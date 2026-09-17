@@ -26,6 +26,20 @@
     line-height: 1.5;
   }
   #app-root * { box-sizing: border-box; }
+  #md-intro {
+    position: fixed; inset: 0; z-index: 999; background: #ffffff;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 1; transition: opacity 0.6s ease;
+  }
+  #md-intro .md-intro-brand {
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    font-size: 20px; font-weight: 700; letter-spacing: 3px; color: #141312;
+    opacity: 0; transform: translateY(6px); transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  #md-intro.show .md-intro-brand { opacity: 1; transform: translateY(0); }
+  #md-intro.out { opacity: 0; pointer-events: none; }
+  #app-root.md-fadein { animation: mdFadeIn 0.7s ease both; }
+  @keyframes mdFadeIn { from { opacity: 0; } to { opacity: 1; } }
   #app-root img.ph { object-fit: cover; display: block; width: 100%; height: 100%; }
   #app-root .ph > img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
   #app-root .wrap { max-width: 720px; margin: 0 auto; padding: 0 0 90px; overflow: hidden; }
@@ -288,7 +302,9 @@
     align-items: center;
     line-height: 1;
   }
-  #app-root .back-header .back-header-title { font-size: 15px; font-weight: 800; margin: 0; }
+  #app-root .back-header .back-header-title { font-size: 15px; font-weight: 800; margin: 0; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  #app-root .back-header-hint { font-size: 11px; font-weight: 500; color: #a49c8c; }
+  #app-root .back-header button, #app-root .feed-header .back-link { color: var(--fg); display: inline-flex; align-items: center; padding: 4px; }
   #app-root .outfit-cat {
     text-align: center;
     padding: 20px 24px;
@@ -736,6 +752,35 @@ async function saveSiteDataToSupabase(value) {
   return !error;
 }
 async function renderPublicSite(root) {
+  // ---------- UI 상태 저장/복원 (무신사 갔다 돌아와도 같은 화면) ----------
+  const UI_KEY = "md-ui-state";
+  function readUI() { try { return JSON.parse(sessionStorage.getItem(UI_KEY) || "{}"); } catch (e) { return {}; } }
+  function writeUI(patch) { try { sessionStorage.setItem(UI_KEY, JSON.stringify(Object.assign(readUI(), patch))); } catch (e) {} }
+  const savedUI = readUI();
+
+  // ---------- 인트로 (데이터 불러오는 동안 브랜드명이 부드럽게 떠요) ----------
+  const introStart = Date.now();
+  let intro = null;
+  let playIntro = true;
+  try { playIntro = !sessionStorage.getItem("md-intro-shown"); } catch (e) {}
+  if (playIntro) {
+    intro = document.createElement("div");
+    intro.id = "md-intro";
+    intro.innerHTML = '<div class="md-intro-brand" id="md-intro-brand"></div>';
+    document.body.appendChild(intro);
+    requestAnimationFrame(() => requestAnimationFrame(() => intro.classList.add("show")));
+  }
+  function finishIntro() {
+    if (!intro) return;
+    const wait = Math.max(0, 1300 - (Date.now() - introStart));
+    setTimeout(() => {
+      intro.classList.add("out");
+      root.classList.add("md-fadein");
+      setTimeout(() => intro.remove(), 700);
+      try { sessionStorage.setItem("md-intro-shown", "1"); } catch (e) {}
+    }, wait);
+  }
+
   // ---------- 어드민에서 저장한 데이터 불러오기 ----------
   let ADMIN = null;
   try {
@@ -857,12 +902,11 @@ async function renderPublicSite(root) {
     return `
       <div class="outfit-modal-backdrop" id="outfit-modal-backdrop">
         <div class="outfit-modal">
-          <div class="back-header"><button id="outfit-modal-close">↩</button><p class="back-header-title">LOOK</p></div>
+          <div class="back-header"><button id="outfit-modal-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button><p class="back-header-title">LOOK <span class="back-header-hint">사진을 누르시면 제품 링크로 이동됩니다</span></p></div>
           <div class="outfit-photo-frame">
             ${photoTag(outfit.photo, "outfit-photo", `style="aspect-ratio:${outfit.ratio || "2/3"};"`)}
           </div>
           ${catHtml}
-          <p class="items-note">제품명 클릭하면 구매 링크로 바로 접속 가능합니다.</p>
         </div>
       </div>
     `;
@@ -890,11 +934,13 @@ async function renderPublicSite(root) {
 
     const backdrop = root.querySelector("#outfit-modal-backdrop");
     animateOverlayIn(backdrop);
-    const close = () => animateOverlayOut(backdrop);
+    writeUI({ outfitId: outfit.id });
+    const close = () => { writeUI({ outfitId: null }); animateOverlayOut(backdrop); };
     root.querySelector("#outfit-modal-close").addEventListener("click", close);
   }
 
   function openOutfitFeed(groupName) {
+    writeUI({ feed: { type: "outfit", key: groupName || null } });
     const existing = root.querySelector("#feed-backdrop");
     if (existing) existing.remove();
 
@@ -904,7 +950,7 @@ async function renderPublicSite(root) {
     holder.innerHTML = `
       <div class="feed-backdrop" id="feed-backdrop">
         <div class="feed-header">
-          <button class="back-link" id="feed-close">↩</button>
+          <button class="back-link" id="feed-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
           <p class="feed-title">LOOK</p>
         </div>
         <div class="feed-list">
@@ -921,7 +967,7 @@ async function renderPublicSite(root) {
     animateOverlayIn(root.querySelector("#feed-backdrop"));
 
     const backdrop = root.querySelector("#feed-backdrop");
-    root.querySelector("#feed-close").addEventListener("click", () => animateOverlayOut(backdrop));
+    root.querySelector("#feed-close").addEventListener("click", () => { writeUI({ feed: null }); animateOverlayOut(backdrop); });
     backdrop.querySelectorAll(".outfit-card").forEach((card) => {
       card.addEventListener("click", () => {
         const id = card.dataset.outfitId;
@@ -932,6 +978,7 @@ async function renderPublicSite(root) {
   }
 
   function openPickFeed(groupIndex) {
+    writeUI({ feed: { type: "pick", key: groupIndex } });
     const existing = root.querySelector("#feed-backdrop");
     if (existing) existing.remove();
 
@@ -941,7 +988,7 @@ async function renderPublicSite(root) {
     holder.innerHTML = `
       <div class="feed-backdrop" id="feed-backdrop">
         <div class="feed-header">
-          <button class="back-link" id="feed-close">↩</button>
+          <button class="back-link" id="feed-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
           <p class="feed-title">${group.title}</p>
         </div>
         <p class="pick-feed-note">가격은 각 링크에서 확인하세요</p>
@@ -967,10 +1014,11 @@ async function renderPublicSite(root) {
     animateOverlayIn(root.querySelector("#feed-backdrop"));
 
     const backdrop = root.querySelector("#feed-backdrop");
-    root.querySelector("#feed-close").addEventListener("click", () => animateOverlayOut(backdrop));
+    root.querySelector("#feed-close").addEventListener("click", () => { writeUI({ feed: null }); animateOverlayOut(backdrop); });
   }
 
   function openCategoryFeed(groupIndex) {
+    writeUI({ feed: { type: "category", key: groupIndex } });
     const existing = root.querySelector("#feed-backdrop");
     if (existing) existing.remove();
 
@@ -980,7 +1028,7 @@ async function renderPublicSite(root) {
     holder.innerHTML = `
       <div class="feed-backdrop" id="feed-backdrop">
         <div class="feed-header">
-          <button class="back-link" id="feed-close">↩</button>
+          <button class="back-link" id="feed-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
           <p class="feed-title">${group.title}</p>
         </div>
         <div class="pick-grid">
@@ -1005,7 +1053,7 @@ async function renderPublicSite(root) {
     animateOverlayIn(root.querySelector("#feed-backdrop"));
 
     const backdrop = root.querySelector("#feed-backdrop");
-    root.querySelector("#feed-close").addEventListener("click", () => animateOverlayOut(backdrop));
+    root.querySelector("#feed-close").addEventListener("click", () => { writeUI({ feed: null }); animateOverlayOut(backdrop); });
   }
 
   const reelsFallback = [
@@ -1094,6 +1142,7 @@ async function renderPublicSite(root) {
     footer: "MD STUDIO x k__man_do", avatar: "",
   };
   const site = (ADMIN && ADMIN.site) ? Object.assign({}, siteFallback, ADMIN.site) : siteFallback;
+  { const ib = document.getElementById("md-intro-brand"); if (ib) ib.textContent = site.brand; }
 
   root.innerHTML = `
     <header class="head">
@@ -1297,6 +1346,7 @@ async function renderPublicSite(root) {
     slider.style.transition = opts.instant ? "none" : "";
     slider.style.transform = `translateX(-${activeIndex * 25}%)`;
     buttons.forEach((b, i) => b.classList.toggle("active", i === activeIndex));
+    writeUI({ tab: activeIndex });
     if (opts.instant) slider.getBoundingClientRect(); // 강제 리플로우
   }
 
@@ -1330,7 +1380,18 @@ async function renderPublicSite(root) {
     }
   });
 
-  setActive(0, { instant: true });
+  setActive(Number.isInteger(savedUI.tab) ? savedUI.tab : 0, { instant: true });
+  // 무신사 갔다가 돌아왔을 때 보던 화면 그대로 복원
+  try {
+    if (savedUI.feed && savedUI.feed.type === "outfit") openOutfitFeed(savedUI.feed.key || undefined);
+    else if (savedUI.feed && savedUI.feed.type === "pick" && pickGroups[savedUI.feed.key]) openPickFeed(savedUI.feed.key);
+    else if (savedUI.feed && savedUI.feed.type === "category" && categoryGroups[savedUI.feed.key]) openCategoryFeed(savedUI.feed.key);
+    if (savedUI.outfitId) {
+      const o = outfits.find((x) => String(x.id) === String(savedUI.outfitId));
+      if (o) openOutfitModal(o);
+    }
+  } catch (e) {}
+  finishIntro();
 
   root.querySelectorAll(".outfit-card").forEach((card) => {
     card.addEventListener("click", () => {
