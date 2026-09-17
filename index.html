@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MD STUDIO</title>
+</head>
+<body>
+<div id="app-root"></div>
+
+<style>
+
+  #app-root {
+    --bg: #ffffff;
+    --fg: #141312;
+    --fg-muted: #85807a;
+    --line: #ececec;
+    --accent: #ff3d3f;
+    --tag-bg: #f5f4f2;
+    --badge-new: #141312;
+
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  #app-root * { box-sizing: border-box; }
+  #app-root img.ph { object-fit: cover; display: block; width: 100%; height: 100%; }
+  #app-root .ph > img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
+  #app-root .wrap { max-width: 720px; margin: 0 auto; padding: 0 0 90px; overflow: hidden; }
+  #app-root .site-footer {
+    text-align: center;
+    padding: 28px 30px 10px;
+  }
+  #app-root .footer-note {
+    font-size: 10.5px;
+    color: var(--fg-muted);
+    opacity: 0.7;
+    line-height: 1.5;
+    margin: 0 0 8px;
+  }
+  #app-root .footer-brand {
+    font-size: 10.5px;
+    color: var(--fg-muted);
+    opacity: 0.5;
+    letter-spacing: 1px;
+    margin: 0;
+  }
+  #app-root .tab-slider {
+    display: flex;
+    width: 400%;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  #app-root .tab-slider > .section {
+    flex: 0 0 25%;
+    width: 25%;
+    box-sizing: border-box;
+  }
+
+  /* Header */
+  #app-root header.head { padding: 26px 20px 22px; }
+  #app-root .top-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+  }
+  #app-root .top-bar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  #app-root .brand {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    margin: 0;
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+  #app-root .handle {
+    color: #a49c8c;
+    font-size: 11px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  #app-root .profile-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  #app-root .avatar-ring {
+    width: 78px;
+    height: 78px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    padding: 3px;
+    background: conic-gradient(from 220deg, #ff5a2e, #ff3d9a, #2ee6d6, #c6ff3d, #ff5a2e);
+    box-sizing: border-box;
+  }
+  #app-root .avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f2f0eb, #e6e2d9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #b7ae9c;
+    font-size: 11px;
+    border: 3px solid var(--bg);
+    box-sizing: border-box;
+  }
+  #app-root .profile-text { text-align: left; flex: 1; min-width: 0; }
+  #app-root .profile-name {
+    font-size: 17px;
+    font-weight: 800;
+    margin: 0 0 6px;
+  }
+  #app-root .bio {
+    color: var(--fg-muted);
+    font-size: 13px;
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  #app-root .head-divider {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 20px 0 0;
+  }
+
+  /* Tabs — pill style, sticky */
+  #app-root nav.tabs {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  #app-root nav.tabs button {
+    background: var(--tag-bg);
+    border: none;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg-muted);
+    padding: 9px 16px;
+    border-radius: 100px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #app-root nav.tabs button.active {
+    background: var(--fg);
+    color: #fff;
+  }
+
+  #app-root .section { padding: 0 20px; }
+  #app-root .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  #app-root .section-title { font-size: 17px; font-weight: 800; margin: 0; letter-spacing: -0.3px; }
+  #app-root .section-sub { font-size: 12px; color: var(--fg-muted); margin: 0; }
+
+  /* Placeholder image */
+  #app-root .ph {
+    background: linear-gradient(135deg, #f2f0eb, #e6e2d9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #b7ae9c;
+    font-size: 11px;
+    position: relative;
+  }
+  #app-root .badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    padding: 3px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+  }
+  #app-root .badge.new { background: var(--badge-new); }
+  #app-root .badge.sale { background: var(--accent); }
+  #app-root .rank-num {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(4px);
+    color: var(--fg);
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: -0.2px;
+  }
+
+  .pick-group { margin-bottom: 30px; }
+  #app-root .pick-group-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  #app-root .pick-group-title { font-size: 16px; font-weight: 800; margin: 0; letter-spacing: -0.3px; }
+  #app-root .pick-group-sub { font-size: 11.5px; color: var(--fg-muted); margin: 0 0 12px; }
+  #app-root .see-all { font-size: 12px; color: var(--fg-muted); font-weight: 600; }
+
+  /* ===== 코디 상세 모달 ===== */
+  #app-root .outfit-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: #faf8f4;
+    z-index: 60;
+    overflow-y: auto;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  #app-root .outfit-modal-backdrop.enter-from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  #app-root .outfit-modal { max-width: 440px; margin: 0 auto; position: relative; }
+  #app-root .outfit-photo-frame {
+    position: relative;
+    background: #fff;
+    margin: 0 24px 20px;
+    padding: 10px 10px 26px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08);
+    transform: rotate(-1.2deg);
+  }
+  #app-root .outfit-modal .outfit-photo { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; }
+  #app-root .outfit-modal .look-tag {
+    position: absolute;
+    top: -10px;
+    left: -8px;
+    z-index: 2;
+    background: var(--look-pop, #ff5a2e);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    padding: 6px 13px;
+    border-radius: 20px;
+    transform: rotate(-6deg);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  #app-root .back-header {
+    position: sticky;
+    top: 0;
+    background: #faf8f4;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    z-index: 3;
+  }
+  #app-root .back-header button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--fg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+  }
+  #app-root .back-header .back-header-title { font-size: 15px; font-weight: 800; margin: 0; }
+  #app-root .outfit-cat {
+    text-align: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  #app-root .outfit-cat .cat-chip {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    margin: 0 0 8px;
+    background: none;
+    padding: 0;
+  }
+  #app-root .outfit-cat .item-link {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--fg);
+    line-height: 1.35;
+  }
+  #app-root .outfit-cat .item-link::after { content: " →"; opacity: 0.4; font-weight: 400; }
+  #app-root .outfit-cat .item-link:active { opacity: 0.6; }
+  #app-root .outfit-cat .item-size {
+    display: inline-block;
+    font-size: 11.5px;
+    color: var(--fg-muted);
+    margin-top: 4px;
+  }
+  #app-root .items-note {
+    font-size: 12px;
+    color: var(--fg-muted);
+    text-align: center;
+    padding: 20px 24px 6px;
+  }
+
+  /* ===== 콜라보 라인업 (대형 히어로 캐러셀) ===== */
+  #app-root .collab-section { padding: 18px 0 8px; }
+  #app-root .collab-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    color: var(--fg-muted);
+    margin: 0 20px 10px;
+    text-transform: uppercase;
+  }
+  #app-root .collab-scroll {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 0 20px 4px;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  #app-root .collab-scroll::-webkit-scrollbar { display: none; }
+  #app-root .collab-card {
+    display: block;
+    flex-shrink: 0;
+    width: 56%;
+    max-width: 240px;
+    aspect-ratio: 4/5;
+    scroll-snap-align: center;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    color: #fff;
+  }
+  #app-root .collab-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.15) 48%, rgba(0,0,0,0) 68%);
+    z-index: 1;
+  }
+  #app-root .collab-card .ph.cc-photo {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.45);
+    font-weight: 700;
+    font-size: 12px;
+  }
+  #app-root .collab-card .cc-sticker {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    background: var(--collab-pop, #ff3d3f);
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    padding: 4px 9px;
+    border-radius: 20px;
+    transform: rotate(-4deg);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  #app-root .collab-card .cc-text {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    z-index: 2;
+    padding: 12px 13px 14px;
+  }
+  #app-root .collab-card .cc-eyebrow {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    opacity: 0.85;
+    margin: 0 0 4px;
+    text-transform: uppercase;
+  }
+  #app-root .collab-card .cc-headline {
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1.18;
+    margin: 0 0 8px;
+    letter-spacing: -0.4px;
+    text-transform: uppercase;
+  }
+  #app-root .collab-card .cc-foot {
+    display: inline-block;
+    border: 1px solid rgba(255,255,255,0.55);
+    border-radius: 20px;
+    padding: 3px 10px;
+  }
+  #app-root .collab-card .cc-caption {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  #app-root .collab-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 14px;
+  }
+  #app-root .collab-dots .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
+    transition: width 0.25s ease, background 0.25s ease;
+  }
+  #app-root .collab-dots .dot.active {
+    width: 18px;
+    background: var(--fg);
+  }
+
+  /* ===== 추천템 : horizontal scroll product cards ===== */
+  #app-root .h-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 2px 20px 10px;
+    margin: 0 -20px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  #app-root .h-scroll::-webkit-scrollbar { display: none; }
+  #app-root .p-card {
+    flex-shrink: 0;
+    width: 148px;
+    scroll-snap-align: start;
+  }
+  #app-root .p-card .ph { width: 148px; height: 185px; border-radius: 10px; }
+  #app-root a { color: inherit; text-decoration: none; }
+  #app-root .p-card .p-brand { font-size: 11px; font-weight: 800; color: var(--fg); margin: 9px 0 1px; }
+  #app-root .p-card .p-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fg);
+    margin: 0 0 1px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  #app-root .p-card .p-price { font-size: 13px; font-weight: 800; }
+  #app-root .p-card .p-off { color: var(--accent); font-weight: 800; margin-right: 4px; }
+  #app-root .p-card .p-comment { font-size: 12px; font-weight: 500; color: var(--fg-muted); margin: 1px 0 0; }
+
+  /* ===== 실착 : 폴라로이드 스타일 그리드 ===== */
+  #app-root .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 12px;
+    padding-top: 4px;
+  }
+  #app-root .polaroid {
+    background: #fff;
+    padding: 8px 8px 22px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+  }
+  #app-root .polaroid:nth-child(4n+1) { transform: rotate(-2.5deg); }
+  #app-root .polaroid:nth-child(4n+2) { transform: rotate(1.8deg); }
+  #app-root .polaroid:nth-child(4n+3) { transform: rotate(1.2deg); }
+  #app-root .polaroid:nth-child(4n+4) { transform: rotate(-1.5deg); }
+  #app-root .polaroid .ph { aspect-ratio: 3/4; border-radius: 1px; }
+  #app-root .polaroid .polaroid-click {
+    position: absolute;
+    left: 10px;
+    bottom: 6px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #a49c8c;
+    text-transform: uppercase;
+  }
+
+  /* 실착 그룹별 가로 스크롤 */
+  #app-root .outfit-group { margin-bottom: 28px; }
+  #app-root .outfit-group-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  #app-root .outfit-group-title { font-size: 15px; font-weight: 800; margin: 0; }
+  #app-root .polaroid-scroll {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 4px 20px 8px;
+    margin: 0 -20px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  #app-root .polaroid-scroll::-webkit-scrollbar { display: none; }
+  #app-root .polaroid-scroll .polaroid { flex-shrink: 0; width: 62%; max-width: 240px; scroll-snap-align: start; }
+  #app-root .polaroid-scroll .polaroid .ph { width: 100%; }
+
+  /* 전체보기 피드 (세로 스크롤) */
+  #app-root .feed-backdrop {
+    position: fixed;
+    inset: 0;
+    background: #faf8f4;
+    z-index: 55;
+    overflow-y: auto;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  #app-root .feed-backdrop.enter-from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  #app-root .feed-header {
+    position: sticky;
+    top: 0;
+    background: #faf8f4;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    z-index: 2;
+    border-bottom: 1px solid var(--line);
+  }
+  #app-root .feed-header .feed-title { font-size: 15px; font-weight: 800; margin: 0; }
+  #app-root .feed-header .back-link {
+    background: none;
+    border: none;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--fg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+  }
+  #app-root .feed-list {
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 18px 20px 40px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 12px;
+  }
+  #app-root .feed-list .polaroid { width: 100%; }
+  #app-root .feed-list .polaroid .ph { aspect-ratio: 3/4; }
+
+  /* 추천템 전체보기 : 번호 뱃지 그리드 */
+  #app-root .pick-feed-note {
+    font-size: 12px;
+    color: var(--fg-muted);
+    padding: 14px 20px 4px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  #app-root .pick-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px 10px;
+    padding: 14px 20px 34px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  #app-root .pick-grid-item .ph {
+    aspect-ratio: 1/1;
+    border-radius: 4px;
+    position: relative;
+    font-size: 10px;
+  }
+  #app-root .pick-grid-item .rank-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: var(--fg);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+  }
+  #app-root .pick-grid-item .g-brand { font-size: 12px; font-weight: 800; color: var(--fg); margin: 9px 0 1px; }
+  #app-root .pick-grid-item .g-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg);
+    line-height: 1.35;
+    margin: 0 0 1px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  #app-root .pick-grid-item .g-comment {
+    font-size: 10.5px;
+    color: var(--fg-muted);
+    line-height: 1.3;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ===== 꿀팁 : 릴스 썸네일 그리드 ===== */
+  #app-root .reel-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 12px;
+  }
+  #app-root .reel-card { display: block; cursor: pointer; }
+  #app-root .reel-thumb-wrap {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  #app-root .reel-thumb { aspect-ratio: 9/16; font-size: 10px; }
+  #app-root .reel-play-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+  #app-root .reel-caption {
+    font-size: 12.5px;
+    font-weight: 600;
+    margin: 8px 0 0;
+    line-height: 1.35;
+    color: var(--fg);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ===== 카테고리 꿀템 모음 ===== */
+  #app-root .cat-group { margin-bottom: 26px; }
+  #app-root .cat-group .cat-label {
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 12px;
+  }
+  #app-root .scroll-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    margin: 0 -20px;
+    padding: 0 20px 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  #app-root .scroll-row::-webkit-scrollbar { display: none; }
+  #app-root .scroll-row .mini { flex-shrink: 0; width: 108px; }
+  #app-root .scroll-row .ph { width: 108px; height: 135px; border-radius: 8px; }
+  #app-root .scroll-row .mini .name { font-size: 12px; font-weight: 600; margin: 6px 0 2px; }
+  #app-root .scroll-row .mini .note { font-size: 11px; color: var(--accent); font-weight: 700; margin: 0; }
+
+
+
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ============================================================
+// Supabase 연결 설정
+// ============================================================
+const SUPABASE_URL = "https://cbuydjkvvzbluyohdkie.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function loadSiteDataFromSupabase() {
+  const { data, error } = await supabaseClient
+    .from("site_data")
+    .select("value")
+    .eq("id", "main")
+    .maybeSingle();
+  if (error || !data) return null;
+  return data.value;
+}
+
+async function saveSiteDataToSupabase(value) {
+  const { error } = await supabaseClient
+    .from("site_data")
+    .upsert({ id: "main", value: value });
+  return !error;
+}
+async function renderPublicSite(root) {
+  // ---------- 어드민에서 저장한 데이터 불러오기 ----------
+  let ADMIN = null;
+  try {
+    ADMIN = await loadSiteDataFromSupabase();
+  } catch (e) {
+    ADMIN = null;
+  }
+
+  const STICKER_POPS = { "NEW DROP": "#ff5a2e", "COLLAB": "#c6ff3d", "LIMITED": "#2ee6d6", "SOLD OUT": "#ff3d9a" };
+
+  // 어드민 아이템(객체) / 데모 아이템(배열 튜플) 둘 다 같은 형태로 통일
+  function normItem(it) {
+    if (Array.isArray(it)) {
+      if (it.length >= 5) return { brand: it[0], name: it[1], comment: it[4], photo: "", link: "#" };
+      return { brand: it[0], name: it[1], comment: it[2], photo: "", link: "#" };
+    }
+    return { brand: it.brand, name: it.name, comment: it.comment || "", photo: it.photo || "", link: it.link || "#" };
+  }
+
+  function photoTag(url, cls, extraAttrs) {
+    extraAttrs = extraAttrs || "";
+    if (url) return `<img src="${url}" class="ph ${cls}" ${extraAttrs}>`;
+    return `<div class="ph ${cls}" ${extraAttrs}>사진</div>`;
+  }
+  // 사진 안에 뱃지(순위 번호 등)를 겹쳐야 할 때 쓰는 버전 — .ph 래퍼는 그대로 두고 내용만 교체
+  function photoInner(url) {
+    return url ? `<img src="${url}">` : `사진`;
+  }
+
+  const collabsFallback = [
+    { photoBg: "#3a2e1f", pop: "#ff5a2e", eyebrow: "웬즈데이 × MD STUDIO", headline: "단독 기획\n크롭 데님 셔츠", caption: "NEW DROP" },
+    { photoBg: "#1f2a1a", pop: "#c6ff3d", eyebrow: "아워데이즈 × MD STUDIO", headline: "시그니처\n세미 커브드 팬츠", caption: "COLLAB" },
+    { photoBg: "#1a2430", pop: "#2ee6d6", eyebrow: "킨치 × MD STUDIO", headline: "한정판\n더비 슈즈 캡슐", caption: "LIMITED" },
+    { photoBg: "#2a1a26", pop: "#ff3d9a", eyebrow: "로맨틱무브 × MD STUDIO", headline: "첫 콜라보\n라인 완판", caption: "SOLD OUT" },
+  ];
+  const collabs = (ADMIN && ADMIN.lineup && ADMIN.lineup.length)
+    ? ADMIN.lineup.map((c) => ({
+        photo: c.photo || "",
+        pop: STICKER_POPS[c.sticker] || "#ff5a2e",
+        eyebrow: c.eyebrow,
+        headline: c.headline,
+        caption: c.sticker,
+        link: c.link,
+      }))
+    : collabsFallback;
+
+  const outfitsFallback = [
+    { id: 1, group: "거울샷", items: {
+        "OUTER": [["데님 파이어버드 트랙탑 - 블랙", "#"]],
+        "TOP": [["오아시스 크롭 데님 셔츠", "#"]],
+        "BOTTOM": [["엣지 워크 라보 팬츠 [카키올리브]", "#"]],
+        "SHOES": [["닥터마틴 1461 3홀 빈티지브라운", "#"]],
+        "ACC": [["라운드링 Line Ring", "#"]],
+      },
+    },
+    { id: 2, group: "거울샷", items: {
+        "TOP": [["세미 오버 니트 가디건", "#"]],
+        "BOTTOM": [["와이드 슬랙스 [차콜]", "#"]],
+        "SHOES": [["로퍼 스웨이드 브라운", "#"]],
+      },
+    },
+    { id: 3, group: "거울샷", items: {
+        "OUTER": [["무스탕 숏 재킷", "#"]],
+        "TOP": [["하프넥 니트 [아이보리]", "#"]],
+        "BOTTOM": [["스트레이트 데님", "#"]],
+        "BAG": [["크로스 미니백 [블랙]", "#"]],
+        "SHOES": [["첼시 부츠", "#"]],
+      },
+    },
+    { id: 4, group: "일상 컷", items: {
+        "TOP": [["후드 스웻셔츠 [그레이]", "#"]],
+        "BOTTOM": [["트랙 팬츠", "#"]],
+        "SHOES": [["뉴발란스 ML2002RC", "#"]],
+      },
+    },
+    { id: 5, group: "일상 컷", items: {
+        "OUTER": [["패딩 베스트 [블랙]", "#"]],
+        "TOP": [["기모 맨투맨", "#"]],
+        "BOTTOM": [["와이드 코듀로이 팬츠", "#"]],
+        "SHOES": [["더비 슈즈", "#"]],
+        "ACC": [["니트 비니", "#"]],
+      },
+    },
+    { id: 6, group: "일상 컷", items: {
+        "TOP": [["체크 셔츠 오버핏", "#"]],
+        "BOTTOM": [["치노 팬츠 [베이지]", "#"]],
+        "SHOES": [["스니커즈 화이트", "#"]],
+      },
+    },
+  ];
+  const outfits = (ADMIN && ADMIN.outfits && ADMIN.outfits.length) ? ADMIN.outfits : outfitsFallback;
+
+  const CAT_ORDER = ["OUTER", "TOP", "BOTTOM", "BAG", "SHOES", "ACC", "ETC"];
+  const CAT_COLORS = {
+    OUTER:  { bg: "#ffe9e2", fg: "#c9420a" },
+    TOP:    { bg: "#eef6df", fg: "#5c7a1e" },
+    BOTTOM: { bg: "#e3f7f4", fg: "#127a70" },
+    BAG:    { bg: "#fdeaf3", fg: "#c22a75" },
+    SHOES:  { bg: "#eef1fb", fg: "#3d4fb0" },
+    ACC:    { bg: "#f6f0e3", fg: "#8a6a1f" },
+    ETC:    { bg: "#f2f0ec", fg: "#71695c" },
+  };
+  const LOOK_POPS = ["#ff5a2e", "#2ee6d6", "#c6ff3d", "#ff3d9a"];
+
+  function renderOutfitModal(outfit, index) {
+    const catHtml = CAT_ORDER
+      .filter((cat) => outfit.items[cat])
+      .map((cat) => {
+        return outfit.items[cat].map(([name, link, size]) => `
+          <div class="outfit-cat">
+            <span class="cat-chip">${cat}</span>
+            <a class="item-link" href="${link}" target="_blank" rel="noopener noreferrer">${name}</a>
+            ${size ? `<span class="item-size">사이즈 ${size}</span>` : ""}
+          </div>
+        `).join("");
+      }).join("");
+
+    return `
+      <div class="outfit-modal-backdrop" id="outfit-modal-backdrop">
+        <div class="outfit-modal">
+          <div class="back-header"><button id="outfit-modal-close">↩</button><p class="back-header-title">LOOK</p></div>
+          <div class="outfit-photo-frame">
+            ${photoTag(outfit.photo, "outfit-photo")}
+          </div>
+          ${catHtml}
+          <p class="items-note">제품명 클릭하면 구매 링크로 바로 접속 가능합니다.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function animateOverlayIn(backdrop) {
+    backdrop.classList.add("enter-from");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => backdrop.classList.remove("enter-from"));
+    });
+  }
+  function animateOverlayOut(backdrop, onDone) {
+    backdrop.classList.add("enter-from");
+    setTimeout(() => { backdrop.remove(); if (onDone) onDone(); }, 300);
+  }
+
+  function openOutfitModal(outfit) {
+    const index = outfits.findIndex((o) => o.id === outfit.id);
+    const existing = root.querySelector("#outfit-modal-backdrop");
+    if (existing) existing.remove();
+
+    const holder = document.createElement("div");
+    holder.innerHTML = renderOutfitModal(outfit, index);
+    root.appendChild(holder.firstElementChild);
+
+    const backdrop = root.querySelector("#outfit-modal-backdrop");
+    animateOverlayIn(backdrop);
+    const close = () => animateOverlayOut(backdrop);
+    root.querySelector("#outfit-modal-close").addEventListener("click", close);
+  }
+
+  function openOutfitFeed(groupName) {
+    const existing = root.querySelector("#feed-backdrop");
+    if (existing) existing.remove();
+
+    const list = groupName ? outfits.filter((o) => o.group === groupName) : outfits;
+
+    const holder = document.createElement("div");
+    holder.innerHTML = `
+      <div class="feed-backdrop" id="feed-backdrop">
+        <div class="feed-header">
+          <button class="back-link" id="feed-close">↩</button>
+          <p class="feed-title">LOOK</p>
+        </div>
+        <div class="feed-list">
+          ${list.map((o) => `
+            <div class="polaroid outfit-card" data-outfit-id="${o.id}">
+              ${photoTag(o.photo, "", 'style="aspect-ratio:3/4;"')}
+              <span class="polaroid-click">Tap in</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+    root.appendChild(holder.firstElementChild);
+    animateOverlayIn(root.querySelector("#feed-backdrop"));
+
+    const backdrop = root.querySelector("#feed-backdrop");
+    root.querySelector("#feed-close").addEventListener("click", () => animateOverlayOut(backdrop));
+    backdrop.querySelectorAll(".outfit-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const id = card.dataset.outfitId;
+        const outfit = outfits.find((o) => String(o.id) === id);
+        if (outfit) openOutfitModal(outfit);
+      });
+    });
+  }
+
+  function openPickFeed(groupIndex) {
+    const existing = root.querySelector("#feed-backdrop");
+    if (existing) existing.remove();
+
+    const group = pickGroups[groupIndex];
+
+    const holder = document.createElement("div");
+    holder.innerHTML = `
+      <div class="feed-backdrop" id="feed-backdrop">
+        <div class="feed-header">
+          <button class="back-link" id="feed-close">↩</button>
+          <p class="feed-title">${group.title}</p>
+        </div>
+        <p class="pick-feed-note">가격은 각 링크에서 확인하세요</p>
+        <div class="pick-grid">
+          ${group.items.map((raw, i) => {
+            const it = normItem(raw);
+            return `
+            <a class="pick-grid-item" href="${it.link}" target="_blank" rel="noopener noreferrer">
+              <div class="ph">
+                ${photoInner(it.photo)}
+                <span class="rank-badge">${i + 1}</span>
+              </div>
+              <p class="g-brand">${it.brand}</p>
+              <p class="g-name">${it.name}</p>
+              <p class="g-comment">${it.comment}</p>
+            </a>
+          `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+    root.appendChild(holder.firstElementChild);
+    animateOverlayIn(root.querySelector("#feed-backdrop"));
+
+    const backdrop = root.querySelector("#feed-backdrop");
+    root.querySelector("#feed-close").addEventListener("click", () => animateOverlayOut(backdrop));
+  }
+
+  function openCategoryFeed(groupIndex) {
+    const existing = root.querySelector("#feed-backdrop");
+    if (existing) existing.remove();
+
+    const group = categoryGroups[groupIndex];
+
+    const holder = document.createElement("div");
+    holder.innerHTML = `
+      <div class="feed-backdrop" id="feed-backdrop">
+        <div class="feed-header">
+          <button class="back-link" id="feed-close">↩</button>
+          <p class="feed-title">${group.title}</p>
+        </div>
+        <div class="pick-grid">
+          ${group.items.map((raw, i) => {
+            const it = normItem(raw);
+            return `
+            <a class="pick-grid-item" href="${it.link}" target="_blank" rel="noopener noreferrer">
+              <div class="ph">
+                ${photoInner(it.photo)}
+                <span class="rank-badge">${i + 1}</span>
+              </div>
+              <p class="g-brand">${it.brand}</p>
+              <p class="g-name">${it.name}</p>
+              <p class="g-comment">${it.comment}</p>
+            </a>
+          `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+    root.appendChild(holder.firstElementChild);
+    animateOverlayIn(root.querySelector("#feed-backdrop"));
+
+    const backdrop = root.querySelector("#feed-backdrop");
+    root.querySelector("#feed-close").addEventListener("click", () => animateOverlayOut(backdrop));
+  }
+
+  const reelsFallback = [
+    { caption: "패션 입문자를 위한 현시점 1순위 기본템", link: "#" },
+    { caption: "하체가 안예뻐서 고민이라면 이 바지로 회생가능", link: "#" },
+    { caption: "기본템 1황 이거 하나면 코디 끝", link: "#" },
+    { caption: "나이대별 코디법 총정리", link: "#" },
+    { caption: "안 질리는 무채색 조합 꿀팁", link: "#" },
+    { caption: "첫 데이트룩 이렇게 입으면 실패 없음", link: "#" },
+  ];
+  const reels = (ADMIN && ADMIN.reels && ADMIN.reels.length) ? ADMIN.reels : reelsFallback;
+
+  const categoryGroupsFallback = [
+    {
+      title: "아우터",
+      sub: "요즘 많이 찾는 아우터 모음",
+      items: [
+        ["웬즈데이", "크롭 가디건", "가벼운데 핏이 예쁜"],
+        ["무신사 스탠다드", "숏 패딩", "가성비로 못 참는 기본템"],
+        ["마르디 메크르디", "트렌치 코트", "봄가을 내내 입는"],
+        ["아워데이즈", "무스탕 숏 재킷", "포인트 주기 좋은"],
+      ],
+    },
+    {
+      title: "하의",
+      sub: "핏 하나로 승부 보는 하의들",
+      items: [
+        ["아워데이즈", "와이드 데님", "핏이 예뻐서 자주 추천하는"],
+        ["유니클로", "슬랙스", "무난하게 하나쯤 있어야 하는"],
+        ["폴로 랄프로렌", "치노 팬츠", "포멀룩에 이거 하나면 끝"],
+        ["나이키", "스웻 팬츠", "편한 날엔 무조건 이거"],
+      ],
+    },
+    {
+      title: "신발",
+      sub: "발밑까지 신경 쓴 신발 모음",
+      items: [
+        ["로맨틱무브", "러그 더비 슈즈", "편해서 계속 손이 가는"],
+        ["나이키", "에어 포스 1", "입문자 첫 신발로 최고"],
+        ["탠디", "로퍼", "포멀하게도 캐주얼하게도"],
+        ["닥터마틴", "첼시 부츠", "한 켤레로 존재감 있는"],
+      ],
+    },
+  ];
+  const categoryGroups = (ADMIN && ADMIN.categories && ADMIN.categories.length) ? ADMIN.categories : categoryGroupsFallback;
+
+  const pickGroupsFallback = [
+    {
+      title: "지금 가장 잘나가는 추천템",
+      sub: "요즘 문의 제일 많이 받는 아이템만 모았어요",
+      items: [
+        ["무신사 스탠다드", "후디드 라이트 다운 재킷 14컬러", "89,000원", "20%", "신상인데 가장 매력적인"],
+        ["뉴발란스", "ML2002RC (GRAY)", "129,000원", "15%", "누구나 입기 좋은 국밥"],
+        ["킨치", "SHOWER 808 (a) / BLACK", "156,000원", null, "포멀룩에 이거 하나면 끝"],
+        ["로맨틱무브", "러그 더비 R26H920", "98,000원", null, "편해서 계속 손이 가는"],
+        ["액트플러스", "얼라인플러스 하이드로", "112,000원", "10%", "카와이한데 은근 실용적"],
+      ],
+    },
+    {
+      title: "입문자를 위한 가성비 필수템",
+      sub: "패션 처음이면 이것부터 사면 됩니다",
+      items: [
+        ["웬즈데이", "오아시스 크롭 데님 셔츠", "68,000원", "40%", "가성비로 못 참는 초도할인"],
+        ["아워데이즈", "세미 커브드 데님 팬츠", "58,000원", "12%", "핏 하나로 승부보는 팬츠"],
+        ["아워데이즈", "세미 커브드 치노 팬츠", "58,000원", null, "무난하게 하나쯤 있어야 하는"],
+        ["아워데이즈", "세미 커브드 스웻 팬츠", "49,000원", "10%", "편한 날엔 무조건 이거"],
+        ["나이키", "에어 포스 1 07 화이트", "139,000원", "10%", "입문자 첫 신발로 최고"],
+      ],
+    },
+    {
+      title: "이번 주 신상 체크",
+      sub: "새로 올라온 것 중에 눈여겨볼 것들",
+      items: [
+        ["마뗑킴", "패커블 크로스 포켓백", "89,000원", "20%", "이번 시즌 제일 많이 물어본 가방"],
+        ["쿠어", "워시드 램스킨 카 코트", "298,000원", null, "순삭됐던 그 코트 재입고"],
+        ["디미트리블랙", "2WAY 어센틱 윈드브레이커", "76,000원", null, "평소보다 만원 저렴한 지금"],
+        ["데우스 엑스 마키나", "서울 컬리지 어드레스 티", "58,000원", null, "품절 전에 미리 챙기기"],
+      ],
+    },
+  ];
+  const pickGroups = (ADMIN && ADMIN.picks && ADMIN.picks.length) ? ADMIN.picks : pickGroupsFallback;
+
+  const siteFallback = {
+    brand: "MD STUDIO", name: "광만두", instagram: "your_instagram",
+    bio: "매일 코디와 아이템을 공유합니다. 카드를 누르면 구매 페이지로 이동해요.",
+    footer: "MD STUDIO x k__man_do", avatar: "",
+  };
+  const site = (ADMIN && ADMIN.site) ? Object.assign({}, siteFallback, ADMIN.site) : siteFallback;
+
+  root.innerHTML = `
+    <header class="head">
+      <div class="top-bar">
+        <p class="brand" id="brand-home-2" style="cursor:pointer;">${site.brand}</p>
+        <a class="handle" id="ig-link" href="https://instagram.com/${site.instagram}" target="_blank" rel="noopener noreferrer">@${site.instagram}</a>
+      </div>
+      <div class="profile-row">
+        <div class="avatar-ring" id="brand-home" style="cursor:pointer;">
+          ${photoTag(site.avatar, "avatar")}
+        </div>
+        <div class="profile-text">
+          <p class="profile-name" id="brand-home-text" style="cursor:pointer;">${site.name}</p>
+          <p class="bio">${site.bio}</p>
+        </div>
+      </div>
+      <hr class="head-divider">
+    </header>
+
+    <div class="collab-section">
+      <p class="collab-label">LINE UP</p>
+      <div class="collab-scroll" id="collab-scroll">
+        ${collabs.map((c) => `
+          <a class="collab-card" style="--collab-pop:${c.pop}" href="${c.link || "#"}" target="_blank" rel="noopener noreferrer">
+            ${photoTag(c.photo, "cc-photo", c.photoBg ? `style="background:${c.photoBg}"` : "")}
+            <span class="cc-sticker">${c.caption}</span>
+            <div class="cc-text">
+              <p class="cc-eyebrow">${c.eyebrow}</p>
+              <p class="cc-headline">${c.headline.split("\n").join("<br>")}</p>
+              <div class="cc-foot"><span class="cc-caption">TAP IN →</span></div>
+            </div>
+          </a>
+        `).join("")}
+      </div>
+      <div class="collab-dots" id="collab-dots">
+        ${collabs.map((_, i) => `<span class="dot${i === 0 ? " active" : ""}"></span>`).join("")}
+      </div>
+    </div>
+
+    <nav class="tabs">
+      <button data-tab="outfits" class="active">실착</button>
+      <button data-tab="picks">추천템</button>
+      <button data-tab="category">카테고리 꿀템 모음</button>
+      <button data-tab="tips">꿀팁</button>
+    </nav>
+
+    <div class="wrap" id="tab-viewport">
+      <div class="tab-slider" id="tab-slider">
+      <section id="tab-outfits" class="section">
+        <div class="section-head">
+          <p class="section-title">LOOK</p>
+        </div>
+        ${[...new Set(outfits.map((o) => o.group))].map((groupName) => `
+          <div class="outfit-group">
+            <div class="outfit-group-head" style="justify-content:flex-end;">
+              <span class="see-all outfit-see-all" data-group="${groupName}" style="cursor:pointer;">전체보기 →</span>
+            </div>
+            <div class="polaroid-scroll">
+              ${outfits.filter((o) => o.group === groupName).map((o) => `
+                <div class="polaroid outfit-card" data-outfit-id="${o.id}">
+                  ${photoTag(o.photo, "", 'style="aspect-ratio:3/4;"')}
+                  <span class="polaroid-click">Tap in</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `).join("")}
+
+        <div class="pick-group" style="margin-top:6px;">
+          <div class="pick-group-head">
+            <p class="pick-group-title">${pickGroups[0].title}</p>
+            <span class="see-all" id="look-picks-more" style="cursor:pointer;">추천템 보러가기 →</span>
+          </div>
+          <div class="h-scroll">
+            ${pickGroups[0].items.map((raw) => {
+              const it = normItem(raw);
+              return `
+              <a class="p-card" href="${it.link}" target="_blank" rel="noopener noreferrer">
+                ${photoTag(it.photo, "")}
+                <p class="p-brand">${it.brand}</p>
+                <p class="p-name">${it.name}</p>
+                <p class="p-comment">${it.comment}</p>
+              </a>
+            `;
+            }).join("")}
+          </div>
+        </div>
+
+        <div class="pick-group" style="margin-top:22px;">
+          <div class="pick-group-head">
+            <p class="pick-group-title">${categoryGroups[0].title} 추천</p>
+            <span class="see-all" id="look-category-more" style="cursor:pointer;">카테고리별 보러가기 →</span>
+          </div>
+          <div class="h-scroll">
+            ${categoryGroups[0].items.map((raw, i) => {
+              const it = normItem(raw);
+              return `
+              <a class="p-card" href="${it.link}" target="_blank" rel="noopener noreferrer">
+                <div class="ph">
+                  ${photoInner(it.photo)}
+                  <span class="rank-num">${i + 1}</span>
+                </div>
+                <p class="p-brand">${it.brand}</p>
+                <p class="p-name">${it.name}</p>
+                <p class="p-comment">${it.comment}</p>
+              </a>
+            `;
+            }).join("")}
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-picks" class="section">
+        ${pickGroups.map((group, gi) => `
+          <div class="pick-group">
+            <div class="pick-group-head">
+              <p class="pick-group-title">${group.title}</p>
+              <span class="see-all pick-see-all" data-group-index="${gi}" style="cursor:pointer;">전체보기 →</span>
+            </div>
+            <p class="pick-group-sub">${group.sub}</p>
+            <div class="h-scroll">
+              ${group.items.map((raw, i) => {
+                const it = normItem(raw);
+                return `
+                <a class="p-card" href="${it.link}" target="_blank" rel="noopener noreferrer">
+                  <div class="ph">
+                    ${photoInner(it.photo)}
+                    <span class="rank-num">${i + 1}</span>
+                  </div>
+                  <p class="p-brand">${it.brand}</p>
+                  <p class="p-name">${it.name}</p>
+                  <p class="p-comment">${it.comment}</p>
+                </a>
+              `;
+              }).join("")}
+            </div>
+          </div>
+        `).join("")}
+      </section>
+
+      <section id="tab-category" class="section">
+        ${categoryGroups.map((group, gi) => `
+          <div class="pick-group">
+            <div class="pick-group-head">
+              <p class="pick-group-title">${group.title}</p>
+              <span class="see-all category-see-all" data-group-index="${gi}" style="cursor:pointer;">전체보기 →</span>
+            </div>
+            <p class="pick-group-sub">${group.sub}</p>
+            <div class="h-scroll">
+              ${group.items.map((raw, i) => {
+                const it = normItem(raw);
+                return `
+                <a class="p-card" href="${it.link}" target="_blank" rel="noopener noreferrer">
+                  <div class="ph">
+                    ${photoInner(it.photo)}
+                    <span class="rank-num">${i + 1}</span>
+                  </div>
+                  <p class="p-brand">${it.brand}</p>
+                  <p class="p-name">${it.name}</p>
+                  <p class="p-comment">${it.comment}</p>
+                </a>
+              `;
+              }).join("")}
+            </div>
+          </div>
+        `).join("")}
+      </section>
+
+      <section id="tab-tips" class="section">
+        <div class="section-head">
+          <p class="section-title">꿀팁 릴스</p>
+        </div>
+        <div class="reel-grid">
+          ${reels.map((r) => `
+            <a class="reel-card" href="${r.link}" target="_blank" rel="noopener noreferrer">
+              <div class="reel-thumb-wrap">
+                ${photoTag(r.photo, "reel-thumb")}
+                <span class="reel-play-badge">▶</span>
+              </div>
+              <p class="reel-caption">${r.caption}</p>
+            </a>
+          `).join("")}
+        </div>
+      </section>
+      </div>
+      <div class="site-footer">
+        <p class="footer-brand">${site.footer}</p>
+      </div>
+    </div>
+  `;
+
+  const TAB_ORDER = ["outfits", "picks", "category", "tips"];
+  const buttons = root.querySelectorAll("nav.tabs button");
+  const slider = root.querySelector("#tab-slider");
+  const viewport = root.querySelector("#tab-viewport");
+  let activeIndex = 0;
+
+  function setActive(index, opts) {
+    opts = opts || {};
+    activeIndex = Math.max(0, Math.min(TAB_ORDER.length - 1, index));
+    slider.style.transition = opts.instant ? "none" : "";
+    slider.style.transform = `translateX(-${activeIndex * 25}%)`;
+    buttons.forEach((b, i) => b.classList.toggle("active", i === activeIndex));
+    if (opts.instant) slider.getBoundingClientRect(); // 강제 리플로우
+  }
+
+  buttons.forEach((btn, i) => {
+    btn.addEventListener("click", () => setActive(i));
+  });
+
+  // 스와이프 제스처
+  let touchStartX = 0, touchCurrentX = 0, dragging = false, viewportWidth = 0;
+  viewport.addEventListener("touchstart", (e) => {
+    dragging = true;
+    touchStartX = touchCurrentX = e.touches[0].clientX;
+    viewportWidth = viewport.getBoundingClientRect().width;
+    slider.style.transition = "none";
+  });
+  viewport.addEventListener("touchmove", (e) => {
+    if (!dragging) return;
+    touchCurrentX = e.touches[0].clientX;
+    const deltaX = touchCurrentX - touchStartX;
+    slider.style.transform = `translateX(calc(-${activeIndex * 25}% + ${deltaX}px))`;
+  });
+  viewport.addEventListener("touchend", () => {
+    if (!dragging) return;
+    dragging = false;
+    slider.style.transition = "";
+    const deltaX = touchCurrentX - touchStartX;
+    if (Math.abs(deltaX) > viewportWidth * 0.16) {
+      setActive(activeIndex + (deltaX < 0 ? 1 : -1));
+    } else {
+      setActive(activeIndex);
+    }
+  });
+
+  setActive(0, { instant: true });
+
+  root.querySelectorAll(".outfit-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const id = card.dataset.outfitId;
+      const outfit = outfits.find((o) => String(o.id) === id);
+      if (outfit) openOutfitModal(outfit);
+    });
+  });
+
+  root.querySelectorAll(".outfit-see-all").forEach((btn) => {
+    btn.addEventListener("click", () => openOutfitFeed(btn.dataset.group));
+  });
+
+  root.querySelectorAll(".pick-see-all").forEach((btn) => {
+    btn.addEventListener("click", () => openPickFeed(Number(btn.dataset.groupIndex)));
+  });
+
+  root.querySelectorAll(".category-see-all").forEach((btn) => {
+    btn.addEventListener("click", () => openCategoryFeed(Number(btn.dataset.groupIndex)));
+  });
+
+  const lookPicksMore = root.querySelector("#look-picks-more");
+  if (lookPicksMore) lookPicksMore.addEventListener("click", () => setActive(TAB_ORDER.indexOf("picks")));
+
+  const lookCategoryMore = root.querySelector("#look-category-more");
+  if (lookCategoryMore) lookCategoryMore.addEventListener("click", () => setActive(TAB_ORDER.indexOf("category")));
+
+  const goHome = () => {
+    const outfitBackdrop = root.querySelector("#outfit-modal-backdrop");
+    if (outfitBackdrop) animateOverlayOut(outfitBackdrop);
+    const feedBackdrop = root.querySelector("#feed-backdrop");
+    if (feedBackdrop) animateOverlayOut(feedBackdrop);
+    setActive(TAB_ORDER.indexOf("outfits"));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const brandHome = root.querySelector("#brand-home");
+  if (brandHome) brandHome.addEventListener("click", goHome);
+  const brandHomeText = root.querySelector("#brand-home-text");
+  if (brandHomeText) brandHomeText.addEventListener("click", goHome);
+  const brandHome2 = root.querySelector("#brand-home-2");
+  if (brandHome2) brandHome2.addEventListener("click", goHome);
+
+  const collabScroll = root.querySelector("#collab-scroll");
+  const dots = root.querySelectorAll("#collab-dots .dot");
+  if (collabScroll && dots.length) {
+    let currentIndex = 0;
+    let autoplayTimer = null;
+    let resumeTimer = null;
+
+    const cardStep = () => collabScroll.firstElementChild.getBoundingClientRect().width + 14;
+
+    const goTo = (idx) => {
+      currentIndex = (idx + collabs.length) % collabs.length;
+      collabScroll.scrollTo({ left: currentIndex * cardStep(), behavior: "smooth" });
+      dots.forEach((d, i) => d.classList.toggle("active", i === currentIndex));
+    };
+
+    const startAutoplay = () => {
+      stopAutoplay();
+      autoplayTimer = setInterval(() => goTo(currentIndex + 1), 2000);
+    };
+    const stopAutoplay = () => { if (autoplayTimer) clearInterval(autoplayTimer); };
+
+    // 사용자가 직접 스크롤하면 점 표시 동기화 + 잠깐 자동재생 멈췄다가 재개
+    collabScroll.addEventListener("scroll", () => {
+      const idx = Math.round(collabScroll.scrollLeft / cardStep());
+      currentIndex = idx;
+      dots.forEach((d, i) => d.classList.toggle("active", i === idx));
+    });
+    ["touchstart", "mousedown"].forEach((evt) => {
+      collabScroll.addEventListener(evt, () => {
+        stopAutoplay();
+        clearTimeout(resumeTimer);
+        resumeTimer = setTimeout(startAutoplay, 3500);
+      });
+    });
+
+    startAutoplay();
+  }
+
+}
+
+const ROOT_EL = document.getElementById("app-root");
+renderPublicSite(ROOT_EL);
+</script>
+</body>
+</html>

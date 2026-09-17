@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MD STUDIO 관리자</title>
+</head>
+<body>
+<div id="app-root"></div>
+
+<style>
+/* ================= 관리자 전용 스타일 ================= */
+
+  #app-root {
+    --bg: #faf8f4;
+    --fg: #191817;
+    --fg-muted: #85807a;
+    --line: #e8e4dc;
+    --accent: #ff5a2e;
+    --tag-bg: #f4f1ea;
+    --danger: #d64545;
+
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  #app-root * { box-sizing: border-box; }
+
+  /* ---------- Login ---------- */
+  #app-root .login-wrap {
+    max-width: 360px;
+    margin: 80px auto;
+    padding: 0 20px;
+  }
+  #app-root .login-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 32px 28px;
+  }
+  #app-root .login-card h1 {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 0 4px;
+  }
+  #app-root .login-card .sub {
+    font-size: 13px;
+    color: var(--fg-muted);
+    margin: 0 0 24px;
+  }
+  #app-root .field { margin-bottom: 14px; }
+  #app-root .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--fg-muted);
+    margin-bottom: 6px;
+  }
+  #app-root .field input,
+  #app-root .field textarea,
+  #app-root .field select {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--fg);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+  }
+  #app-root .field textarea { resize: vertical; min-height: 64px; }
+  #app-root .err { color: var(--danger); font-size: 13px; margin: 0 0 12px; }
+  #app-root .btn {
+    background: var(--fg);
+    color: #fff;
+    border: none;
+    padding: 11px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  #app-root .btn.block { width: 100%; }
+  #app-root .btn.accent { background: var(--accent); }
+  #app-root .btn.danger { background: none; color: var(--danger); font-weight: 700; padding: 6px 10px; }
+  #app-root .btn.ghost { background: none; border: 1px solid var(--line); color: var(--fg); }
+
+  /* ---------- Admin shell ---------- */
+  #app-root .shell { display: flex; min-height: 100vh; }
+  #app-root .side {
+    width: 190px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid var(--line);
+    padding: 20px 12px;
+  }
+  #app-root .side .brand {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 0 10px 18px;
+  }
+  #app-root .side button.nav-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 10px 10px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--fg-muted);
+    cursor: pointer;
+    margin-bottom: 2px;
+  }
+  #app-root .side button.nav-item.active { background: var(--tag-bg); color: var(--fg); }
+  #app-root .side .logout {
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  #app-root .main { flex: 1; min-width: 0; padding: 28px 34px 60px; max-width: 780px; }
+  #app-root .page-title { font-size: 20px; font-weight: 800; margin: 0 0 4px; }
+  #app-root .page-sub { font-size: 13px; color: var(--fg-muted); margin: 0 0 24px; }
+
+  #app-root .panel {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+  #app-root .panel h2 { font-size: 15px; font-weight: 800; margin: 0 0 16px; }
+  #app-root .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  #app-root .row-flex { display: flex; gap: 10px; align-items: flex-end; }
+  #app-root .row-flex .field { flex: 1; margin-bottom: 0; }
+
+  /* item list rows */
+  #app-root .item-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    background: #fff;
+  }
+  #app-root .item-row:last-child { border-bottom: none; }
+  #app-root .item-row.drag-row { cursor: grab; }
+  #app-root .item-row.drag-row.dragging { opacity: 0.35; }
+  #app-root .drag-handle { color: var(--fg-muted); font-size: 15px; flex-shrink: 0; cursor: grab; user-select: none; }
+  #app-root .item-row img.thumb,
+  #app-root .item-row .thumb-ph {
+    width: 46px;
+    height: 58px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: var(--tag-bg);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: var(--fg-muted);
+  }
+  #app-root .item-row .info { flex: 1; min-width: 0; }
+  #app-root .item-row .info .t1 { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #app-root .item-row .info .t2 { font-size: 11.5px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #app-root .tag-chip {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--tag-bg);
+    color: var(--fg-muted);
+    margin-right: 6px;
+  }
+
+  #app-root .subgroup-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 18px 0 8px;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  #app-root .subgroup-title:first-child { margin-top: 0; }
+  #app-root .empty-note { font-size: 12.5px; color: var(--fg-muted); padding: 6px 0 4px; }
+
+  #app-root .cat-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  #app-root .cat-row select { flex: 0 0 96px; }
+  #app-root .cat-row input { flex: 1; }
+  #app-root .cat-row .rm { background: none; border: none; color: var(--danger); font-size: 16px; cursor: pointer; padding: 0 4px; }
+
+  #app-root .save-msg { font-size: 12.5px; color: var(--accent); font-weight: 700; margin-left: 10px; }
+  #app-root .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--fg);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 100;
+  }
+  #app-root .toast.show { opacity: 1; }
+  #app-root .loading { padding: 60px; text-align: center; color: var(--fg-muted); }
+
+
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ============================================================
+// Supabase 연결 설정
+// ============================================================
+const SUPABASE_URL = "https://cbuydjkvvzbluyohdkie.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function loadSiteDataFromSupabase() {
+  const { data, error } = await supabaseClient
+    .from("site_data")
+    .select("value")
+    .eq("id", "main")
+    .maybeSingle();
+  if (error || !data) return null;
+  return data.value;
+}
+
+async function saveSiteDataToSupabase(value) {
+  const { error } = await supabaseClient
+    .from("site_data")
+    .upsert({ id: "main", value: value });
+  return !error;
+}
+function renderAdminApp(root) {
+  // ============================================================
+  // 어드민 로그인 정보 — 배포 전 꼭 바꿔주세요
+  // ============================================================
+  const ADMIN_ID = "admin";
+  const ADMIN_PW = "changeme123";
+
+  const CAT_ORDER = ["OUTER", "TOP", "BOTTOM", "BAG", "SHOES", "ACC", "ETC"];
+
+  const DEFAULT_DATA = {
+    site: {
+      brand: "MD STUDIO",
+      name: "광만두",
+      instagram: "your_instagram",
+      bio: "매일 코디와 아이템을 공유합니다. 카드를 누르면 구매 페이지로 이동해요.",
+      footer: "MD STUDIO x k__man_do",
+      avatar: "",
+    },
+    lineup: [],
+    outfitGroups: ["거울샷", "일상 컷"],
+    outfits: [],
+    picks: [
+      { id: "g1", title: "지금 가장 잘나가는 추천템", sub: "요즘 문의 제일 많이 받는 아이템만 모았어요", items: [] },
+      { id: "g2", title: "입문자를 위한 가성비 필수템", sub: "패션 처음이면 이것부터 사면 됩니다", items: [] },
+      { id: "g3", title: "이번 주 신상 체크", sub: "새로 올라온 것 중에 눈여겨볼 것들", items: [] },
+    ],
+    categories: [
+      { id: "c1", title: "아우터", sub: "요즘 많이 찾는 아우터 모음", items: [] },
+      { id: "c2", title: "하의", sub: "핏 하나로 승부 보는 하의들", items: [] },
+      { id: "c3", title: "신발", sub: "발밑까지 신경 쓴 신발 모음", items: [] },
+    ],
+    reels: [],
+  };
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function loadData() {
+    try {
+      const parsed = await loadSiteDataFromSupabase();
+      if (!parsed) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+      return Object.assign(JSON.parse(JSON.stringify(DEFAULT_DATA)), parsed);
+    } catch (e) {
+      return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+  }
+
+  async function saveData(data) {
+    const ok = await saveSiteDataToSupabase(data);
+    if (!ok) toast("저장에 실패했어요. 인터넷 연결을 확인해주세요.");
+  }
+
+  let DATA = null;
+  let currentPage = "site";
+  let loggedIn = false;
+
+  function toast(msg) {
+    let el = root.querySelector(".toast");
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "toast";
+      root.appendChild(el);
+    }
+    el.textContent = msg;
+    el.classList.add("show");
+    setTimeout(() => el.classList.remove("show"), 1600);
+  }
+
+  // confirm()은 이 미리보기 환경에서 막혀있어서, 두 번 눌러 확인하는 방식으로 대체
+  function armDelete(btn, onConfirm) {
+    if (btn.dataset.armed === "1") {
+      onConfirm();
+      return;
+    }
+    btn.dataset.armed = "1";
+    const original = btn.textContent;
+    btn.textContent = "정말 삭제?";
+    btn.dataset.origText = original;
+    setTimeout(() => {
+      if (btn.dataset.armed === "1" && btn.isConnected) {
+        btn.dataset.armed = "0";
+        btn.textContent = btn.dataset.origText;
+      }
+    }, 3000);
+  }
+
+  // 드래그로 순서 바꾸기 — container 안의 .drag-row 요소들을 대상으로 함
+  function makeSortable(container, onReorder) {
+    let dragEl = null;
+    function getAfterElement(y) {
+      const els = [...container.querySelectorAll(":scope > .drag-row:not(.dragging)")];
+      return els.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) return { offset, element: child };
+        return closest;
+      }, { offset: -Infinity, element: null }).element;
+    }
+    container.querySelectorAll(":scope > .drag-row").forEach((row) => {
+      row.setAttribute("draggable", "true");
+      row.addEventListener("dragstart", () => {
+        dragEl = row;
+        setTimeout(() => row.classList.add("dragging"), 0);
+      });
+      row.addEventListener("dragend", () => {
+        row.classList.remove("dragging");
+        dragEl = null;
+        onReorder([...container.querySelectorAll(":scope > .drag-row")].map((r) => r.dataset.id));
+      });
+    });
+    container.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!dragEl) return;
+      const afterEl = getAfterElement(e.clientY);
+      if (afterEl == null) container.appendChild(dragEl);
+      else container.insertBefore(dragEl, afterEl);
+    });
+  }
+
+  // ============================================================
+  // 로그인 화면
+  // ============================================================
+  function renderLogin() {
+    root.innerHTML = `
+      <div class="login-wrap">
+        <div class="login-card">
+          <h1>MD STUDIO 관리자</h1>
+          <p class="sub">로그인 후 콘텐츠를 관리할 수 있어요.</p>
+          <p class="err" id="login-err" style="display:none;"></p>
+          <div class="field">
+            <label>아이디</label>
+            <input id="login-id" autofocus />
+          </div>
+          <div class="field">
+            <label>비밀번호</label>
+            <input id="login-pw" type="password" />
+          </div>
+          <button class="btn accent block" type="button" id="login-btn">로그인</button>
+        </div>
+      </div>
+    `;
+    const doLogin = () => {
+      const id = root.querySelector("#login-id").value;
+      const pw = root.querySelector("#login-pw").value;
+      if (id === ADMIN_ID && pw === ADMIN_PW) {
+        loggedIn = true;
+        renderShell();
+      } else {
+        const err = root.querySelector("#login-err");
+        err.textContent = "아이디 또는 비밀번호가 올바르지 않아요.";
+        err.style.display = "block";
+      }
+    };
+    root.querySelector("#login-btn").addEventListener("click", doLogin);
+    root.querySelector("#login-pw").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doLogin();
+    });
+  }
+
+  // ============================================================
+  // 전체 셸 (사이드바 + 본문)
+  // ============================================================
+  const NAV = [
+    { key: "site", label: "사이트 설정" },
+    { key: "lineup", label: "라인업" },
+    { key: "outfits", label: "실착 (LOOK)" },
+    { key: "picks", label: "추천템" },
+    { key: "categories", label: "카테고리 꿀템 모음" },
+    { key: "reels", label: "꿀팁 릴스" },
+  ];
+
+  function renderShell() {
+    root.innerHTML = `
+      <div class="shell">
+        <div class="side">
+          <div class="brand">MD STUDIO</div>
+          ${NAV.map((n) => `<button class="nav-item" data-page="${n.key}">${n.label}</button>`).join("")}
+          <div class="logout">
+            <a href="/" style="display:block;text-align:center;font-size:12.5px;color:var(--fg-muted);margin-bottom:8px;">← 사이트 보기</a>
+            <button class="btn ghost" id="logout-btn" style="width:100%;">로그아웃</button>
+          </div>
+        </div>
+        <div class="main" id="main-panel"><div class="loading">불러오는 중…</div></div>
+      </div>
+    `;
+    root.querySelectorAll(".nav-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentPage = btn.dataset.page;
+        updateNavActive();
+        renderPage();
+      });
+    });
+    root.querySelector("#logout-btn").addEventListener("click", () => {
+      loggedIn = false;
+      renderLogin();
+    });
+    updateNavActive();
+    bootstrap();
+  }
+
+  function updateNavActive() {
+    root.querySelectorAll(".nav-item").forEach((b) => b.classList.toggle("active", b.dataset.page === currentPage));
+  }
+
+  async function bootstrap() {
+    DATA = await loadData();
+    renderPage();
+  }
+
+  function renderPage() {
+    const main = root.querySelector("#main-panel");
+    if (!main) return;
+    if (currentPage === "site") return renderSitePage(main);
+    if (currentPage === "lineup") return renderLineupPage(main);
+    if (currentPage === "outfits") return renderOutfitsPage(main);
+    if (currentPage === "picks") return renderGroupedPage(main, "picks", "추천템", "카테고리(그룹)별로 아이템을 등록해요. 브랜드/제품명/코멘트/링크만 입력하면 돼요.");
+    if (currentPage === "categories") return renderGroupedPage(main, "categories", "카테고리 꿀템 모음", "아우터/하의/신발처럼 카테고리별로 아이템을 등록해요.");
+    if (currentPage === "reels") return renderReelsPage(main);
+  }
+
+  // ============================================================
+  // 1. 사이트 설정
+  // ============================================================
+  function renderSitePage(main) {
+    const s = DATA.site;
+    main.innerHTML = `
+      <p class="page-title">사이트 설정</p>
+      <p class="page-sub">상단 브랜드명, 프로필, 소개글 등 사이트 전체에 쓰이는 정보예요.</p>
+      <div class="panel">
+        <h2>기본 정보</h2>
+        <div class="field">
+          <label>프로필 사진</label>
+          <input type="file" id="site-avatar-file" accept="image/*" />
+          <div style="margin-top:10px;">${s.avatar ? `<img src="${s.avatar}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;">` : `<span class="empty-note">아직 업로드된 사진이 없어요</span>`}</div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>상단 브랜드명 (영문)</label>
+            <input id="site-brand" value="${s.brand}" />
+          </div>
+          <div class="field">
+            <label>프로필 이름</label>
+            <input id="site-name" value="${s.name}" />
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>인스타그램 아이디 (@ 없이)</label>
+            <input id="site-ig" value="${s.instagram}" />
+          </div>
+          <div class="field">
+            <label>하단 시그니처 문구</label>
+            <input id="site-footer" value="${s.footer}" />
+          </div>
+        </div>
+        <div class="field">
+          <label>소개글</label>
+          <textarea id="site-bio">${s.bio}</textarea>
+        </div>
+        <button class="btn accent" id="site-save">저장하기</button>
+        <span class="save-msg" id="site-save-msg" style="display:none;">저장됐어요</span>
+      </div>
+    `;
+    main.querySelector("#site-avatar-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      s.avatar = await fileToDataUrl(file);
+      await saveData(DATA);
+      renderSitePage(main);
+      toast("사진이 반영됐어요");
+    });
+    main.querySelector("#site-save").addEventListener("click", async () => {
+      s.brand = main.querySelector("#site-brand").value.trim();
+      s.name = main.querySelector("#site-name").value.trim();
+      s.instagram = main.querySelector("#site-ig").value.trim().replace("@", "");
+      s.footer = main.querySelector("#site-footer").value.trim();
+      s.bio = main.querySelector("#site-bio").value.trim();
+      await saveData(DATA);
+      const msg = main.querySelector("#site-save-msg");
+      msg.style.display = "inline";
+      toast("사이트 설정이 저장됐어요");
+    });
+  }
+
+  // ============================================================
+  // 2. 라인업
+  // ============================================================
+  const STICKER_OPTIONS = [
+    { value: "NEW DROP", pop: "#ff5a2e" },
+    { value: "COLLAB", pop: "#c6ff3d" },
+    { value: "LIMITED", pop: "#2ee6d6" },
+    { value: "SOLD OUT", pop: "#ff3d9a" },
+  ];
+
+  function renderLineupPage(main, editingId) {
+    const editing = editingId ? DATA.lineup.find((x) => x.id === editingId) : null;
+    main.innerHTML = `
+      <p class="page-title">라인업</p>
+      <p class="page-sub">홈 상단 캐러셀에 들어가는 카드예요. 사진 + 링크만 있으면 클릭 시 바로 이동해요.</p>
+      <div class="panel">
+        <h2>${editing ? "카드 수정" : "새 카드 등록"}</h2>
+        <div class="field">
+          <label>대표 이미지 링크 (무신사 상품 페이지 링크 — 자동으로 사진을 가져와볼게요)</label>
+          <div class="row-flex">
+            <input id="lu-source-link" placeholder="https://www.musinsa.com/products/..." />
+            <button class="btn ghost" id="lu-fetch" type="button">가져오기</button>
+          </div>
+          <p class="empty-note" id="lu-fetch-status"></p>
+        </div>
+        <div class="field">
+          <label>사진 (자동으로 안 가져와지면 여기서 직접 업로드해주세요)</label>
+          <input type="file" id="lu-file" accept="image/*" />
+          <div id="lu-preview" style="margin-top:8px;">${editing && editing.photo ? `<img src="${editing.photo}" style="width:64px;height:80px;object-fit:cover;border-radius:6px;">` : ""}</div>
+        </div>
+        <div class="field">
+          <label>상단 문구 (예: 웬즈데이 × MD STUDIO)</label>
+          <input id="lu-eyebrow" value="${editing ? editing.eyebrow : ""}" />
+        </div>
+        <div class="field">
+          <label>헤드라인 (줄바꿈하려면 두 줄로 나눠 입력)</label>
+          <input id="lu-headline1" placeholder="첫 줄" style="margin-bottom:6px;" value="${editing ? editing.headline.split("\n")[0] : ""}" />
+          <input id="lu-headline2" placeholder="둘째 줄 (선택)" value="${editing && editing.headline.split("\n")[1] ? editing.headline.split("\n")[1] : ""}" />
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>스티커 태그</label>
+            <select id="lu-sticker">
+              ${STICKER_OPTIONS.map((o) => `<option value="${o.value}" ${editing && editing.sticker === o.value ? "selected" : ""}>${o.value}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label>실제 클릭 시 이동할 링크 (무신사 큐레이터 링크)</label>
+            <input id="lu-link" placeholder="https://..." value="${editing ? editing.link : ""}" />
+          </div>
+        </div>
+        <button class="btn accent" id="lu-add">${editing ? "수정 저장" : "등록하기"}</button>
+        ${editing ? `<button class="btn ghost" id="lu-cancel" style="margin-left:8px;">취소</button>` : ""}
+      </div>
+      <div class="panel">
+        <h2>등록된 카드 (${DATA.lineup.length})</h2>
+        <div id="lu-list">${DATA.lineup.length === 0 ? '<p class="empty-note">아직 없어요.</p>' : DATA.lineup.map(rowLineup).join("")}</div>
+      </div>
+    `;
+
+    let fetchedPhoto = editing ? editing.photo || "" : "";
+
+    function rowLineup(item) {
+      const stickerColor = (STICKER_OPTIONS.find((o) => o.value === item.sticker) || {}).pop || "#999";
+      return `
+        <div class="item-row drag-row" data-id="${item.id}">
+          <span class="drag-handle">⋮⋮</span>
+          ${item.photo ? `<img class="thumb" src="${item.photo}">` : `<div class="thumb-ph">사진</div>`}
+          <div class="info">
+            <p class="t1"><span class="tag-chip" style="background:${stickerColor}22;color:${stickerColor}">${item.sticker}</span>${item.eyebrow}</p>
+            <p class="t2">${item.headline.replace("\\n", " / ")}</p>
+          </div>
+          <button class="btn ghost" data-edit="${item.id}">수정</button>
+          <button class="btn danger" data-del="${item.id}">삭제</button>
+        </div>
+      `;
+    }
+
+    main.querySelector("#lu-fetch").addEventListener("click", async () => {
+      const url = main.querySelector("#lu-source-link").value.trim();
+      const status = main.querySelector("#lu-fetch-status");
+      if (!url) { toast("링크를 먼저 입력해주세요"); return; }
+      status.textContent = "가져오는 중…";
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const match = text.match(/property=["']og:image["']\s+content=["']([^"']+)["']/i);
+        if (match && match[1]) {
+          fetchedPhoto = match[1];
+          main.querySelector("#lu-preview").innerHTML = `<img src="${fetchedPhoto}" style="width:64px;height:80px;object-fit:cover;border-radius:6px;">`;
+          status.textContent = "사진을 가져왔어요. 마음에 안 들면 아래에서 직접 업로드로 바꿀 수 있어요.";
+        } else {
+          throw new Error("no image found");
+        }
+      } catch (e) {
+        status.textContent = "자동으로 못 가져왔어요 (무신사가 막아둔 경우가 많아요) — 아래에서 사진을 직접 업로드해주세요.";
+      }
+    });
+
+    main.querySelector("#lu-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      fetchedPhoto = await fileToDataUrl(file);
+      main.querySelector("#lu-preview").innerHTML = `<img src="${fetchedPhoto}" style="width:64px;height:80px;object-fit:cover;border-radius:6px;">`;
+    });
+
+    main.querySelector("#lu-add").addEventListener("click", async () => {
+      const eyebrow = main.querySelector("#lu-eyebrow").value.trim();
+      const h1 = main.querySelector("#lu-headline1").value.trim();
+      const h2 = main.querySelector("#lu-headline2").value.trim();
+      const sticker = main.querySelector("#lu-sticker").value;
+      const link = main.querySelector("#lu-link").value.trim();
+      if (!eyebrow || !h1 || !link) { toast("상단 문구, 헤드라인, 연결 링크는 필수예요"); return; }
+      if (editing) {
+        editing.photo = fetchedPhoto;
+        editing.eyebrow = eyebrow;
+        editing.headline = h2 ? `${h1}\n${h2}` : h1;
+        editing.sticker = sticker;
+        editing.link = link;
+      } else {
+        DATA.lineup.unshift({
+          id: uid(), photo: fetchedPhoto, eyebrow, headline: h2 ? `${h1}\n${h2}` : h1, sticker, link,
+        });
+      }
+      await saveData(DATA);
+      renderLineupPage(main);
+      toast(editing ? "수정됐어요" : "라인업 카드가 등록됐어요");
+    });
+
+    if (editing) {
+      main.querySelector("#lu-cancel").addEventListener("click", () => renderLineupPage(main));
+    }
+
+    main.querySelectorAll("[data-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => renderLineupPage(main, btn.dataset.edit));
+    });
+
+    main.querySelectorAll("[data-del]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        armDelete(btn, async () => {
+          DATA.lineup = DATA.lineup.filter((x) => x.id !== btn.dataset.del);
+          await saveData(DATA);
+          renderLineupPage(main);
+          toast("삭제했어요");
+        });
+      });
+    });
+
+    const luList = main.querySelector("#lu-list");
+    if (luList) {
+      makeSortable(luList, async (orderIds) => {
+        DATA.lineup = orderIds.map((id) => DATA.lineup.find((x) => x.id === id)).filter(Boolean);
+        await saveData(DATA);
+        toast("순서가 저장됐어요");
+      });
+    }
+  }
+
+  // ============================================================
+  // 3. 실착 (LOOK)
+  // ============================================================
+  function renderOutfitsPage(main, editingId) {
+    const editing = editingId ? DATA.outfits.find((x) => x.id === editingId) : null;
+    main.innerHTML = `
+      <p class="page-title">실착 (LOOK)</p>
+      <p class="page-sub">코디 사진을 올리고, 입은 아이템을 카테고리별로 연결해요.</p>
+      <div class="panel">
+        <h2>${editing ? "코디 수정" : "새 코디 등록"}</h2>
+        <div class="grid2">
+          <div class="field">
+            <label>사진</label>
+            <input type="file" id="of-file" accept="image/*" />
+            <div style="margin-top:8px;">${editing && editing.photo ? `<img src="${editing.photo}" style="width:48px;height:60px;object-fit:cover;border-radius:6px;">` : ""}</div>
+          </div>
+          <div class="field">
+            <label>분류</label>
+            <select id="of-group">
+              ${DATA.outfitGroups.map((g) => `<option value="${g}" ${editing && editing.group === g ? "selected" : ""}>${g}</option>`).join("")}
+            </select>
+            <div class="row-flex" style="margin-top:8px;">
+              <input id="of-new-group" placeholder="새 분류 이름 (예: 여행룩)" />
+              <button class="btn ghost" id="of-new-group-add" type="button">분류 추가</button>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>아이템 (카테고리 · 사이즈 · 제품명 · 링크)</label>
+          <div id="of-cat-rows"></div>
+          <button class="btn ghost" id="of-cat-add" type="button" style="margin-top:4px;">+ 아이템 추가</button>
+        </div>
+        <button class="btn accent" id="of-save" style="margin-top:14px;">${editing ? "수정 저장" : "등록하기"}</button>
+        ${editing ? `<button class="btn ghost" id="of-cancel" style="margin-top:14px;margin-left:8px;">취소</button>` : ""}
+      </div>
+      <div class="panel">
+        <h2>등록된 코디 (${DATA.outfits.length})</h2>
+        <div id="of-list">${DATA.outfits.length === 0 ? '<p class="empty-note">아직 없어요.</p>' : DATA.outfits.map(rowOutfit).join("")}</div>
+      </div>
+    `;
+
+    function rowOutfit(o) {
+      const catCount = Object.values(o.items || {}).reduce((a, arr) => a + arr.length, 0);
+      return `
+        <div class="item-row drag-row" data-id="${o.id}">
+          <span class="drag-handle">⋮⋮</span>
+          ${o.photo ? `<img class="thumb" src="${o.photo}">` : `<div class="thumb-ph">사진</div>`}
+          <div class="info">
+            <p class="t1">${o.group}</p>
+            <p class="t2">아이템 ${catCount}개</p>
+          </div>
+          <button class="btn ghost" data-edit="${o.id}">수정</button>
+          <button class="btn danger" data-del="${o.id}">삭제</button>
+        </div>
+      `;
+    }
+
+    function addCatRow(cat, name, link, size) {
+      const wrap = main.querySelector("#of-cat-rows");
+      const block = document.createElement("div");
+      block.className = "cat-block";
+      block.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;";
+      block.innerHTML = `
+        <div class="grid2">
+          <div class="field" style="margin-bottom:8px;">
+            <label>카테고리</label>
+            <select class="cat-select">${CAT_ORDER.map((c) => `<option value="${c}" ${c === cat ? "selected" : ""}>${c}</option>`).join("")}</select>
+          </div>
+          <div class="field" style="margin-bottom:8px;">
+            <label>사이즈</label>
+            <input class="cat-size" placeholder="예: M, 270, 30" value="${size || ""}" />
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:8px;">
+          <label>제품명</label>
+          <input class="cat-name" placeholder="제품명" value="${name || ""}" />
+        </div>
+        <div class="field" style="margin-bottom:8px;">
+          <label>실제 클릭 시 이동할 링크</label>
+          <input class="cat-link" placeholder="https://..." value="${link || ""}" />
+        </div>
+        <button type="button" class="btn danger rm-block">이 아이템 삭제</button>
+      `;
+
+      block.querySelector(".rm-block").addEventListener("click", () => block.remove());
+
+      wrap.appendChild(block);
+    }
+    if (editing) {
+      CAT_ORDER.filter((cat) => editing.items[cat]).forEach((cat) => {
+        editing.items[cat].forEach(([name, link, size]) => addCatRow(cat, name, link, size));
+      });
+      if (Object.keys(editing.items).length === 0) addCatRow();
+    } else {
+      addCatRow();
+    }
+    main.querySelector("#of-cat-add").addEventListener("click", () => addCatRow());
+
+    main.querySelector("#of-new-group-add").addEventListener("click", async () => {
+      const nameInput = main.querySelector("#of-new-group");
+      const name = nameInput.value.trim();
+      if (!name) { toast("분류 이름을 입력해주세요"); return; }
+      if (DATA.outfitGroups.includes(name)) { toast("이미 있는 분류예요"); return; }
+      DATA.outfitGroups.push(name);
+      await saveData(DATA);
+      renderOutfitsPage(main, editingId);
+      toast(`"${name}" 분류가 추가됐어요`);
+    });
+
+    main.querySelector("#of-save").addEventListener("click", async () => {
+      const fileInput = main.querySelector("#of-file");
+      const group = main.querySelector("#of-group").value;
+      if (!editing && !fileInput.files[0]) { toast("사진을 업로드해주세요"); return; }
+      let photo = editing ? editing.photo || "" : "";
+      if (fileInput.files[0]) photo = await fileToDataUrl(fileInput.files[0]);
+      const items = {};
+      main.querySelectorAll("#of-cat-rows .cat-block").forEach((block) => {
+        const cat = block.querySelector(".cat-select").value;
+        const name = block.querySelector(".cat-name").value.trim();
+        const link = block.querySelector(".cat-link").value.trim();
+        const size = block.querySelector(".cat-size").value.trim();
+        if (!name || !link) return;
+        if (!items[cat]) items[cat] = [];
+        items[cat].push([name, link, size]);
+      });
+      if (editing) {
+        editing.photo = photo;
+        editing.group = group;
+        editing.items = items;
+      } else {
+        DATA.outfits.unshift({ id: uid(), photo, group, items });
+      }
+      await saveData(DATA);
+      renderOutfitsPage(main);
+      toast(editing ? "수정됐어요" : "코디가 등록됐어요");
+    });
+
+    if (editing) {
+      main.querySelector("#of-cancel").addEventListener("click", () => renderOutfitsPage(main));
+    }
+
+    main.querySelectorAll("[data-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => renderOutfitsPage(main, btn.dataset.edit));
+    });
+
+    main.querySelectorAll("[data-del]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        armDelete(btn, async () => {
+          DATA.outfits = DATA.outfits.filter((x) => x.id !== btn.dataset.del);
+          await saveData(DATA);
+          renderOutfitsPage(main);
+          toast("삭제했어요");
+        });
+      });
+    });
+
+    const ofList = main.querySelector("#of-list");
+    if (ofList) {
+      makeSortable(ofList, async (orderIds) => {
+        DATA.outfits = orderIds.map((id) => DATA.outfits.find((x) => x.id === id)).filter(Boolean);
+        await saveData(DATA);
+        toast("순서가 저장됐어요");
+      });
+    }
+  }
+
+  // ============================================================
+  // 4/5. 추천템 & 카테고리 꿀템 모음 (같은 구조라 함수 공유)
+  // ============================================================
+  function renderGroupedPage(main, dataKey, title, sub, editing) {
+    const groups = DATA[dataKey];
+    const editItem = editing ? groups[editing.gi].items.find((x) => x.id === editing.id) : null;
+    main.innerHTML = `
+      <p class="page-title">${title}</p>
+      <p class="page-sub">${sub}</p>
+      ${groups.map((g, gi) => `
+        <div class="panel">
+          <div class="subgroup-title">
+            <input class="group-title-input" data-gi="${gi}" value="${g.title}" title="클릭해서 제목 수정" style="font-size:14px;font-weight:800;border:1px dashed var(--line);background:var(--tag-bg);border-radius:6px;padding:4px 8px;width:50%;">
+            <span style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:12px;color:var(--fg-muted);">${g.items.length}개 등록됨</span>
+              <button class="btn danger" data-del-group="${gi}" type="button" style="padding:2px 8px;">그룹 삭제</button>
+            </span>
+          </div>
+          <input class="group-sub-input" data-gi="${gi}" value="${g.sub}" placeholder="그룹 소개 (선택)" title="클릭해서 부제목 수정" style="width:100%;border:1px dashed var(--line);background:var(--tag-bg);border-radius:6px;font-size:12.5px;color:var(--fg-muted);padding:4px 8px;margin-top:6px;">
+          <p class="empty-note" style="margin:4px 0 0;">✏️ 제목·부제목을 클릭해서 바로 수정할 수 있어요 (입력 후 다른 곳을 누르면 저장돼요)</p>
+          <div id="${dataKey}-list-${gi}" style="margin-top:10px;">
+            ${g.items.length === 0 ? '<p class="empty-note">아직 등록된 아이템이 없어요.</p>' : g.items.map((it) => rowItem(it, gi)).join("")}
+          </div>
+          <hr style="border:none;border-top:1px solid var(--line);margin:14px 0;">
+          <h2 style="font-size:13px;">${editing && editing.gi === gi ? "아이템 수정" : "아이템 추가"}</h2>
+          <div class="grid2">
+            <div class="field">
+              <label>사진</label>
+              <input type="file" class="add-file" data-gi="${gi}" accept="image/*">
+              <div style="margin-top:6px;">${editing && editing.gi === gi && editItem.photo ? `<img src="${editItem.photo}" style="width:44px;height:56px;object-fit:cover;border-radius:6px;">` : ""}</div>
+            </div>
+            <div class="field"><label>브랜드</label><input class="add-brand" data-gi="${gi}" value="${editing && editing.gi === gi ? editItem.brand : ""}"></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label>제품명</label><input class="add-name" data-gi="${gi}" value="${editing && editing.gi === gi ? editItem.name : ""}"></div>
+            <div class="field"><label>링크</label><input class="add-link" data-gi="${gi}" placeholder="https://..." value="${editing && editing.gi === gi ? editItem.link : ""}"></div>
+          </div>
+          <div class="field"><label>코멘트</label><input class="add-comment" data-gi="${gi}" placeholder="예: 신상인데 가장 매력적인" value="${editing && editing.gi === gi ? (editItem.comment || "") : ""}"></div>
+          <button class="btn accent add-item-btn" data-gi="${gi}">${editing && editing.gi === gi ? "수정 저장" : "아이템 추가"}</button>
+          ${editing && editing.gi === gi ? `<button class="btn ghost cancel-edit-btn" type="button" style="margin-left:8px;">취소</button>` : ""}
+        </div>
+      `).join("")}
+      <button class="btn ghost" id="add-group-btn" type="button" style="width:100%;">+ 새 그룹 추가</button>
+    `;
+
+    function rowItem(it, gi) {
+      return `
+        <div class="item-row drag-row" data-id="${it.id}" data-gi="${gi}">
+          <span class="drag-handle">⋮⋮</span>
+          ${it.photo ? `<img class="thumb" src="${it.photo}">` : `<div class="thumb-ph">사진</div>`}
+          <div class="info">
+            <p class="t1">${it.brand} · ${it.name}</p>
+            <p class="t2">${it.comment || ""}</p>
+          </div>
+          <button class="btn ghost" data-edit-gi="${gi}" data-edit-id="${it.id}">수정</button>
+          <button class="btn danger" data-del-gi="${gi}" data-del-id="${it.id}">삭제</button>
+        </div>
+      `;
+    }
+
+    main.querySelectorAll(".group-title-input").forEach((input) => {
+      input.addEventListener("change", async () => {
+        groups[Number(input.dataset.gi)].title = input.value.trim();
+        await saveData(DATA);
+        toast("그룹 이름이 저장됐어요");
+      });
+    });
+    main.querySelectorAll(".group-sub-input").forEach((input) => {
+      input.addEventListener("change", async () => {
+        groups[Number(input.dataset.gi)].sub = input.value.trim();
+        await saveData(DATA);
+        toast("저장됐어요");
+      });
+    });
+
+    main.querySelector("#add-group-btn").addEventListener("click", async () => {
+      groups.push({ id: uid(), title: "새 그룹", sub: "", items: [] });
+      await saveData(DATA);
+      renderGroupedPage(main, dataKey, title, sub);
+      toast("그룹이 추가됐어요");
+    });
+
+    main.querySelectorAll("[data-del-group]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (groups.length <= 1) { toast("최소 1개의 그룹은 있어야 해요"); return; }
+        armDelete(btn, async () => {
+          groups.splice(Number(btn.dataset.delGroup), 1);
+          await saveData(DATA);
+          renderGroupedPage(main, dataKey, title, sub);
+          toast("그룹을 삭제했어요");
+        });
+      });
+    });
+
+    main.querySelectorAll(".cancel-edit-btn").forEach((btn) => {
+      btn.addEventListener("click", () => renderGroupedPage(main, dataKey, title, sub));
+    });
+
+    main.querySelectorAll("[data-edit-id]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        renderGroupedPage(main, dataKey, title, sub, { gi: Number(btn.dataset.editGi), id: btn.dataset.editId });
+      });
+    });
+
+    main.querySelectorAll(".add-item-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const gi = Number(btn.dataset.gi);
+        const fileInput = main.querySelector(`.add-file[data-gi="${gi}"]`);
+        const brand = main.querySelector(`.add-brand[data-gi="${gi}"]`).value.trim();
+        const name = main.querySelector(`.add-name[data-gi="${gi}"]`).value.trim();
+        const link = main.querySelector(`.add-link[data-gi="${gi}"]`).value.trim();
+        const comment = main.querySelector(`.add-comment[data-gi="${gi}"]`).value.trim();
+        if (!brand || !name || !link) { toast("브랜드, 제품명, 링크는 필수예요"); return; }
+        const isEditingThis = editing && editing.gi === gi;
+        let photo = isEditingThis ? editItem.photo || "" : "";
+        if (fileInput.files[0]) photo = await fileToDataUrl(fileInput.files[0]);
+        if (isEditingThis) {
+          editItem.photo = photo;
+          editItem.brand = brand;
+          editItem.name = name;
+          editItem.link = link;
+          editItem.comment = comment;
+        } else {
+          groups[gi].items.push({ id: uid(), photo, brand, name, link, comment });
+        }
+        await saveData(DATA);
+        renderGroupedPage(main, dataKey, title, sub);
+        toast(isEditingThis ? "수정됐어요" : "아이템이 등록됐어요");
+      });
+    });
+
+    main.querySelectorAll("[data-del-id]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        armDelete(btn, async () => {
+          const gi = Number(btn.dataset.delGi);
+          groups[gi].items = groups[gi].items.filter((x) => x.id !== btn.dataset.delId);
+          await saveData(DATA);
+          renderGroupedPage(main, dataKey, title, sub);
+          toast("삭제했어요");
+        });
+      });
+    });
+
+    groups.forEach((g, gi) => {
+      const listEl = main.querySelector(`#${dataKey}-list-${gi}`);
+      if (!listEl) return;
+      makeSortable(listEl, async (orderIds) => {
+        groups[gi].items = orderIds.map((id) => g.items.find((x) => x.id === id)).filter(Boolean);
+        await saveData(DATA);
+        toast("순서가 저장됐어요");
+      });
+    });
+  }
+
+  // ============================================================
+  // 6. 꿀팁 릴스
+  // ============================================================
+  function renderReelsPage(main, editingId) {
+    const editing = editingId ? DATA.reels.find((x) => x.id === editingId) : null;
+    main.innerHTML = `
+      <p class="page-title">꿀팁 릴스</p>
+      <p class="page-sub">썸네일 + 캡션 + 인스타 링크만 넣으면 돼요.</p>
+      <div class="panel">
+        <h2>${editing ? "릴스 수정" : "새 릴스 등록"}</h2>
+        <div class="field">
+          <label>썸네일 사진</label>
+          <input type="file" id="rl-file" accept="image/*">
+          <div style="margin-top:8px;">${editing && editing.photo ? `<img src="${editing.photo}" style="width:48px;height:60px;object-fit:cover;border-radius:6px;">` : ""}</div>
+        </div>
+        <div class="field"><label>캡션</label><input id="rl-caption" placeholder="예: 패션 입문자를 위한 현시점 1순위 기본템" value="${editing ? editing.caption : ""}"></div>
+        <div class="field"><label>인스타 릴스 링크</label><input id="rl-link" placeholder="https://instagram.com/reel/..." value="${editing ? editing.link : ""}"></div>
+        <button class="btn accent" id="rl-add">${editing ? "수정 저장" : "등록하기"}</button>
+        ${editing ? `<button class="btn ghost" id="rl-cancel" style="margin-left:8px;">취소</button>` : ""}
+      </div>
+      <div class="panel">
+        <h2>등록된 릴스 (${DATA.reels.length})</h2>
+        <div id="rl-list">${DATA.reels.length === 0 ? '<p class="empty-note">아직 없어요.</p>' : DATA.reels.map(rowReel).join("")}</div>
+      </div>
+    `;
+
+    function rowReel(r) {
+      return `
+        <div class="item-row drag-row" data-id="${r.id}">
+          <span class="drag-handle">⋮⋮</span>
+          ${r.photo ? `<img class="thumb" src="${r.photo}">` : `<div class="thumb-ph">사진</div>`}
+          <div class="info"><p class="t1">${r.caption}</p></div>
+          <button class="btn ghost" data-edit="${r.id}">수정</button>
+          <button class="btn danger" data-del="${r.id}">삭제</button>
+        </div>
+      `;
+    }
+
+    main.querySelector("#rl-add").addEventListener("click", async () => {
+      const fileInput = main.querySelector("#rl-file");
+      const caption = main.querySelector("#rl-caption").value.trim();
+      const link = main.querySelector("#rl-link").value.trim();
+      if (!caption || !link) { toast("캡션과 링크는 필수예요"); return; }
+      let photo = editing ? editing.photo || "" : "";
+      if (fileInput.files[0]) photo = await fileToDataUrl(fileInput.files[0]);
+      if (editing) {
+        editing.photo = photo;
+        editing.caption = caption;
+        editing.link = link;
+      } else {
+        DATA.reels.unshift({ id: uid(), photo, caption, link });
+      }
+      await saveData(DATA);
+      renderReelsPage(main);
+      toast(editing ? "수정됐어요" : "릴스가 등록됐어요");
+    });
+
+    if (editing) {
+      main.querySelector("#rl-cancel").addEventListener("click", () => renderReelsPage(main));
+    }
+
+    main.querySelectorAll("[data-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => renderReelsPage(main, btn.dataset.edit));
+    });
+
+    main.querySelectorAll("[data-del]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        armDelete(btn, async () => {
+          DATA.reels = DATA.reels.filter((x) => x.id !== btn.dataset.del);
+          await saveData(DATA);
+          renderReelsPage(main);
+          toast("삭제했어요");
+        });
+      });
+    });
+
+    const rlList = main.querySelector("#rl-list");
+    if (rlList) {
+      makeSortable(rlList, async (orderIds) => {
+        DATA.reels = orderIds.map((id) => DATA.reels.find((x) => x.id === id)).filter(Boolean);
+        await saveData(DATA);
+        toast("순서가 저장됐어요");
+      });
+    }
+  }
+  renderLogin();
+}
+
+const ROOT_EL = document.getElementById("app-root");
+renderAdminApp(ROOT_EL);
+</script>
+</body>
+</html>
