@@ -215,8 +215,46 @@
   #app-root .toast.show { opacity: 1; }
   #app-root .loading { padding: 60px; text-align: center; color: var(--fg-muted); }
 
-
+  /* ---------- 사진 자르기 모달 ---------- */
+  .crop-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.72);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .crop-modal {
+    background: #fff;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  .crop-head { padding: 16px 20px 6px; font-size: 15px; font-weight: 800; color: #191817; }
+  .crop-sub { padding: 0 20px 10px; font-size: 12px; color: #85807a; }
+  .crop-stage { background: #111; height: 56vh; min-height: 300px; }
+  .crop-stage img { max-width: 100%; display: block; }
+  .crop-ratios { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 20px 0; }
+  .crop-ratios button {
+    background: #f4f1ea; border: 1px solid #e8e4dc; color: #191817;
+    font: inherit; font-size: 12px; font-weight: 700; padding: 6px 11px; border-radius: 20px; cursor: pointer;
+  }
+  .crop-ratios button.active { background: #191817; color: #fff; border-color: #191817; }
+  .crop-actions { display: flex; gap: 8px; justify-content: flex-end; padding: 14px 20px 18px; }
+  .crop-actions button {
+    font: inherit; font-size: 13.5px; font-weight: 700; padding: 10px 16px; border-radius: 8px; cursor: pointer; border: 1px solid #e8e4dc; background: #fff; color: #191817;
+  }
+  .crop-actions button.primary { background: #ff5a2e; border-color: #ff5a2e; color: #fff; }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -284,6 +322,83 @@ async function renderAdminApp(root) {
       r.onerror = reject;
       r.readAsDataURL(file);
     });
+  }
+
+  // ============================================================
+  // 사진 자르기 모달
+  // opts.ratio  : 고정 비율 (예: 4/5). 없으면 자유 비율 + 프리셋 버튼 표시
+  // opts.title  : 모달 제목
+  // 반환값      : { dataUrl, ratio }  (취소하면 null)
+  // ============================================================
+  const RATIO_PRESETS = [
+    { label: "자유", value: NaN },
+    { label: "3:4", value: 3 / 4 },
+    { label: "2:3", value: 2 / 3 },
+    { label: "9:16", value: 9 / 16 },
+    { label: "1:1", value: 1 },
+    { label: "4:3", value: 4 / 3 },
+  ];
+
+  function openCropper(file, opts) {
+    opts = opts || {};
+    return new Promise(async (resolve) => {
+      const srcUrl = await fileToDataUrl(file);
+      const fixed = typeof opts.ratio === "number" && !isNaN(opts.ratio);
+
+      const backdrop = document.createElement("div");
+      backdrop.className = "crop-backdrop";
+      backdrop.innerHTML = `
+        <div class="crop-modal">
+          <div class="crop-head">${opts.title || "사진 자르기"}</div>
+          <div class="crop-sub">${fixed ? "네모를 드래그해서 보여줄 부분을 골라주세요. (모서리를 잡으면 크기 조절)" : "네모를 드래그하거나 모서리를 잡아 자유롭게 조절하세요. 아래 버튼으로 비율을 고정할 수도 있어요."}</div>
+          <div class="crop-stage"><img id="crop-img" src="${srcUrl}"></div>
+          ${fixed ? "" : `<div class="crop-ratios">${RATIO_PRESETS.map((p, i) => `<button type="button" data-i="${i}" class="${i === 0 ? "active" : ""}">${p.label}</button>`).join("")}</div>`}
+          <div class="crop-actions">
+            <button type="button" id="crop-cancel">취소</button>
+            <button type="button" id="crop-ok" class="primary">이렇게 사용</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(backdrop);
+
+      const img = backdrop.querySelector("#crop-img");
+      let cropper = null;
+      const start = () => {
+        cropper = new Cropper(img, {
+          aspectRatio: fixed ? opts.ratio : NaN,
+          viewMode: 1,
+          autoCropArea: 1,
+          background: false,
+          responsive: true,
+        });
+      };
+      if (img.complete) start(); else img.onload = start;
+
+      backdrop.querySelectorAll(".crop-ratios button").forEach((b) => {
+        b.addEventListener("click", () => {
+          backdrop.querySelectorAll(".crop-ratios button").forEach((x) => x.classList.remove("active"));
+          b.classList.add("active");
+          if (cropper) cropper.setAspectRatio(RATIO_PRESETS[Number(b.dataset.i)].value);
+        });
+      });
+
+      const close = () => { if (cropper) cropper.destroy(); backdrop.remove(); };
+      backdrop.querySelector("#crop-cancel").addEventListener("click", () => { close(); resolve(null); });
+      backdrop.querySelector("#crop-ok").addEventListener("click", () => {
+        if (!cropper) return;
+        const canvas = cropper.getCroppedCanvas({ maxWidth: 1400, maxHeight: 1800, imageSmoothingQuality: "high" });
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+        const ratio = `${canvas.width}/${canvas.height}`;
+        close();
+        resolve({ dataUrl, ratio });
+      });
+    });
+  }
+
+  // 파일 input에서 고른 파일을 크롭 모달로 넘겨 결과 dataUrl을 돌려줌 (취소 시 "")
+  async function pickAndCrop(file, opts) {
+    if (!file) return null;
+    return await openCropper(file, opts);
   }
 
   async function loadData() {
@@ -522,7 +637,10 @@ async function renderAdminApp(root) {
     main.querySelector("#site-avatar-file").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      s.avatar = await fileToDataUrl(file);
+      const cropped = await pickAndCrop(file, { ratio: 1, title: "프로필 사진 자르기" });
+      e.target.value = "";
+      if (!cropped) return;
+      s.avatar = cropped.dataUrl;
       await saveData(DATA);
       renderSitePage(main);
       toast("사진이 반영됐어요");
@@ -601,6 +719,7 @@ async function renderAdminApp(root) {
     `;
 
     let fetchedPhoto = editing ? editing.photo || "" : "";
+    let fetchedRatio = editing ? editing.ratio || "4/5" : "4/5";
 
     function rowLineup(item) {
       const stickerColor = (STICKER_OPTIONS.find((o) => o.value === item.sticker) || {}).pop || "#999";
@@ -642,8 +761,12 @@ async function renderAdminApp(root) {
     main.querySelector("#lu-file").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      fetchedPhoto = await fileToDataUrl(file);
-      main.querySelector("#lu-preview").innerHTML = `<img src="${fetchedPhoto}" style="width:64px;height:80px;object-fit:cover;border-radius:6px;">`;
+      const cropped = await pickAndCrop(file, { title: "라인업 사진 자르기" });
+      e.target.value = "";
+      if (!cropped) return;
+      fetchedPhoto = cropped.dataUrl;
+      fetchedRatio = cropped.ratio;
+      main.querySelector("#lu-preview").innerHTML = `<img src="${fetchedPhoto}" style="width:64px;aspect-ratio:${fetchedRatio};object-fit:cover;border-radius:6px;">`;
     });
 
     main.querySelector("#lu-add").addEventListener("click", async () => {
@@ -655,13 +778,14 @@ async function renderAdminApp(root) {
       if (!eyebrow || !h1 || !link) { toast("상단 문구, 헤드라인, 연결 링크는 필수예요"); return; }
       if (editing) {
         editing.photo = fetchedPhoto;
+        editing.ratio = fetchedRatio;
         editing.eyebrow = eyebrow;
         editing.headline = h2 ? `${h1}\n${h2}` : h1;
         editing.sticker = sticker;
         editing.link = link;
       } else {
         DATA.lineup.unshift({
-          id: uid(), photo: fetchedPhoto, eyebrow, headline: h2 ? `${h1}\n${h2}` : h1, sticker, link,
+          id: uid(), photo: fetchedPhoto, ratio: fetchedRatio, eyebrow, headline: h2 ? `${h1}\n${h2}` : h1, sticker, link,
         });
       }
       await saveData(DATA);
@@ -708,12 +832,17 @@ async function renderAdminApp(root) {
       <p class="page-sub">코디 사진을 올리고, 입은 아이템을 카테고리별로 연결해요.</p>
       <div class="panel">
         <h2>${editing ? "코디 수정" : "새 코디 등록"}</h2>
-        <div class="grid2">
-          <div class="field">
-            <label>사진</label>
-            <input type="file" id="of-file" accept="image/*" />
-            <div style="margin-top:8px;">${editing && editing.photo ? `<img src="${editing.photo}" style="width:48px;height:60px;object-fit:cover;border-radius:6px;">` : ""}</div>
+        <div class="field">
+          <label>사진 (올리면 자르기 창이 떠요 — 네모를 자유롭게 조절하거나 비율을 고정할 수 있어요)</label>
+          <input type="file" id="of-file" accept="image/*" />
+        </div>
+        <div class="field">
+          <label>미리보기 (이 모양 그대로 사이트에 보여요)</label>
+          <div id="of-photo-preview" style="width:140px; border-radius:8px; overflow:hidden; background:var(--tag-bg); aspect-ratio:${editing && editing.ratio ? editing.ratio : "2/3"};">
+            ${editing && editing.photo ? `<img src="${editing.photo}" style="width:100%;height:100%;object-fit:cover;display:block;">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--fg-muted);">사진 없음</div>`}
           </div>
+        </div>
+        <div class="grid2">
           <div class="field">
             <label>분류</label>
             <select id="of-group">
@@ -796,6 +925,26 @@ async function renderAdminApp(root) {
     }
     main.querySelector("#of-cat-add").addEventListener("click", () => addCatRow());
 
+    let previewPhoto = editing ? editing.photo || "" : "";
+    let previewRatio = editing && editing.ratio ? editing.ratio : "2/3";
+    function updatePreview() {
+      const box = main.querySelector("#of-photo-preview");
+      box.style.aspectRatio = previewRatio;
+      box.innerHTML = previewPhoto
+        ? `<img src="${previewPhoto}" style="width:100%;height:100%;object-fit:cover;display:block;">`
+        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--fg-muted);">사진 없음</div>`;
+    }
+    main.querySelector("#of-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const cropped = await pickAndCrop(file, { title: "코디 사진 자르기" });
+      e.target.value = "";
+      if (!cropped) return;
+      previewPhoto = cropped.dataUrl;
+      previewRatio = cropped.ratio;
+      updatePreview();
+    });
+
     main.querySelector("#of-new-group-add").addEventListener("click", async () => {
       const nameInput = main.querySelector("#of-new-group");
       const name = nameInput.value.trim();
@@ -808,11 +957,10 @@ async function renderAdminApp(root) {
     });
 
     main.querySelector("#of-save").addEventListener("click", async () => {
-      const fileInput = main.querySelector("#of-file");
       const group = main.querySelector("#of-group").value;
-      if (!editing && !fileInput.files[0]) { toast("사진을 업로드해주세요"); return; }
-      let photo = editing ? editing.photo || "" : "";
-      if (fileInput.files[0]) photo = await fileToDataUrl(fileInput.files[0]);
+      if (!previewPhoto) { toast("사진을 업로드해주세요"); return; }
+      const photo = previewPhoto;
+      const ratio = previewRatio;
       const items = {};
       main.querySelectorAll("#of-cat-rows .cat-block").forEach((block) => {
         const cat = block.querySelector(".cat-select").value;
@@ -826,9 +974,10 @@ async function renderAdminApp(root) {
       if (editing) {
         editing.photo = photo;
         editing.group = group;
+        editing.ratio = ratio;
         editing.items = items;
       } else {
-        DATA.outfits.unshift({ id: uid(), photo, group, items });
+        DATA.outfits.unshift({ id: uid(), photo, group, ratio, items });
       }
       await saveData(DATA);
       renderOutfitsPage(main);
@@ -968,10 +1117,32 @@ async function renderAdminApp(root) {
       });
     });
 
+    const pendingItemPhotos = {};
+    const pendingItemRatios = {};
+    main.querySelectorAll(".add-file").forEach((input) => {
+      input.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const gi = input.dataset.gi;
+        const cropped = await pickAndCrop(file, { title: "아이템 사진 자르기" });
+        e.target.value = "";
+        if (!cropped) return;
+        pendingItemPhotos[gi] = cropped.dataUrl;
+        pendingItemRatios[gi] = cropped.ratio;
+        let prev = input.parentElement.querySelector(".add-file-preview");
+        if (!prev) {
+          prev = document.createElement("div");
+          prev.className = "add-file-preview";
+          prev.style.marginTop = "6px";
+          input.parentElement.appendChild(prev);
+        }
+        prev.innerHTML = `<img src="${cropped.dataUrl}" style="width:44px;aspect-ratio:${cropped.ratio};object-fit:cover;border-radius:6px;">`;
+      });
+    });
+
     main.querySelectorAll(".add-item-btn").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const gi = Number(btn.dataset.gi);
-        const fileInput = main.querySelector(`.add-file[data-gi="${gi}"]`);
         const brand = main.querySelector(`.add-brand[data-gi="${gi}"]`).value.trim();
         const name = main.querySelector(`.add-name[data-gi="${gi}"]`).value.trim();
         const link = main.querySelector(`.add-link[data-gi="${gi}"]`).value.trim();
@@ -979,15 +1150,17 @@ async function renderAdminApp(root) {
         if (!brand || !name || !link) { toast("브랜드, 제품명, 링크는 필수예요"); return; }
         const isEditingThis = editing && editing.gi === gi;
         let photo = isEditingThis ? editItem.photo || "" : "";
-        if (fileInput.files[0]) photo = await fileToDataUrl(fileInput.files[0]);
+        let ratio = isEditingThis ? editItem.ratio || "4/5" : "4/5";
+        if (pendingItemPhotos[gi]) { photo = pendingItemPhotos[gi]; ratio = pendingItemRatios[gi] || ratio; }
         if (isEditingThis) {
           editItem.photo = photo;
+          editItem.ratio = ratio;
           editItem.brand = brand;
           editItem.name = name;
           editItem.link = link;
           editItem.comment = comment;
         } else {
-          groups[gi].items.push({ id: uid(), photo, brand, name, link, comment });
+          groups[gi].items.push({ id: uid(), photo, ratio, brand, name, link, comment });
         }
         await saveData(DATA);
         renderGroupedPage(main, dataKey, title, sub);
@@ -1056,19 +1229,38 @@ async function renderAdminApp(root) {
       `;
     }
 
+    let reelPhoto = editing ? editing.photo || "" : "";
+    let reelRatio = editing ? editing.ratio || "9/16" : "9/16";
+    main.querySelector("#rl-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const cropped = await pickAndCrop(file, { title: "릴스 썸네일 자르기" });
+      e.target.value = "";
+      if (!cropped) return;
+      reelPhoto = cropped.dataUrl;
+      reelRatio = cropped.ratio;
+      let prev = e.target.parentElement.querySelector(".rl-preview");
+      if (!prev) {
+        prev = document.createElement("div");
+        prev.className = "rl-preview";
+        prev.style.marginTop = "8px";
+        e.target.parentElement.appendChild(prev);
+      }
+      prev.innerHTML = `<img src="${reelPhoto}" style="width:48px;aspect-ratio:${reelRatio};object-fit:cover;border-radius:6px;">`;
+    });
+
     main.querySelector("#rl-add").addEventListener("click", async () => {
-      const fileInput = main.querySelector("#rl-file");
       const caption = main.querySelector("#rl-caption").value.trim();
       const link = main.querySelector("#rl-link").value.trim();
       if (!caption || !link) { toast("캡션과 링크는 필수예요"); return; }
-      let photo = editing ? editing.photo || "" : "";
-      if (fileInput.files[0]) photo = await fileToDataUrl(fileInput.files[0]);
+      const photo = reelPhoto;
       if (editing) {
         editing.photo = photo;
+        editing.ratio = reelRatio;
         editing.caption = caption;
         editing.link = link;
       } else {
-        DATA.reels.unshift({ id: uid(), photo, caption, link });
+        DATA.reels.unshift({ id: uid(), photo, ratio: reelRatio, caption, link });
       }
       await saveData(DATA);
       renderReelsPage(main);
