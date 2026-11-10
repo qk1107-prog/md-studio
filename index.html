@@ -63,12 +63,12 @@
   }
   #app-root .tab-slider {
     display: flex;
-    width: 400%;
+    width: 200%;
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
   #app-root .tab-slider > .section {
-    flex: 0 0 25%;
-    width: 25%;
+    flex: 0 0 50%;
+    width: 50%;
     box-sizing: border-box;
   }
 
@@ -461,42 +461,7 @@
     width: 18px;
     background: var(--fg);
   }
-
-  /* ===== 추천템 : horizontal scroll product cards ===== */
-  #app-root .h-scroll {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    overflow-x: auto;
-    padding: 2px 20px 10px;
-    margin: 0 -20px;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  #app-root .h-scroll::-webkit-scrollbar { display: none; }
-  #app-root .p-card {
-    flex-shrink: 0;
-    width: 148px;
-    scroll-snap-align: start;
-  }
-  #app-root .p-card .ph { width: 148px; aspect-ratio: 4/5; border-radius: 10px; }
   #app-root a { color: inherit; text-decoration: none; }
-  #app-root .p-card .p-brand { font-size: 11px; font-weight: 800; color: var(--fg); margin: 9px 0 1px; }
-  #app-root .p-card .p-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--fg);
-    margin: 0 0 1px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  #app-root .p-card .p-price { font-size: 13px; font-weight: 800; }
-  #app-root .p-card .p-off { color: var(--accent); font-weight: 800; margin-right: 4px; }
-  #app-root .p-card .p-comment { font-size: 12px; font-weight: 500; color: var(--fg-muted); margin: 1px 0 0; }
-
   /* ===== 실착 : 폴라로이드 스타일 그리드 ===== */
   #app-root .grid {
     display: grid;
@@ -601,135 +566,125 @@
   #app-root .feed-list .polaroid { width: 100%; }
   #app-root .feed-list .polaroid .ph { aspect-ratio: 2/3; }
 
-  /* 추천템 전체보기 : 번호 뱃지 그리드 */
-  #app-root .pick-feed-note {
-    font-size: 12px;
-    color: var(--fg-muted);
-    padding: 14px 20px 4px;
-    max-width: 480px;
-    margin: 0 auto;
-  }
-  #app-root .pick-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px 10px;
-    padding: 14px 20px 34px;
-    max-width: 480px;
-    margin: 0 auto;
-  }
-  #app-root .pick-grid-item .ph {
-    aspect-ratio: 1/1;
-    border-radius: 4px;
-    position: relative;
-    font-size: 10px;
-  }
-  #app-root .pick-grid-item .rank-badge {
-    position: absolute;
-    top: 6px;
-    left: 6px;
-    background: var(--fg);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 800;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-  }
-  #app-root .pick-grid-item .g-brand { font-size: 12px; font-weight: 800; color: var(--fg); margin: 9px 0 1px; }
-  #app-root .pick-grid-item .g-name {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--fg);
-    line-height: 1.35;
-    margin: 0 0 1px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  #app-root .pick-grid-item .g-comment {
-    font-size: 10.5px;
-    color: var(--fg-muted);
-    line-height: 1.3;
-    margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+  /* 탭 2개는 반반 */
+  #app-root nav.tabs button { flex: 1; }
 
-  /* ===== 꿀팁 : 릴스 썸네일 그리드 ===== */
-  #app-root .reel-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px 12px;
-  }
-  #app-root .reel-card { display: block; cursor: pointer; }
-  #app-root .reel-thumb-wrap {
-    position: relative;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  #app-root .reel-thumb { aspect-ratio: 9/16; font-size: 10px; }
-  #app-root .reel-play-badge {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.55);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-  }
-  #app-root .reel-caption {
-    font-size: 12.5px;
-    font-weight: 600;
-    margin: 8px 0 0;
-    line-height: 1.35;
-    color: var(--fg);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+  /* ===== 실착 상세: 브랜드가 따로 저장된 아이템 ===== */
+  #app-root .outfit-cat .cat-chip .chip-sep { opacity: 0.5; margin: 0 4px; }
 
-  /* ===== 카테고리 꿀템 모음 ===== */
-  #app-root .cat-group { margin-bottom: 26px; }
-  #app-root .cat-group .cat-label {
-    font-size: 14px;
-    font-weight: 800;
-    margin-bottom: 12px;
+  /* ===== 추천템 : 편 목록 ===== */
+  #app-root .ep-filter { display: flex; gap: 6px; margin: 0 0 16px; }
+  #app-root .ep-filter button {
+    background: #fff; border: 1px solid var(--line); border-radius: 100px;
+    padding: 7px 15px; font: inherit; font-size: 12.5px; font-weight: 700;
+    color: var(--fg-muted); cursor: pointer;
   }
-  #app-root .scroll-row {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    margin: 0 -20px;
-    padding: 0 20px 4px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+  #app-root .ep-filter button.active { border-color: var(--fg); background: var(--fg); color: #fff; }
+  #app-root .ep-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 12px; }
+  @media (min-width: 560px) { #app-root .ep-grid { grid-template-columns: repeat(3, 1fr); } }
+  #app-root .ep-card { display: block; color: inherit; -webkit-tap-highlight-color: transparent; }
+  #app-root .ep-card:active { opacity: 0.75; }
+  #app-root .ep-thumb {
+    position: relative; aspect-ratio: 9/16; border-radius: 12px; overflow: hidden;
+    background: linear-gradient(160deg, #2a2724, #141312);
+    display: flex; align-items: center; justify-content: center;
   }
-  #app-root .scroll-row::-webkit-scrollbar { display: none; }
-  #app-root .scroll-row .mini { flex-shrink: 0; width: 108px; }
-  #app-root .scroll-row .ph { width: 108px; height: 135px; border-radius: 8px; }
-  #app-root .scroll-row .mini .name { font-size: 12px; font-weight: 600; margin: 6px 0 2px; }
-  #app-root .scroll-row .mini .note { font-size: 11px; color: var(--accent); font-weight: 700; margin: 0; }
+  #app-root .ep-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #app-root .ep-thumb .ep-thumb-ph { color: #fff; font-size: 15px; font-weight: 900; text-align: center; padding: 0 14px; line-height: 1.3; letter-spacing: -0.3px; }
+  #app-root .ep-thumb .ep-series { position: absolute; top: 8px; left: 8px; }
+  #app-root .ep-thumb .ep-play {
+    position: absolute; bottom: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(0,0,0,0.5); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px;
+  }
+  #app-root .ep-series {
+    display: inline-block; font-size: 10.5px; font-weight: 800; padding: 3px 9px;
+    border-radius: 20px; letter-spacing: 0.2px; line-height: 1.4;
+  }
+  #app-root .ep-series.s-value { background: #c6ff3d; color: #141312; }
+  #app-root .ep-series.s-heart { background: #ff3d9a; color: #fff; }
+  #app-root .ep-card-title { font-size: 13.5px; font-weight: 800; margin: 9px 0 0; line-height: 1.3; letter-spacing: -0.2px; }
+  #app-root .ep-card-date { font-size: 11px; color: var(--fg-muted); margin: 2px 0 0; }
+  #app-root .ep-empty { text-align: center; color: var(--fg-muted); font-size: 13px; padding: 48px 0; line-height: 1.6; }
 
-
-
+  /* ===== 추천템 : 편 상세 ===== */
+  #app-root .ep-detail { background: #faf8f4; }
+  #app-root .ep-sticky {
+    position: sticky; top: 0; z-index: 5;
+    background: rgba(250,248,244,0.97);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  #app-root .ep-sticky .feed-header {
+    position: static; border-bottom: none; background: transparent;
+    padding: 10px 14px 2px; max-width: 480px; margin: 0 auto;
+  }
+  #app-root .ep-sticky .feed-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #app-root .ep-labelbar {
+    display: flex; gap: 6px; padding: 6px 16px 10px; max-width: 480px; margin: 0 auto;
+  }
+  #app-root .ep-labelbar button {
+    flex: 1; background: #fff; border: 1px solid var(--line); border-radius: 100px;
+    font: inherit; font-size: 12.5px; font-weight: 800; color: var(--fg);
+    padding: 7px 0; cursor: pointer; white-space: nowrap;
+  }
+  #app-root .ep-labelbar button.active { background: var(--fg); border-color: var(--fg); color: #fff; }
+  #app-root .ep-wrap { max-width: 480px; margin: 0 auto; padding: 0 16px 56px; }
+  #app-root .ep-hero { text-align: center; padding: 24px 0 6px; }
+  #app-root .ep-hero-title { font-size: 25px; font-weight: 900; letter-spacing: -0.7px; line-height: 1.2; margin: 10px 0 16px; }
+  #app-root .ep-replay {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--fg); color: #fff; font-size: 13px; font-weight: 800;
+    padding: 11px 20px; border-radius: 100px;
+  }
+  #app-root .ep-replay:active { opacity: 0.8; }
+  #app-root .ep-sec { padding-top: 30px; }
+  #app-root .ep-sec-head { display: flex; align-items: center; gap: 8px; }
+  #app-root .ep-sec-head h2 { font-size: 20px; font-weight: 900; margin: 0; letter-spacing: -0.4px; }
+  #app-root .ep-sec-emoji { font-size: 20px; line-height: 1; }
+  #app-root .ep-brand-row { margin-top: 14px; }
+  #app-root .ep-brand-name {
+    font-size: 13px; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.1px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #app-root .ep-brand-name::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+  #app-root .ep-prod-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  #app-root .ep-prod {
+    display: flex; flex-direction: column; min-width: 0;
+    background: #fff; border-radius: 10px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    -webkit-tap-highlight-color: transparent;
+  }
+  #app-root .ep-prod:active { opacity: 0.75; }
+  #app-root .ep-prod-img { aspect-ratio: 5/6; background: #f2f0eb; display: flex; align-items: center; justify-content: center; color: #b7ae9c; font-size: 10px; }
+  #app-root .ep-prod-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #app-root .ep-prod-info { padding: 7px 7px 8px; display: flex; flex-direction: column; flex: 1; }
+  #app-root .ep-prod-brand { font-size: 10px; font-weight: 800; color: var(--fg-muted); margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #app-root .ep-prod-name {
+    font-size: 11.5px; font-weight: 600; line-height: 1.32; margin: 2px 0 8px; min-height: 2.64em;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all;
+  }
+  #app-root .ep-prod-btn {
+    margin-top: auto; display: block; text-align: center; font-size: 10.5px; font-weight: 800;
+    padding: 6px 0; border-radius: 6px; background: var(--fg); color: #fff; white-space: nowrap;
+  }
+  #app-root .ep-onepick {
+    background: #fff; border: 1.5px solid var(--fg); border-radius: 12px;
+    padding: 13px 14px 14px; margin-top: 12px;
+  }
+  #app-root .ep-onepick-badge {
+    display: inline-block; background: #ff5a2e; color: #fff; font-size: 11px; font-weight: 800;
+    padding: 4px 10px; border-radius: 20px; transform: rotate(-3deg);
+  }
+  #app-root .ep-onepick-comment { font-size: 14px; font-weight: 600; margin: 9px 0 0; line-height: 1.5; }
+  #app-root .ep-sec.is-pick .ep-prod { box-shadow: 0 0 0 1.5px var(--fg); }
+  #app-root .ep-note { font-size: 11px; color: var(--fg-muted); text-align: center; margin: 34px 0 0; line-height: 1.6; }
+  #app-root .ep-loading { text-align: center; color: var(--fg-muted); font-size: 13px; padding: 40px 0; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ============================================================
-// Supabase 연결 설정
+// Supabase 연결 설정 (공개용 anon 키 — 읽기만 가능하도록 보안 규칙이 걸려 있어요)
 // ============================================================
 const SUPABASE_URL = "https://cbuydjkvvzbluyohdkie.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
@@ -745,12 +700,47 @@ async function loadSiteDataFromSupabase() {
   return data.value;
 }
 
-async function saveSiteDataToSupabase(value) {
-  const { error } = await supabaseClient
-    .from("site_data")
-    .upsert({ id: "main", value: value });
-  return !error;
+async function loadEpisodesFromSupabase() {
+  const { data, error } = await supabaseClient
+    .from("episodes")
+    .select("id,title,series,upload_date,reel_url,thumbnail_url,pick_comment,created_at")
+    .order("upload_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(300);
+  if (error) throw error;
+  return data || [];
 }
+
+async function loadEpisodeItemsFromSupabase(episodeId) {
+  const { data, error } = await supabaseClient
+    .from("episode_items")
+    .select("label,brand,product_name,curator_url,image_url,sort_order")
+    .eq("episode_id", episodeId)
+    .order("sort_order", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// 화면에 글자를 넣을 때 깨지거나 악용되지 않게 처리
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function safeUrl(u) {
+  u = String(u || "").trim();
+  return /^https?:\/\//i.test(u) ? u : "";
+}
+function safeImg(u) {
+  u = String(u || "").trim();
+  return /^(https?:\/\/|data:image\/)/i.test(u) ? u : "";
+}
+
+const EP_LABELS = [
+  { key: "국밥", emoji: "🍚" },
+  { key: "힙함", emoji: "🔥" },
+  { key: "남친룩", emoji: "🤍" },
+  { key: "옷쟁이", emoji: "👑" },
+];
+
 async function renderPublicSite(root) {
   // ---------- UI 상태 저장/복원 (무신사 갔다 돌아와도 같은 화면) ----------
   const UI_KEY = "md-ui-state";
@@ -781,33 +771,20 @@ async function renderPublicSite(root) {
     }, wait);
   }
 
-  // ---------- 어드민에서 저장한 데이터 불러오기 ----------
+  // ---------- 데이터 불러오기 (사이트 정보 + 추천템 편 목록을 동시에) ----------
   let ADMIN = null;
-  try {
-    ADMIN = await loadSiteDataFromSupabase();
-  } catch (e) {
-    ADMIN = null;
-  }
+  let EPISODES = null; // null = 불러오기 실패
+  const [siteRes, epRes] = await Promise.allSettled([loadSiteDataFromSupabase(), loadEpisodesFromSupabase()]);
+  if (siteRes.status === "fulfilled") ADMIN = siteRes.value;
+  if (epRes.status === "fulfilled") EPISODES = epRes.value;
 
   const STICKER_POPS = { "NEW DROP": "#ff5a2e", "COLLAB": "#c6ff3d", "LIMITED": "#2ee6d6", "SOLD OUT": "#ff3d9a" };
 
-  // 어드민 아이템(객체) / 데모 아이템(배열 튜플) 둘 다 같은 형태로 통일
-  function normItem(it) {
-    if (Array.isArray(it)) {
-      if (it.length >= 5) return { brand: it[0], name: it[1], comment: it[4], photo: "", link: "#", ratio: "" };
-      return { brand: it[0], name: it[1], comment: it[2], photo: "", link: "#", ratio: "" };
-    }
-    return { brand: it.brand, name: it.name, comment: it.comment || "", photo: it.photo || "", link: it.link || "#", ratio: it.ratio || "" };
-  }
-
   function photoTag(url, cls, extraAttrs) {
     extraAttrs = extraAttrs || "";
-    if (url) return `<img src="${url}" class="ph ${cls}" ${extraAttrs}>`;
+    const u = safeImg(url);
+    if (u) return `<img src="${esc(u)}" class="ph ${cls}" ${extraAttrs} loading="lazy" decoding="async">`;
     return `<div class="ph ${cls}" ${extraAttrs}>사진</div>`;
-  }
-  // 사진 안에 뱃지(순위 번호 등)를 겹쳐야 할 때 쓰는 버전 — .ph 래퍼는 그대로 두고 내용만 교체
-  function photoInner(url) {
-    return url ? `<img src="${url}">` : `사진`;
   }
 
   const collabsFallback = [
@@ -820,9 +797,9 @@ async function renderPublicSite(root) {
     ? ADMIN.lineup.map((c) => ({
         photo: c.photo || "",
         pop: STICKER_POPS[c.sticker] || "#ff5a2e",
-        eyebrow: c.eyebrow,
-        headline: c.headline,
-        caption: c.sticker,
+        eyebrow: c.eyebrow || "",
+        headline: c.headline || "",
+        caption: c.sticker || "",
         ratio: c.ratio || "4/5",
         link: c.link,
       }))
@@ -834,7 +811,6 @@ async function renderPublicSite(root) {
         "TOP": [["오아시스 크롭 데님 셔츠", "#"]],
         "BOTTOM": [["엣지 워크 라보 팬츠 [카키올리브]", "#"]],
         "SHOES": [["닥터마틴 1461 3홀 빈티지브라운", "#"]],
-        "ACC": [["라운드링 Line Ring", "#"]],
       },
     },
     { id: 2, group: "거울샷", items: {
@@ -843,68 +819,46 @@ async function renderPublicSite(root) {
         "SHOES": [["로퍼 스웨이드 브라운", "#"]],
       },
     },
-    { id: 3, group: "거울샷", items: {
-        "OUTER": [["무스탕 숏 재킷", "#"]],
-        "TOP": [["하프넥 니트 [아이보리]", "#"]],
-        "BOTTOM": [["스트레이트 데님", "#"]],
-        "BAG": [["크로스 미니백 [블랙]", "#"]],
-        "SHOES": [["첼시 부츠", "#"]],
-      },
-    },
     { id: 4, group: "일상 컷", items: {
         "TOP": [["후드 스웻셔츠 [그레이]", "#"]],
         "BOTTOM": [["트랙 팬츠", "#"]],
         "SHOES": [["뉴발란스 ML2002RC", "#"]],
       },
     },
-    { id: 5, group: "일상 컷", items: {
-        "OUTER": [["패딩 베스트 [블랙]", "#"]],
-        "TOP": [["기모 맨투맨", "#"]],
-        "BOTTOM": [["와이드 코듀로이 팬츠", "#"]],
-        "SHOES": [["더비 슈즈", "#"]],
-        "ACC": [["니트 비니", "#"]],
-      },
-    },
-    { id: 6, group: "일상 컷", items: {
-        "TOP": [["체크 셔츠 오버핏", "#"]],
-        "BOTTOM": [["치노 팬츠 [베이지]", "#"]],
-        "SHOES": [["스니커즈 화이트", "#"]],
-      },
-    },
   ];
   const outfits = (ADMIN && ADMIN.outfits && ADMIN.outfits.length) ? ADMIN.outfits : outfitsFallback;
 
   const CAT_ORDER = ["OUTER", "TOP", "BOTTOM", "BAG", "SHOES", "ACC", "ETC"];
-  const CAT_COLORS = {
-    OUTER:  { bg: "#ffe9e2", fg: "#c9420a" },
-    TOP:    { bg: "#eef6df", fg: "#5c7a1e" },
-    BOTTOM: { bg: "#e3f7f4", fg: "#127a70" },
-    BAG:    { bg: "#fdeaf3", fg: "#c22a75" },
-    SHOES:  { bg: "#eef1fb", fg: "#3d4fb0" },
-    ACC:    { bg: "#f6f0e3", fg: "#8a6a1f" },
-    ETC:    { bg: "#f2f0ec", fg: "#71695c" },
-  };
-  const LOOK_POPS = ["#ff5a2e", "#2ee6d6", "#c6ff3d", "#ff3d9a"];
 
-  function renderOutfitModal(outfit, index) {
-    const catHtml = CAT_ORDER
-      .filter((cat) => outfit.items[cat])
-      .map((cat) => {
-        return outfit.items[cat].map(([name, link, size]) => `
-          <div class="outfit-cat">
-            <span class="cat-chip">${cat}</span>
-            <a class="item-link" href="${link}" target="_blank" rel="noopener noreferrer">${name}</a>
-            ${size ? `<span class="item-size">사이즈 ${size}</span>` : ""}
-          </div>
-        `).join("");
-      }).join("");
+  // 코디 아이템 목록 — 예전 방식(카테고리별)과 새 방식(브랜드 따로 저장) 둘 다 지원
+  function outfitPieces(outfit) {
+    if (Array.isArray(outfit.pieces) && outfit.pieces.length) return outfit.pieces;
+    const list = [];
+    CAT_ORDER.filter((cat) => outfit.items && outfit.items[cat]).forEach((cat) => {
+      outfit.items[cat].forEach(([name, link, size]) => list.push({ cat, brand: "", name, link, size }));
+    });
+    return list;
+  }
+
+  function renderOutfitModal(outfit) {
+    const catHtml = outfitPieces(outfit).map((p) => {
+      const chip = [p.cat, p.brand].filter(Boolean).map(esc).join('<span class="chip-sep">·</span>');
+      const link = safeUrl(p.link) || "#";
+      return `
+        <div class="outfit-cat">
+          ${chip ? `<span class="cat-chip">${chip}</span>` : ""}
+          <a class="item-link" href="${esc(link)}" target="_blank" rel="noopener">${esc(p.name)}</a>
+          ${p.size ? `<span class="item-size">사이즈 ${esc(p.size)}</span>` : ""}
+        </div>
+      `;
+    }).join("");
 
     return `
       <div class="outfit-modal-backdrop" id="outfit-modal-backdrop">
         <div class="outfit-modal">
-          <div class="back-header"><button id="outfit-modal-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button><p class="back-header-title">LOOK <span class="back-header-hint">사진을 누르시면 제품 링크로 이동됩니다</span></p></div>
+          <div class="back-header"><button id="outfit-modal-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button><p class="back-header-title">LOOK <span class="back-header-hint">제품 이름을 누르면 구매 링크로 이동해요</span></p></div>
           <div class="outfit-photo-frame">
-            ${photoTag(outfit.photo, "outfit-photo", `style="aspect-ratio:${outfit.ratio || "2/3"};"`)}
+            ${photoTag(outfit.photo, "outfit-photo", `style="aspect-ratio:${esc(outfit.ratio || "2/3")};"`)}
           </div>
           ${catHtml}
         </div>
@@ -924,12 +878,11 @@ async function renderPublicSite(root) {
   }
 
   function openOutfitModal(outfit) {
-    const index = outfits.findIndex((o) => o.id === outfit.id);
     const existing = root.querySelector("#outfit-modal-backdrop");
     if (existing) existing.remove();
 
     const holder = document.createElement("div");
-    holder.innerHTML = renderOutfitModal(outfit, index);
+    holder.innerHTML = renderOutfitModal(outfit);
     root.appendChild(holder.firstElementChild);
 
     const backdrop = root.querySelector("#outfit-modal-backdrop");
@@ -955,8 +908,8 @@ async function renderPublicSite(root) {
         </div>
         <div class="feed-list">
           ${list.map((o) => `
-            <div class="polaroid outfit-card" data-outfit-id="${o.id}">
-              ${photoTag(o.photo, "", `style="aspect-ratio:${o.ratio || "2/3"};"`)}
+            <div class="polaroid outfit-card" data-outfit-id="${esc(o.id)}">
+              ${photoTag(o.photo, "", `style="aspect-ratio:${esc(o.ratio || "2/3")};"`)}
               <span class="polaroid-click">Tap in</span>
             </div>
           `).join("")}
@@ -970,172 +923,208 @@ async function renderPublicSite(root) {
     root.querySelector("#feed-close").addEventListener("click", () => { writeUI({ feed: null }); animateOverlayOut(backdrop); });
     backdrop.querySelectorAll(".outfit-card").forEach((card) => {
       card.addEventListener("click", () => {
-        const id = card.dataset.outfitId;
-        const outfit = outfits.find((o) => String(o.id) === id);
+        const outfit = outfits.find((o) => String(o.id) === card.dataset.outfitId);
         if (outfit) openOutfitModal(outfit);
       });
     });
   }
 
-  function openPickFeed(groupIndex) {
-    writeUI({ feed: { type: "pick", key: groupIndex } });
-    const existing = root.querySelector("#feed-backdrop");
+  // ============================================================
+  // 추천템 (편)
+  // ============================================================
+  const episodes = EPISODES || [];
+  let epFilter = ["가성비", "가심비"].includes(savedUI.epFilter) ? savedUI.epFilter : "all";
+  const itemsCache = new Map();
+
+  function seriesClass(series) { return series === "가심비" ? "s-heart" : "s-value"; }
+  function fmtDate(d) {
+    const m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? `${Number(m[2])}.${Number(m[3])}` : "";
+  }
+
+  function episodeGridHtml() {
+    if (EPISODES === null) return `<p class="ep-empty">추천템을 불러오지 못했어요.<br>잠시 후 다시 들어와 주세요.</p>`;
+    const list = epFilter === "all" ? episodes : episodes.filter((e) => e.series === epFilter);
+    if (!list.length) return `<p class="ep-empty">${episodes.length ? "아직 이 시리즈 편이 없어요." : "첫 편이 곧 올라와요 🎵"}</p>`;
+    return `<div class="ep-grid">${list.map((e) => `
+      <a class="ep-card" href="#ep=${esc(e.id)}">
+        <div class="ep-thumb">
+          ${safeImg(e.thumbnail_url)
+            ? `<img src="${esc(safeImg(e.thumbnail_url))}" alt="${esc(e.title)}" loading="lazy" decoding="async">`
+            : `<span class="ep-thumb-ph">${esc(e.title)}</span>`}
+          <span class="ep-series ${seriesClass(e.series)}">${esc(e.series)}</span>
+          <span class="ep-play">▶</span>
+        </div>
+        <p class="ep-card-title">${esc(e.title)}</p>
+        <p class="ep-card-date">${fmtDate(e.upload_date)}</p>
+      </a>
+    `).join("")}</div>`;
+  }
+
+  function groupByBrand(items) {
+    const order = [];
+    const map = new Map();
+    items.forEach((it) => {
+      const b = String(it.brand || "").trim();
+      if (!map.has(b)) { map.set(b, []); order.push(b); }
+      map.get(b).push(it);
+    });
+    return order.map((b) => ({ brand: b, items: map.get(b) }));
+  }
+
+  function productCardHtml(it) {
+    const link = safeUrl(it.curator_url);
+    const img = safeImg(it.image_url);
+    return `
+      <a class="ep-prod" href="${esc(link || "#")}" target="_blank" rel="noopener">
+        <div class="ep-prod-img">${img ? `<img src="${esc(img)}" alt="${esc(it.product_name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : "사진"}</div>
+        <div class="ep-prod-info">
+          <p class="ep-prod-brand">${esc(it.brand)}</p>
+          <p class="ep-prod-name">${esc(it.product_name)}</p>
+          <span class="ep-prod-btn">무신사에서 보기</span>
+        </div>
+      </a>
+    `;
+  }
+
+  function sectionsHtml(ep, items) {
+    return EP_LABELS.map(({ key, emoji }) => {
+      const list = items.filter((it) => it.label === key);
+      if (!list.length) return "";
+      const isPick = key === "옷쟁이";
+      return `
+        <section class="ep-sec${isPick ? " is-pick" : ""}" data-label="${esc(key)}">
+          <div class="ep-sec-head"><span class="ep-sec-emoji">${emoji}</span><h2>${esc(key)}</h2></div>
+          ${isPick ? `
+            <div class="ep-onepick">
+              <span class="ep-onepick-badge">광만두 원픽</span>
+              ${ep.pick_comment ? `<p class="ep-onepick-comment">${esc(ep.pick_comment)}</p>` : ""}
+            </div>` : ""}
+          ${groupByBrand(list).map((g) => `
+            <div class="ep-brand-row">
+              <p class="ep-brand-name">${esc(g.brand)}</p>
+              <div class="ep-prod-grid">${g.items.map(productCardHtml).join("")}</div>
+            </div>
+          `).join("")}
+        </section>
+      `;
+    }).join("");
+  }
+
+  let openedFromList = false;
+
+  async function openEpisode(id) {
+    const ep = episodes.find((e) => String(e.id) === String(id));
+    if (!ep) { history.replaceState(null, "", location.pathname + location.search); return; }
+    const existing = root.querySelector("#ep-backdrop");
+    if (existing && existing.dataset.ep === String(id)) return;
     if (existing) existing.remove();
 
-    const group = pickGroups[groupIndex];
-
+    const reel = safeUrl(ep.reel_url);
     const holder = document.createElement("div");
     holder.innerHTML = `
-      <div class="feed-backdrop" id="feed-backdrop">
-        <div class="feed-header">
-          <button class="back-link" id="feed-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
-          <p class="feed-title">${group.title}</p>
+      <div class="feed-backdrop ep-detail" id="ep-backdrop" data-ep="${esc(ep.id)}">
+        <div class="ep-sticky">
+          <div class="feed-header">
+            <button class="back-link" id="ep-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
+            <p class="feed-title">${esc(ep.title)}</p>
+          </div>
+          <div class="ep-labelbar">
+            ${EP_LABELS.map((l) => `<button type="button" data-jump="${esc(l.key)}">${l.emoji} ${esc(l.key)}</button>`).join("")}
+          </div>
         </div>
-        <p class="pick-feed-note">가격은 각 링크에서 확인하세요</p>
-        <div class="pick-grid">
-          ${group.items.map((raw, i) => {
-            const it = normItem(raw);
-            return `
-            <a class="pick-grid-item" href="${it.link}" target="_blank" rel="noopener noreferrer">
-              <div class="ph" style="aspect-ratio:${it.ratio || "1/1"};">
-                ${photoInner(it.photo)}
-                <span class="rank-badge">${i + 1}</span>
-              </div>
-              <p class="g-brand">${it.brand}</p>
-              <p class="g-name">${it.name}</p>
-              <p class="g-comment">${it.comment}</p>
-            </a>
-          `;
-          }).join("")}
+        <div class="ep-wrap">
+          <div class="ep-hero">
+            <span class="ep-series ${seriesClass(ep.series)}">${esc(ep.series)}</span>
+            <h1 class="ep-hero-title">${esc(ep.title)}</h1>
+            ${reel ? `<a class="ep-replay" href="${esc(reel)}" target="_blank" rel="noopener">▶ 영상 다시 보기</a>` : ""}
+          </div>
+          <div id="ep-sections"><p class="ep-loading">불러오는 중…</p></div>
+          <p class="ep-note">가격은 세일에 따라 바뀌어서 무신사에서 확인해 주세요.<br>이 페이지의 링크로 구매하시면 광만두가 일정 수수료를 받을 수 있어요.</p>
         </div>
       </div>
     `;
-    root.appendChild(holder.firstElementChild);
-    animateOverlayIn(root.querySelector("#feed-backdrop"));
+    const backdrop = holder.firstElementChild;
+    root.appendChild(backdrop);
+    animateOverlayIn(backdrop);
+    document.body.style.overflow = "hidden";
 
-    const backdrop = root.querySelector("#feed-backdrop");
-    root.querySelector("#feed-close").addEventListener("click", () => { writeUI({ feed: null }); animateOverlayOut(backdrop); });
+    backdrop.querySelector("#ep-close").addEventListener("click", () => {
+      if (openedFromList) history.back();
+      else { history.replaceState(null, "", location.pathname + location.search); closeEpisode(); }
+    });
+
+    let items = itemsCache.get(ep.id);
+    if (!items) {
+      try {
+        items = await loadEpisodeItemsFromSupabase(ep.id);
+        itemsCache.set(ep.id, items);
+      } catch (e) {
+        const box = backdrop.querySelector("#ep-sections");
+        if (box) box.innerHTML = `<p class="ep-loading">제품을 불러오지 못했어요. 새로고침해 주세요.</p>`;
+        return;
+      }
+    }
+    if (!backdrop.isConnected) return;
+    const box = backdrop.querySelector("#ep-sections");
+    box.innerHTML = items.length ? sectionsHtml(ep, items) : `<p class="ep-loading">아직 등록된 제품이 없어요.</p>`;
+    setupLabelBar(backdrop);
+
+    // 무신사 갔다가 돌아왔을 때 보던 위치로
+    const saved = readUI().epScroll;
+    if (saved && saved.id === ep.id) backdrop.scrollTop = saved.top;
+    let t = null;
+    backdrop.addEventListener("scroll", () => {
+      clearTimeout(t);
+      t = setTimeout(() => writeUI({ epScroll: { id: ep.id, top: backdrop.scrollTop } }), 150);
+    });
   }
 
-  function openCategoryFeed(groupIndex) {
-    writeUI({ feed: { type: "category", key: groupIndex } });
-    const existing = root.querySelector("#feed-backdrop");
-    if (existing) existing.remove();
-
-    const group = categoryGroups[groupIndex];
-
-    const holder = document.createElement("div");
-    holder.innerHTML = `
-      <div class="feed-backdrop" id="feed-backdrop">
-        <div class="feed-header">
-          <button class="back-link" id="feed-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
-          <p class="feed-title">${group.title}</p>
-        </div>
-        <div class="pick-grid">
-          ${group.items.map((raw, i) => {
-            const it = normItem(raw);
-            return `
-            <a class="pick-grid-item" href="${it.link}" target="_blank" rel="noopener noreferrer">
-              <div class="ph" style="aspect-ratio:${it.ratio || "1/1"};">
-                ${photoInner(it.photo)}
-                <span class="rank-badge">${i + 1}</span>
-              </div>
-              <p class="g-brand">${it.brand}</p>
-              <p class="g-name">${it.name}</p>
-              <p class="g-comment">${it.comment}</p>
-            </a>
-          `;
-          }).join("")}
-        </div>
-      </div>
-    `;
-    root.appendChild(holder.firstElementChild);
-    animateOverlayIn(root.querySelector("#feed-backdrop"));
-
-    const backdrop = root.querySelector("#feed-backdrop");
-    root.querySelector("#feed-close").addEventListener("click", () => { writeUI({ feed: null }); animateOverlayOut(backdrop); });
+  function setupLabelBar(backdrop) {
+    const sticky = backdrop.querySelector(".ep-sticky");
+    const buttons = [...backdrop.querySelectorAll(".ep-labelbar button")];
+    const secs = [...backdrop.querySelectorAll(".ep-sec")];
+    buttons.forEach((btn) => {
+      const sec = secs.find((s) => s.dataset.label === btn.dataset.jump);
+      if (!sec) { btn.style.display = "none"; return; }
+      btn.addEventListener("click", () => {
+        const top = sec.getBoundingClientRect().top - backdrop.getBoundingClientRect().top + backdrop.scrollTop - sticky.offsetHeight - 4;
+        backdrop.scrollTo({ top, behavior: "smooth" });
+        setChip(btn.dataset.jump);
+        holdUntil = Date.now() + 900; // 스크롤이 끝날 때까지 누른 칩 유지
+      });
+    });
+    let holdUntil = 0;
+    const setChip = (label) => buttons.forEach((b) => b.classList.toggle("active", b.dataset.jump === label));
+    const mark = () => {
+      if (Date.now() < holdUntil) return;
+      const line = sticky.getBoundingClientRect().bottom + 40;
+      let current = null;
+      secs.forEach((s) => { if (s.getBoundingClientRect().top <= line) current = s.dataset.label; });
+      // 맨 아래까지 내리면 마지막 섹션(옷쟁이)
+      if (backdrop.scrollTop + backdrop.clientHeight >= backdrop.scrollHeight - 4 && secs.length) current = secs[secs.length - 1].dataset.label;
+      setChip(current);
+    };
+    backdrop.addEventListener("scroll", mark, { passive: true });
+    mark();
   }
 
-  const reelsFallback = [
-    { caption: "패션 입문자를 위한 현시점 1순위 기본템", link: "#" },
-    { caption: "하체가 안예뻐서 고민이라면 이 바지로 회생가능", link: "#" },
-    { caption: "기본템 1황 이거 하나면 코디 끝", link: "#" },
-    { caption: "나이대별 코디법 총정리", link: "#" },
-    { caption: "안 질리는 무채색 조합 꿀팁", link: "#" },
-    { caption: "첫 데이트룩 이렇게 입으면 실패 없음", link: "#" },
-  ];
-  const reels = (ADMIN && ADMIN.reels && ADMIN.reels.length) ? ADMIN.reels : reelsFallback;
+  function closeEpisode() {
+    const backdrop = root.querySelector("#ep-backdrop");
+    document.body.style.overflow = "";
+    writeUI({ epScroll: null });
+    if (backdrop) animateOverlayOut(backdrop);
+  }
 
-  const categoryGroupsFallback = [
-    {
-      title: "아우터",
-      sub: "요즘 많이 찾는 아우터 모음",
-      items: [
-        ["웬즈데이", "크롭 가디건", "가벼운데 핏이 예쁜"],
-        ["무신사 스탠다드", "숏 패딩", "가성비로 못 참는 기본템"],
-        ["마르디 메크르디", "트렌치 코트", "봄가을 내내 입는"],
-        ["아워데이즈", "무스탕 숏 재킷", "포인트 주기 좋은"],
-      ],
-    },
-    {
-      title: "하의",
-      sub: "핏 하나로 승부 보는 하의들",
-      items: [
-        ["아워데이즈", "와이드 데님", "핏이 예뻐서 자주 추천하는"],
-        ["유니클로", "슬랙스", "무난하게 하나쯤 있어야 하는"],
-        ["폴로 랄프로렌", "치노 팬츠", "포멀룩에 이거 하나면 끝"],
-        ["나이키", "스웻 팬츠", "편한 날엔 무조건 이거"],
-      ],
-    },
-    {
-      title: "신발",
-      sub: "발밑까지 신경 쓴 신발 모음",
-      items: [
-        ["로맨틱무브", "러그 더비 슈즈", "편해서 계속 손이 가는"],
-        ["나이키", "에어 포스 1", "입문자 첫 신발로 최고"],
-        ["탠디", "로퍼", "포멀하게도 캐주얼하게도"],
-        ["닥터마틴", "첼시 부츠", "한 켤레로 존재감 있는"],
-      ],
-    },
-  ];
-  const categoryGroups = (ADMIN && ADMIN.categories && ADMIN.categories.length) ? ADMIN.categories : categoryGroupsFallback;
+  function routeFromHash() {
+    const m = location.hash.match(/^#ep=([\w-]+)/);
+    if (m) openEpisode(m[1]);
+    else closeEpisode();
+  }
 
-  const pickGroupsFallback = [
-    {
-      title: "지금 가장 잘나가는 추천템",
-      sub: "요즘 문의 제일 많이 받는 아이템만 모았어요",
-      items: [
-        ["무신사 스탠다드", "후디드 라이트 다운 재킷 14컬러", "89,000원", "20%", "신상인데 가장 매력적인"],
-        ["뉴발란스", "ML2002RC (GRAY)", "129,000원", "15%", "누구나 입기 좋은 국밥"],
-        ["킨치", "SHOWER 808 (a) / BLACK", "156,000원", null, "포멀룩에 이거 하나면 끝"],
-        ["로맨틱무브", "러그 더비 R26H920", "98,000원", null, "편해서 계속 손이 가는"],
-        ["액트플러스", "얼라인플러스 하이드로", "112,000원", "10%", "카와이한데 은근 실용적"],
-      ],
-    },
-    {
-      title: "입문자를 위한 가성비 필수템",
-      sub: "패션 처음이면 이것부터 사면 됩니다",
-      items: [
-        ["웬즈데이", "오아시스 크롭 데님 셔츠", "68,000원", "40%", "가성비로 못 참는 초도할인"],
-        ["아워데이즈", "세미 커브드 데님 팬츠", "58,000원", "12%", "핏 하나로 승부보는 팬츠"],
-        ["아워데이즈", "세미 커브드 치노 팬츠", "58,000원", null, "무난하게 하나쯤 있어야 하는"],
-        ["아워데이즈", "세미 커브드 스웻 팬츠", "49,000원", "10%", "편한 날엔 무조건 이거"],
-        ["나이키", "에어 포스 1 07 화이트", "139,000원", "10%", "입문자 첫 신발로 최고"],
-      ],
-    },
-    {
-      title: "이번 주 신상 체크",
-      sub: "새로 올라온 것 중에 눈여겨볼 것들",
-      items: [
-        ["마뗑킴", "패커블 크로스 포켓백", "89,000원", "20%", "이번 시즌 제일 많이 물어본 가방"],
-        ["쿠어", "워시드 램스킨 카 코트", "298,000원", null, "순삭됐던 그 코트 재입고"],
-        ["디미트리블랙", "2WAY 어센틱 윈드브레이커", "76,000원", null, "평소보다 만원 저렴한 지금"],
-        ["데우스 엑스 마키나", "서울 컬리지 어드레스 티", "58,000원", null, "품절 전에 미리 챙기기"],
-      ],
-    },
-  ];
-  const pickGroups = (ADMIN && ADMIN.picks && ADMIN.picks.length) ? ADMIN.picks : pickGroupsFallback;
-
+  // ============================================================
+  // 화면 그리기
+  // ============================================================
   const siteFallback = {
     brand: "MD STUDIO", name: "광만두", instagram: "your_instagram",
     bio: "매일 코디와 아이템을 공유합니다. 카드를 누르면 구매 페이지로 이동해요.",
@@ -1144,19 +1133,21 @@ async function renderPublicSite(root) {
   const site = (ADMIN && ADMIN.site) ? Object.assign({}, siteFallback, ADMIN.site) : siteFallback;
   { const ib = document.getElementById("md-intro-brand"); if (ib) ib.textContent = site.brand; }
 
+  const outfitGroups = [...new Set(outfits.map((o) => o.group))];
+
   root.innerHTML = `
     <header class="head">
       <div class="top-bar">
-        <p class="brand" id="brand-home-2" style="cursor:pointer;">${site.brand}</p>
-        <a class="handle" id="ig-link" href="https://instagram.com/${site.instagram}" target="_blank" rel="noopener noreferrer">@${site.instagram}</a>
+        <p class="brand" id="brand-home-2" style="cursor:pointer;">${esc(site.brand)}</p>
+        <a class="handle" id="ig-link" href="https://instagram.com/${encodeURIComponent(site.instagram || "")}" target="_blank" rel="noopener noreferrer">@${esc(site.instagram)}</a>
       </div>
       <div class="profile-row">
         <div class="avatar-ring" id="brand-home" style="cursor:pointer;">
           ${photoTag(site.avatar, "avatar")}
         </div>
         <div class="profile-text">
-          <p class="profile-name" id="brand-home-text" style="cursor:pointer;">${site.name}</p>
-          <p class="bio">${site.bio}</p>
+          <p class="profile-name" id="brand-home-text" style="cursor:pointer;">${esc(site.name)}</p>
+          <p class="bio">${esc(site.bio)}</p>
         </div>
       </div>
       <hr class="head-divider">
@@ -1166,12 +1157,12 @@ async function renderPublicSite(root) {
       <p class="collab-label">LINE UP</p>
       <div class="collab-scroll" id="collab-scroll">
         ${collabs.map((c) => `
-          <a class="collab-card" style="--collab-pop:${c.pop}; aspect-ratio:${c.ratio || "4/5"};" href="${c.link || "#"}" target="_blank" rel="noopener noreferrer">
-            ${photoTag(c.photo, "cc-photo", c.photoBg ? `style="background:${c.photoBg}"` : "")}
-            <span class="cc-sticker">${c.caption}</span>
+          <a class="collab-card" style="--collab-pop:${esc(c.pop)}; aspect-ratio:${esc(c.ratio || "4/5")};" href="${esc(safeUrl(c.link) || "#")}" target="_blank" rel="noopener">
+            ${photoTag(c.photo, "cc-photo", c.photoBg ? `style="background:${esc(c.photoBg)}"` : "")}
+            <span class="cc-sticker">${esc(c.caption)}</span>
             <div class="cc-text">
-              <p class="cc-eyebrow">${c.eyebrow}</p>
-              <p class="cc-headline">${c.headline.split("\n").join("<br>")}</p>
+              <p class="cc-eyebrow">${esc(c.eyebrow)}</p>
+              <p class="cc-headline">${String(c.headline).split("\n").map(esc).join("<br>")}</p>
               <div class="cc-foot"><span class="cc-caption">TAP IN →</span></div>
             </div>
           </a>
@@ -1185,8 +1176,6 @@ async function renderPublicSite(root) {
     <nav class="tabs">
       <button data-tab="outfits" class="active">실착</button>
       <button data-tab="picks">추천템</button>
-      <button data-tab="category">카테고리 꿀템 모음</button>
-      <button data-tab="tips">꿀팁</button>
     </nav>
 
     <div class="wrap" id="tab-viewport">
@@ -1195,156 +1184,65 @@ async function renderPublicSite(root) {
         <div class="section-head">
           <p class="section-title">LOOK</p>
         </div>
-        ${[...new Set(outfits.map((o) => o.group))].map((groupName) => `
+        ${outfitGroups.map((groupName) => `
           <div class="outfit-group">
             <div class="outfit-group-head" style="justify-content:flex-end;">
-              <span class="see-all outfit-see-all" data-group="${groupName}" style="cursor:pointer;">전체보기 →</span>
+              <span class="see-all outfit-see-all" data-group="${esc(groupName)}" style="cursor:pointer;">전체보기 →</span>
             </div>
             <div class="polaroid-scroll">
               ${outfits.filter((o) => o.group === groupName).map((o) => `
-                <div class="polaroid outfit-card" data-outfit-id="${o.id}">
-                  ${photoTag(o.photo, "", `style="aspect-ratio:${o.ratio || "2/3"};"`)}
+                <div class="polaroid outfit-card" data-outfit-id="${esc(o.id)}">
+                  ${photoTag(o.photo, "", `style="aspect-ratio:${esc(o.ratio || "2/3")};"`)}
                   <span class="polaroid-click">Tap in</span>
                 </div>
               `).join("")}
             </div>
           </div>
         `).join("")}
-
-        <div class="pick-group" style="margin-top:6px;">
-          <div class="pick-group-head">
-            <p class="pick-group-title">${pickGroups[0].title}</p>
-            <span class="see-all" id="look-picks-more" style="cursor:pointer;">추천템 보러가기 →</span>
-          </div>
-          <div class="h-scroll">
-            ${pickGroups[0].items.map((raw) => {
-              const it = normItem(raw);
-              return `
-              <a class="p-card" href="${it.link}" target="_blank" rel="noopener noreferrer">
-                ${photoTag(it.photo, "", `style="aspect-ratio:${it.ratio || "4/5"};"`)}
-                <p class="p-brand">${it.brand}</p>
-                <p class="p-name">${it.name}</p>
-                <p class="p-comment">${it.comment}</p>
-              </a>
-            `;
-            }).join("")}
-          </div>
-        </div>
-
-        <div class="pick-group" style="margin-top:22px;">
-          <div class="pick-group-head">
-            <p class="pick-group-title">${categoryGroups[0].title} 추천</p>
-            <span class="see-all" id="look-category-more" style="cursor:pointer;">카테고리별 보러가기 →</span>
-          </div>
-          <div class="h-scroll">
-            ${categoryGroups[0].items.map((raw, i) => {
-              const it = normItem(raw);
-              return `
-              <a class="p-card" href="${it.link}" target="_blank" rel="noopener noreferrer">
-                <div class="ph" style="aspect-ratio:${it.ratio || "4/5"};">
-                  ${photoInner(it.photo)}
-                  <span class="rank-num">${i + 1}</span>
-                </div>
-                <p class="p-brand">${it.brand}</p>
-                <p class="p-name">${it.name}</p>
-                <p class="p-comment">${it.comment}</p>
-              </a>
-            `;
-            }).join("")}
-          </div>
-        </div>
       </section>
 
       <section id="tab-picks" class="section">
-        ${pickGroups.map((group, gi) => `
-          <div class="pick-group">
-            <div class="pick-group-head">
-              <p class="pick-group-title">${group.title}</p>
-              <span class="see-all pick-see-all" data-group-index="${gi}" style="cursor:pointer;">전체보기 →</span>
-            </div>
-            <p class="pick-group-sub">${group.sub}</p>
-            <div class="h-scroll">
-              ${group.items.map((raw, i) => {
-                const it = normItem(raw);
-                return `
-                <a class="p-card" href="${it.link}" target="_blank" rel="noopener noreferrer">
-                  <div class="ph" style="aspect-ratio:${it.ratio || "4/5"};">
-                    ${photoInner(it.photo)}
-                    <span class="rank-num">${i + 1}</span>
-                  </div>
-                  <p class="p-brand">${it.brand}</p>
-                  <p class="p-name">${it.name}</p>
-                  <p class="p-comment">${it.comment}</p>
-                </a>
-              `;
-              }).join("")}
-            </div>
-          </div>
-        `).join("")}
-      </section>
-
-      <section id="tab-category" class="section">
-        ${categoryGroups.map((group, gi) => `
-          <div class="pick-group">
-            <div class="pick-group-head">
-              <p class="pick-group-title">${group.title}</p>
-              <span class="see-all category-see-all" data-group-index="${gi}" style="cursor:pointer;">전체보기 →</span>
-            </div>
-            <p class="pick-group-sub">${group.sub}</p>
-            <div class="h-scroll">
-              ${group.items.map((raw, i) => {
-                const it = normItem(raw);
-                return `
-                <a class="p-card" href="${it.link}" target="_blank" rel="noopener noreferrer">
-                  <div class="ph" style="aspect-ratio:${it.ratio || "4/5"};">
-                    ${photoInner(it.photo)}
-                    <span class="rank-num">${i + 1}</span>
-                  </div>
-                  <p class="p-brand">${it.brand}</p>
-                  <p class="p-name">${it.name}</p>
-                  <p class="p-comment">${it.comment}</p>
-                </a>
-              `;
-              }).join("")}
-            </div>
-          </div>
-        `).join("")}
-      </section>
-
-      <section id="tab-tips" class="section">
-        <div class="section-head">
-          <p class="section-title">꿀팁 릴스</p>
+        <div class="ep-filter" id="ep-filter">
+          <button type="button" data-f="all">전체</button>
+          <button type="button" data-f="가성비">가성비</button>
+          <button type="button" data-f="가심비">가심비</button>
         </div>
-        <div class="reel-grid">
-          ${reels.map((r) => `
-            <a class="reel-card" href="${r.link}" target="_blank" rel="noopener noreferrer">
-              <div class="reel-thumb-wrap">
-                ${photoTag(r.photo, "reel-thumb", `style="aspect-ratio:${r.ratio || "9/16"};"`)}
-                <span class="reel-play-badge">▶</span>
-              </div>
-              <p class="reel-caption">${r.caption}</p>
-            </a>
-          `).join("")}
-        </div>
+        <div id="ep-list">${episodeGridHtml()}</div>
       </section>
       </div>
       <div class="site-footer">
-        <p class="footer-brand">${site.footer}</p>
+        <p class="footer-brand">${esc(site.footer)}</p>
       </div>
     </div>
   `;
 
-  const TAB_ORDER = ["outfits", "picks", "category", "tips"];
+  // ---------- 추천템 필터 ----------
+  const filterBtns = root.querySelectorAll("#ep-filter button");
+  const syncFilter = () => filterBtns.forEach((b) => b.classList.toggle("active", b.dataset.f === epFilter));
+  syncFilter();
+  filterBtns.forEach((b) => b.addEventListener("click", () => {
+    epFilter = b.dataset.f;
+    writeUI({ epFilter });
+    syncFilter();
+    root.querySelector("#ep-list").innerHTML = episodeGridHtml();
+  }));
+  root.querySelector("#ep-list").addEventListener("click", (e) => {
+    if (e.target.closest(".ep-card")) openedFromList = true;
+  });
+
+  // ---------- 탭 ----------
+  const TAB_ORDER = ["outfits", "picks"];
   const buttons = root.querySelectorAll("nav.tabs button");
   const slider = root.querySelector("#tab-slider");
   const viewport = root.querySelector("#tab-viewport");
   let activeIndex = 0;
+  const step = 100 / TAB_ORDER.length;
 
   function setActive(index, opts) {
     opts = opts || {};
     activeIndex = Math.max(0, Math.min(TAB_ORDER.length - 1, index));
     slider.style.transition = opts.instant ? "none" : "";
-    slider.style.transform = `translateX(-${activeIndex * 25}%)`;
+    slider.style.transform = `translateX(-${activeIndex * step}%)`;
     buttons.forEach((b, i) => b.classList.toggle("active", i === activeIndex));
     writeUI({ tab: activeIndex });
     if (opts.instant) slider.getBoundingClientRect(); // 강제 리플로우
@@ -1354,49 +1252,56 @@ async function renderPublicSite(root) {
     btn.addEventListener("click", () => setActive(i));
   });
 
-  // 스와이프 제스처
-  let touchStartX = 0, touchCurrentX = 0, dragging = false, viewportWidth = 0;
+  // 스와이프 제스처 (가로로 넘기는 사진 줄 위에서는 탭이 안 넘어가게)
+  let touchStartX = 0, touchStartY = 0, touchCurrentX = 0, dragging = false, viewportWidth = 0, decided = false, horizontal = false;
   viewport.addEventListener("touchstart", (e) => {
-    dragging = true;
+    if (e.target.closest(".polaroid-scroll")) { dragging = false; return; }
+    dragging = true; decided = false; horizontal = false;
     touchStartX = touchCurrentX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
     viewportWidth = viewport.getBoundingClientRect().width;
-    slider.style.transition = "none";
-  });
+  }, { passive: true });
   viewport.addEventListener("touchmove", (e) => {
     if (!dragging) return;
     touchCurrentX = e.touches[0].clientX;
-    const deltaX = touchCurrentX - touchStartX;
-    slider.style.transform = `translateX(calc(-${activeIndex * 25}% + ${deltaX}px))`;
-  });
+    const dx = touchCurrentX - touchStartX;
+    const dy = e.touches[0].clientY - touchStartY;
+    if (!decided && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+      decided = true;
+      horizontal = Math.abs(dx) > Math.abs(dy);
+      if (horizontal) slider.style.transition = "none";
+    }
+    if (horizontal) slider.style.transform = `translateX(calc(-${activeIndex * step}% + ${dx}px))`;
+  }, { passive: true });
   viewport.addEventListener("touchend", () => {
     if (!dragging) return;
     dragging = false;
+    if (!horizontal) return;
     slider.style.transition = "";
-    const deltaX = touchCurrentX - touchStartX;
-    if (Math.abs(deltaX) > viewportWidth * 0.16) {
-      setActive(activeIndex + (deltaX < 0 ? 1 : -1));
-    } else {
-      setActive(activeIndex);
-    }
+    const dx = touchCurrentX - touchStartX;
+    if (Math.abs(dx) > viewportWidth * 0.16) setActive(activeIndex + (dx < 0 ? 1 : -1));
+    else setActive(activeIndex);
   });
 
-  setActive(Number.isInteger(savedUI.tab) ? savedUI.tab : 0, { instant: true });
+  // 처음 열 때: 추천템 링크(#ep=…)로 들어오면 추천템 탭, 아니면 보던 탭
+  const startTab = location.hash.startsWith("#ep=") ? 1 : (Number.isInteger(savedUI.tab) ? savedUI.tab : 0);
+  setActive(startTab, { instant: true });
+
   // 무신사 갔다가 돌아왔을 때 보던 화면 그대로 복원
   try {
     if (savedUI.feed && savedUI.feed.type === "outfit") openOutfitFeed(savedUI.feed.key || undefined);
-    else if (savedUI.feed && savedUI.feed.type === "pick" && pickGroups[savedUI.feed.key]) openPickFeed(savedUI.feed.key);
-    else if (savedUI.feed && savedUI.feed.type === "category" && categoryGroups[savedUI.feed.key]) openCategoryFeed(savedUI.feed.key);
     if (savedUI.outfitId) {
       const o = outfits.find((x) => String(x.id) === String(savedUI.outfitId));
       if (o) openOutfitModal(o);
     }
   } catch (e) {}
+  window.addEventListener("hashchange", routeFromHash);
+  if (location.hash.startsWith("#ep=")) routeFromHash();
   finishIntro();
 
-  root.querySelectorAll(".outfit-card").forEach((card) => {
+  root.querySelectorAll("#tab-outfits .outfit-card").forEach((card) => {
     card.addEventListener("click", () => {
-      const id = card.dataset.outfitId;
-      const outfit = outfits.find((o) => String(o.id) === id);
+      const outfit = outfits.find((o) => String(o.id) === card.dataset.outfitId);
       if (outfit) openOutfitModal(outfit);
     });
   });
@@ -1405,35 +1310,21 @@ async function renderPublicSite(root) {
     btn.addEventListener("click", () => openOutfitFeed(btn.dataset.group));
   });
 
-  root.querySelectorAll(".pick-see-all").forEach((btn) => {
-    btn.addEventListener("click", () => openPickFeed(Number(btn.dataset.groupIndex)));
-  });
-
-  root.querySelectorAll(".category-see-all").forEach((btn) => {
-    btn.addEventListener("click", () => openCategoryFeed(Number(btn.dataset.groupIndex)));
-  });
-
-  const lookPicksMore = root.querySelector("#look-picks-more");
-  if (lookPicksMore) lookPicksMore.addEventListener("click", () => setActive(TAB_ORDER.indexOf("picks")));
-
-  const lookCategoryMore = root.querySelector("#look-category-more");
-  if (lookCategoryMore) lookCategoryMore.addEventListener("click", () => setActive(TAB_ORDER.indexOf("category")));
-
   const goHome = () => {
     const outfitBackdrop = root.querySelector("#outfit-modal-backdrop");
     if (outfitBackdrop) animateOverlayOut(outfitBackdrop);
     const feedBackdrop = root.querySelector("#feed-backdrop");
     if (feedBackdrop) animateOverlayOut(feedBackdrop);
+    writeUI({ outfitId: null, feed: null });
     setActive(TAB_ORDER.indexOf("outfits"));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const brandHome = root.querySelector("#brand-home");
-  if (brandHome) brandHome.addEventListener("click", goHome);
-  const brandHomeText = root.querySelector("#brand-home-text");
-  if (brandHomeText) brandHomeText.addEventListener("click", goHome);
-  const brandHome2 = root.querySelector("#brand-home-2");
-  if (brandHome2) brandHome2.addEventListener("click", goHome);
+  ["#brand-home", "#brand-home-text", "#brand-home-2"].forEach((sel) => {
+    const el = root.querySelector(sel);
+    if (el) el.addEventListener("click", goHome);
+  });
 
+  // ---------- 상단 라인업 캐러셀 (그대로) ----------
   const collabScroll = root.querySelector("#collab-scroll");
   const dots = root.querySelectorAll("#collab-dots .dot");
   if (collabScroll && dots.length) {
@@ -1455,7 +1346,6 @@ async function renderPublicSite(root) {
     };
     const stopAutoplay = () => { if (autoplayTimer) clearInterval(autoplayTimer); };
 
-    // 사용자가 직접 스크롤하면 점 표시 동기화 + 잠깐 자동재생 멈췄다가 재개
     collabScroll.addEventListener("scroll", () => {
       const idx = Math.round(collabScroll.scrollLeft / cardStep());
       currentIndex = idx;
@@ -1466,12 +1356,11 @@ async function renderPublicSite(root) {
         stopAutoplay();
         clearTimeout(resumeTimer);
         resumeTimer = setTimeout(startAutoplay, 3500);
-      });
+      }, { passive: true });
     });
 
     startAutoplay();
   }
-
 }
 
 const ROOT_EL = document.getElementById("app-root");

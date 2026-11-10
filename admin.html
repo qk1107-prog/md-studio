@@ -252,6 +252,43 @@
     font: inherit; font-size: 13.5px; font-weight: 700; padding: 10px 16px; border-radius: 8px; cursor: pointer; border: 1px solid #e8e4dc; background: #fff; color: #191817;
   }
   .crop-actions button.primary { background: #ff5a2e; border-color: #ff5a2e; color: #fff; }
+
+  /* ---------- 일괄 등록 미리보기 ---------- */
+  #app-root .bulk-box { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-top: 12px; background: #fff; }
+  #app-root .msg-err { color: var(--danger); font-size: 12.5px; margin: 4px 0 0; line-height: 1.45; }
+  #app-root .msg-warn { color: #a86a00; font-size: 12.5px; margin: 4px 0 0; line-height: 1.45; }
+  #app-root .look-prev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 12px; }
+  #app-root .look-prev { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; font-size: 11.5px; }
+  #app-root .look-prev img { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; }
+  #app-root .look-prev .lp-num { position: absolute; top: 6px; left: 6px; background: var(--fg); color: #fff; font-size: 12px; font-weight: 800; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+  #app-root .ep-prev { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #fff; }
+  #app-root .ep-prev.bad { border-color: #f0b4b4; background: #fff8f8; }
+  #app-root .ep-prev-head { display: flex; gap: 12px; align-items: flex-start; }
+  #app-root .ep-prev-thumb { width: 54px; aspect-ratio: 9/16; border-radius: 6px; background: var(--tag-bg); flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 9.5px; color: var(--fg-muted); text-align: center; line-height: 1.3; }
+  #app-root .ep-prev-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #app-root .file-btn { display: inline-block; font-size: 12px; padding: 7px 12px; cursor: pointer; }
+  #app-root .mini-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 8px; }
+  #app-root .mini-table td { text-align: left; padding: 5px 6px; border-top: 1px solid var(--line); vertical-align: middle; }
+  #app-root .ee-row { display: grid; grid-template-columns: 104px 1fr 1.6fr 34px; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  #app-root .ee-row .ee-link { grid-column: 2 / 3; }
+  #app-root .ee-row .ee-img { grid-column: 3 / 4; }
+  #app-root .ee-row input, #app-root .ee-row select { width: 100%; min-width: 0; font: inherit; font-size: 12.5px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--fg); }
+  #app-root .ee-row .ee-rm { padding: 4px; grid-row: 1 / 3; grid-column: 4; }
+
+  /* ---------- 휴대폰에서 관리자 화면 ---------- */
+  @media (max-width: 720px) {
+    #app-root .shell { flex-direction: column; }
+    #app-root .side { width: auto; border-right: none; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 4px; padding: 12px; }
+    #app-root .side .brand { width: 100%; padding: 0 6px 6px; }
+    #app-root .side button.nav-item { width: auto; margin: 0; }
+    #app-root .side .logout { width: 100%; margin-top: 6px; padding-top: 8px; }
+    #app-root .main { padding: 18px 14px 60px; }
+    #app-root .grid2 { grid-template-columns: 1fr; }
+    #app-root .ee-row { grid-template-columns: 1fr 1fr 34px; }
+    #app-root .ee-row .ee-label { grid-column: 1 / 3; }
+    #app-root .ee-row .ee-name, #app-root .ee-row .ee-link, #app-root .ee-row .ee-img { grid-column: 1 / 3; }
+    #app-root .ee-row .ee-rm { grid-row: 1; grid-column: 3; }
+  }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
@@ -315,6 +352,64 @@ async function renderAdminApp(root) {
   };
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // ============================================================
+  // 사진 보관함(Supabase Storage "media")에 올리기
+  // 사진을 데이터 안에 통째로 넣지 않고 파일로 따로 보관 → 사이트가 훨씬 가벼워져요
+  // ============================================================
+  function loadImageEl(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => resolve({ img, url });
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(`사진을 읽을 수 없어요: ${file.name || ""} (아이폰 HEIC 사진이면 JPG로 바꿔주세요)`)); };
+      img.src = url;
+    });
+  }
+  async function compressImage(file, maxSide) {
+    const { img, url } = await loadImageEl(file);
+    let w = img.naturalWidth, h = img.naturalHeight;
+    const scale = Math.min(1, maxSide / Math.max(w, h));
+    w = Math.round(w * scale); h = Math.round(h * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    URL.revokeObjectURL(url);
+    const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.86));
+    if (!blob) throw new Error("사진 변환에 실패했어요");
+    return { blob, ratio: `${w}/${h}` };
+  }
+  async function uploadBlob(blob, folder) {
+    const n = new Date();
+    const day = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+    const path = `${folder}/${day}/${uid()}.jpg`;
+    const { error } = await supabaseClient.storage.from("media").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000", upsert: false });
+    if (error) throw error;
+    return supabaseClient.storage.from("media").getPublicUrl(path).data.publicUrl;
+  }
+  async function uploadImageFile(file, folder, maxSide) {
+    const { blob, ratio } = await compressImage(file, maxSide || 1400);
+    const url = await uploadBlob(blob, folder);
+    return { url, ratio };
+  }
+  // 자르기 창에서 나온 사진(data:…)이면 보관함에 올리고 주소로 바꿔요. 실패하면 예전 방식 그대로 둬요.
+  async function persistPhoto(src, folder) {
+    if (!src || !String(src).startsWith("data:")) return src;
+    try {
+      const blob = await (await fetch(src)).blob();
+      return await uploadBlob(blob, folder);
+    } catch (e) {
+      console.warn("사진 보관함 업로드 실패 — 데이터 안에 그대로 저장해요", e);
+      return src;
+    }
+  }
 
   function fileToDataUrl(file) {
     return new Promise((resolve, reject) => {
@@ -414,7 +509,8 @@ async function renderAdminApp(root) {
 
   async function saveData(data) {
     const ok = await saveSiteDataToSupabase(data);
-    if (!ok) toast("저장에 실패했어요. 인터넷 연결을 확인해주세요.");
+    if (!ok) toast("저장에 실패했어요. 인터넷 연결이나 로그인 상태를 확인해주세요.");
+    return ok;
   }
 
   let DATA = null;
@@ -548,9 +644,7 @@ async function renderAdminApp(root) {
     { key: "site", label: "사이트 설정" },
     { key: "lineup", label: "라인업" },
     { key: "outfits", label: "실착 (LOOK)" },
-    { key: "picks", label: "추천템" },
-    { key: "categories", label: "카테고리 꿀템 모음" },
-    { key: "reels", label: "꿀팁 릴스" },
+    { key: "episodes", label: "추천템 (편)" },
   ];
 
   function renderShell() {
@@ -598,9 +692,7 @@ async function renderAdminApp(root) {
     if (currentPage === "site") return renderSitePage(main);
     if (currentPage === "lineup") return renderLineupPage(main);
     if (currentPage === "outfits") return renderOutfitsPage(main);
-    if (currentPage === "picks") return renderGroupedPage(main, "picks", "추천템", "카테고리(그룹)별로 아이템을 등록해요. 브랜드/제품명/코멘트/링크만 입력하면 돼요.");
-    if (currentPage === "categories") return renderGroupedPage(main, "categories", "카테고리 꿀템 모음", "아우터/하의/신발처럼 카테고리별로 아이템을 등록해요.");
-    if (currentPage === "reels") return renderReelsPage(main);
+    if (currentPage === "episodes") return renderEpisodesPage(main);
   }
 
   // ============================================================
@@ -652,7 +744,7 @@ async function renderAdminApp(root) {
       const cropped = await pickAndCrop(file, { ratio: 1, title: "프로필 사진 자르기" });
       e.target.value = "";
       if (!cropped) return;
-      s.avatar = cropped.dataUrl;
+      s.avatar = await persistPhoto(cropped.dataUrl, "site");
       await saveData(DATA);
       renderSitePage(main);
       toast("사진이 반영됐어요");
@@ -788,6 +880,7 @@ async function renderAdminApp(root) {
       const sticker = main.querySelector("#lu-sticker").value;
       const link = main.querySelector("#lu-link").value.trim();
       if (!eyebrow || !h1 || !link) { toast("상단 문구, 헤드라인, 연결 링크는 필수예요"); return; }
+      fetchedPhoto = await persistPhoto(fetchedPhoto, "lineup");
       if (editing) {
         editing.photo = fetchedPhoto;
         editing.ratio = fetchedRatio;
@@ -835,39 +928,152 @@ async function renderAdminApp(root) {
   }
 
   // ============================================================
+  // 엑셀 읽기 공통 도우미
+  // ============================================================
+  function normHeader(s) {
+    return String(s == null ? "" : s).replace(/[\s‍️]/g, "").replace(/[^\p{L}\p{N}]/gu, "").toLowerCase();
+  }
+  function cellAt(ws, r, c) { return ws[XLSX.utils.encode_cell({ r, c })]; }
+  function cellText(ws, r, c) {
+    const cell = cellAt(ws, r, c);
+    if (!cell) return "";
+    const v = cell.w != null ? cell.w : cell.v;
+    return String(v == null ? "" : v).trim();
+  }
+  // 하이퍼링크가 걸린 칸(글자는 "링크"인데 실제 주소는 따로 있는 경우)까지 읽어요
+  function cellLink(ws, r, c) {
+    const cell = cellAt(ws, r, c);
+    if (!cell) return "";
+    if (cell.l && cell.l.Target && /^https?:\/\//i.test(cell.l.Target)) return cell.l.Target.trim();
+    if (cell.f) {
+      const m = String(cell.f).match(/HYPERLINK\(\s*"([^"]+)"/i);
+      if (m) return m[1].trim();
+    }
+    return cellText(ws, r, c);
+  }
+  function ymd(y, m, d) {
+    if (!y || !m || !d || m > 12 || d > 31) return "";
+    return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  }
+  function cellDate(ws, r, c) {
+    const cell = cellAt(ws, r, c);
+    if (!cell) return "";
+    if (cell.t === "n" && cell.v > 20000 && cell.v < 80000) {
+      const d = XLSX.SSF.parse_date_code(cell.v);
+      if (d) return ymd(d.y, d.m, d.d);
+    }
+    if (cell.v instanceof Date) return ymd(cell.v.getFullYear(), cell.v.getMonth() + 1, cell.v.getDate());
+    const s = String(cell.w != null ? cell.w : cell.v).trim();
+    let m = s.match(/(\d{4})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/);
+    if (m) return ymd(+m[1], +m[2], +m[3]);
+    m = s.match(/^(\d{4})(\d{2})(\d{2})$/);
+    if (m) return ymd(+m[1], +m[2], +m[3]);
+    m = s.match(/^(\d{2})(\d{2})(\d{2})$/);
+    if (m) return ymd(2000 + +m[1], +m[2], +m[3]);
+    m = s.match(/^(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/);
+    if (m) return ymd(new Date().getFullYear(), +m[1], +m[2]);
+    return "";
+  }
+  // 헤더 줄에서 각 열 위치 찾기 (못 찾으면 기본 위치 A, B, C…)
+  function findCols(ws, headerRow, spec, defaults) {
+    const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+    const heads = [];
+    for (let c = range.s.c; c <= Math.min(range.e.c, 40); c++) heads.push({ c, h: normHeader(cellText(ws, headerRow, c)) });
+    const used = new Set();
+    const out = {};
+    const keys = Object.keys(spec);
+    keys.forEach((k) => {
+      for (const cand of spec[k]) {
+        const hit = heads.find((x) => !used.has(x.c) && x.h === cand);
+        if (hit) { out[k] = hit.c; used.add(hit.c); return; }
+      }
+    });
+    keys.forEach((k) => {
+      if (out[k] != null) return;
+      for (const cand of spec[k]) {
+        const hit = heads.find((x) => !used.has(x.c) && x.h && x.h.includes(cand));
+        if (hit) { out[k] = hit.c; used.add(hit.c); return; }
+      }
+    });
+    keys.forEach((k) => { if (out[k] == null) out[k] = defaults[k]; });
+    return out;
+  }
+  async function readWorkbook(file) {
+    const buf = await file.arrayBuffer();
+    return XLSX.read(buf, { type: "array", cellFormula: true, cellNF: true });
+  }
+  function friendlyError(err) {
+    const msg = String((err && (err.message || err.error_description || err.error)) || err || "");
+    if (/does not exist|42P01|schema cache/i.test(msg)) return "Supabase에 표가 아직 없어요. 안내드린 SQL을 먼저 실행해 주세요.";
+    if (/row-level security|42501|permission|Unauthorized|not allowed/i.test(msg)) return "저장 권한이 없어요. 관리자 명단 SQL이 실행됐는지, 로그인이 풀리지 않았는지 확인해 주세요.";
+    if (/bucket not found/i.test(msg)) return "사진 보관함(media)이 아직 없어요. 안내드린 SQL을 먼저 실행해 주세요.";
+    if (/duplicate key|23505/i.test(msg)) return "같은 제목의 편이 이미 있어요. 제목을 바꿔 주세요.";
+    if (/Failed to fetch|NetworkError/i.test(msg)) return "인터넷 연결이 불안정해요. 잠시 후 다시 시도해 주세요.";
+    return msg || "알 수 없는 오류";
+  }
+
+  // ============================================================
   // 3. 실착 (LOOK)
   // ============================================================
+  const NO_CAT = "-";
+  function outfitPieces(o) {
+    if (Array.isArray(o.pieces)) return o.pieces;
+    const list = [];
+    CAT_ORDER.filter((cat) => o.items && o.items[cat]).forEach((cat) => {
+      o.items[cat].forEach(([name, link, size]) => list.push({ cat, brand: "", name, link, size: size || "" }));
+    });
+    return list;
+  }
+
   function renderOutfitsPage(main, editingId) {
     const editing = editingId ? DATA.outfits.find((x) => x.id === editingId) : null;
     main.innerHTML = `
       <p class="page-title">실착 (LOOK)</p>
-      <p class="page-sub">코디 사진을 올리고, 입은 아이템을 카테고리별로 연결해요.</p>
-      <div class="panel">
-        <h2>${editing ? "코디 수정" : "새 코디 등록"}</h2>
-        <div class="field">
-          <label>사진 (올리면 자르기 창이 떠요 — 네모를 자유롭게 조절하거나 비율을 고정할 수 있어요)</label>
-          <input type="file" id="of-file" accept="image/*" />
-        </div>
-        <div class="field">
-          <label>미리보기 (이 모양 그대로 사이트에 보여요)</label>
-          <div id="of-photo-preview" style="width:140px; border-radius:8px; overflow:hidden; background:var(--tag-bg); aspect-ratio:${editing && editing.ratio ? editing.ratio : "2/3"};">
-            ${editing && editing.photo ? `<img src="${editing.photo}" style="width:100%;height:100%;object-fit:cover;display:block;">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--fg-muted);">사진 없음</div>`}
-          </div>
+      <p class="page-sub">코디 사진과 입은 아이템(브랜드 · 옷 이름 · 링크 · 사이즈)을 등록해요.</p>
+      ${editing ? "" : `
+      <div class="panel" style="border-style:dashed;">
+        <h2>📦 사진 + 엑셀로 한 번에 등록</h2>
+        <p class="empty-note" style="margin:0 0 12px;">
+          ① 코디 사진 파일 이름을 <b>1, 2, 3…</b> 번호로 바꿔서 여러 장 한 번에 골라요.<br>
+          ② 엑셀은 <b>4행이 제목(사진번호 · 브랜드 · 옷 이름 · 옷 링크 · 사이즈)</b>, 5행부터 옷 한 개당 한 줄씩. 한 코디에 옷이 여러 개면 같은 사진번호로 여러 줄 적어요.
+        </p>
+        <div class="grid2">
+          <div class="field"><label>① 코디 사진 (여러 장 선택)</label><input type="file" id="ob-photos" accept="image/*" multiple></div>
+          <div class="field"><label>② 엑셀 파일</label><input type="file" id="ob-excel" accept=".xlsx,.xls,.csv"></div>
         </div>
         <div class="grid2">
           <div class="field">
-            <label>분류</label>
-            <select id="of-group">
-              ${DATA.outfitGroups.map((g) => `<option value="${g}" ${editing && editing.group === g ? "selected" : ""}>${g}</option>`).join("")}
-            </select>
-            <div class="row-flex" style="margin-top:8px;">
-              <input id="of-new-group" placeholder="새 분류 이름 (예: 여행룩)" />
-              <button class="btn ghost" id="of-new-group-add" type="button">분류 추가</button>
-            </div>
+            <label>넣을 분류</label>
+            <select id="ob-group">${DATA.outfitGroups.map((g) => `<option value="${esc(g)}">${esc(g)}</option>`).join("")}</select>
+          </div>
+          <div class="field" style="display:flex;align-items:flex-end;">
+            <button class="btn ghost" id="ob-template" type="button">엑셀 양식 다운로드</button>
+          </div>
+        </div>
+        <div id="ob-preview"></div>
+      </div>`}
+      <div class="panel">
+        <h2>${editing ? "코디 수정" : "코디 하나씩 등록"}</h2>
+        <div class="field">
+          <label>사진 (올리면 자르기 창이 떠요)</label>
+          <input type="file" id="of-file" accept="image/*" />
+        </div>
+        <div class="field">
+          <label>미리보기</label>
+          <div id="of-photo-preview" style="width:140px; border-radius:8px; overflow:hidden; background:var(--tag-bg); aspect-ratio:${esc(editing && editing.ratio ? editing.ratio : "2/3")};"></div>
+        </div>
+        <div class="field">
+          <label>분류</label>
+          <select id="of-group">
+            ${DATA.outfitGroups.map((g) => `<option value="${esc(g)}" ${editing && editing.group === g ? "selected" : ""}>${esc(g)}</option>`).join("")}
+          </select>
+          <div class="row-flex" style="margin-top:8px;">
+            <input id="of-new-group" placeholder="새 분류 이름 (예: 여행룩)" style="flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;font-size:14px;" />
+            <button class="btn ghost" id="of-new-group-add" type="button">분류 추가</button>
           </div>
         </div>
         <div class="field">
-          <label>아이템 (카테고리 · 사이즈 · 제품명 · 링크)</label>
+          <label>아이템</label>
           <div id="of-cat-rows"></div>
           <button class="btn ghost" id="of-cat-add" type="button" style="margin-top:4px;">+ 아이템 추가</button>
         </div>
@@ -876,65 +1082,55 @@ async function renderAdminApp(root) {
       </div>
       <div class="panel">
         <h2>등록된 코디 (${DATA.outfits.length})</h2>
+        <p class="empty-note" style="margin:-8px 0 8px;">⋮⋮ 를 잡고 끌어서 순서를 바꿀 수 있어요.</p>
         <div id="of-list">${DATA.outfits.length === 0 ? '<p class="empty-note">아직 없어요.</p>' : DATA.outfits.map(rowOutfit).join("")}</div>
       </div>
     `;
 
     function rowOutfit(o) {
-      const catCount = Object.values(o.items || {}).reduce((a, arr) => a + arr.length, 0);
+      const pieces = outfitPieces(o);
+      const brands = [...new Set(pieces.map((p) => p.brand).filter(Boolean))];
       return `
-        <div class="item-row drag-row" data-id="${o.id}">
+        <div class="item-row drag-row" data-id="${esc(o.id)}">
           <span class="drag-handle">⋮⋮</span>
-          ${o.photo ? `<img class="thumb" src="${o.photo}">` : `<div class="thumb-ph">사진</div>`}
+          ${o.photo ? `<img class="thumb" src="${esc(o.photo)}" loading="lazy">` : `<div class="thumb-ph">사진</div>`}
           <div class="info">
-            <p class="t1">${o.group}</p>
-            <p class="t2">아이템 ${catCount}개</p>
+            <p class="t1">${esc(o.group)}</p>
+            <p class="t2">아이템 ${pieces.length}개${brands.length ? " · " + esc(brands.join(", ")) : ""}</p>
           </div>
-          <button class="btn ghost" data-edit="${o.id}">수정</button>
-          <button class="btn danger" data-del="${o.id}">삭제</button>
+          <button class="btn ghost" data-edit="${esc(o.id)}">수정</button>
+          <button class="btn danger" data-del="${esc(o.id)}">삭제</button>
         </div>
       `;
     }
 
-    function addCatRow(cat, name, link, size) {
+    // ---------- 하나씩 등록 / 수정 ----------
+    function addCatRow(p) {
+      p = p || {};
       const wrap = main.querySelector("#of-cat-rows");
       const block = document.createElement("div");
       block.className = "cat-block";
       block.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;";
       block.innerHTML = `
         <div class="grid2">
-          <div class="field" style="margin-bottom:8px;">
-            <label>카테고리</label>
-            <select class="cat-select">${CAT_ORDER.map((c) => `<option value="${c}" ${c === cat ? "selected" : ""}>${c}</option>`).join("")}</select>
+          <div class="field" style="margin-bottom:8px;"><label>브랜드</label><input class="cat-brand" placeholder="예: 아워데이즈" value="${esc(p.brand || "")}" /></div>
+          <div class="field" style="margin-bottom:8px;"><label>사이즈</label><input class="cat-size" placeholder="예: M, 270, 30" value="${esc(p.size || "")}" /></div>
+        </div>
+        <div class="field" style="margin-bottom:8px;"><label>옷 이름</label><input class="cat-name" value="${esc(p.name || "")}" /></div>
+        <div class="field" style="margin-bottom:8px;"><label>옷 링크 (큐레이터 링크)</label><input class="cat-link" placeholder="https://..." value="${esc(p.link || "")}" /></div>
+        <div class="grid2">
+          <div class="field" style="margin-bottom:0;">
+            <label>카테고리 (선택)</label>
+            <select class="cat-select">${[NO_CAT].concat(CAT_ORDER).map((c) => `<option value="${c}" ${c === (p.cat || NO_CAT) ? "selected" : ""}>${c === NO_CAT ? "없음" : c}</option>`).join("")}</select>
           </div>
-          <div class="field" style="margin-bottom:8px;">
-            <label>사이즈</label>
-            <input class="cat-size" placeholder="예: M, 270, 30" value="${size || ""}" />
-          </div>
+          <div class="field" style="margin-bottom:0;display:flex;align-items:flex-end;"><button type="button" class="btn danger rm-block">이 아이템 삭제</button></div>
         </div>
-        <div class="field" style="margin-bottom:8px;">
-          <label>제품명</label>
-          <input class="cat-name" placeholder="제품명" value="${name || ""}" />
-        </div>
-        <div class="field" style="margin-bottom:8px;">
-          <label>실제 클릭 시 이동할 링크</label>
-          <input class="cat-link" placeholder="https://..." value="${link || ""}" />
-        </div>
-        <button type="button" class="btn danger rm-block">이 아이템 삭제</button>
       `;
-
       block.querySelector(".rm-block").addEventListener("click", () => block.remove());
-
       wrap.appendChild(block);
     }
-    if (editing) {
-      CAT_ORDER.filter((cat) => editing.items[cat]).forEach((cat) => {
-        editing.items[cat].forEach(([name, link, size]) => addCatRow(cat, name, link, size));
-      });
-      if (Object.keys(editing.items).length === 0) addCatRow();
-    } else {
-      addCatRow();
-    }
+    const startPieces = editing ? outfitPieces(editing) : [];
+    if (startPieces.length) startPieces.forEach(addCatRow); else addCatRow();
     main.querySelector("#of-cat-add").addEventListener("click", () => addCatRow());
 
     let previewPhoto = editing ? editing.photo || "" : "";
@@ -943,9 +1139,10 @@ async function renderAdminApp(root) {
       const box = main.querySelector("#of-photo-preview");
       box.style.aspectRatio = previewRatio;
       box.innerHTML = previewPhoto
-        ? `<img src="${previewPhoto}" style="width:100%;height:100%;object-fit:cover;display:block;">`
+        ? `<img src="${esc(previewPhoto)}" style="width:100%;height:100%;object-fit:cover;display:block;">`
         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--fg-muted);">사진 없음</div>`;
     }
+    updatePreview();
     main.querySelector("#of-file").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -958,8 +1155,7 @@ async function renderAdminApp(root) {
     });
 
     main.querySelector("#of-new-group-add").addEventListener("click", async () => {
-      const nameInput = main.querySelector("#of-new-group");
-      const name = nameInput.value.trim();
+      const name = main.querySelector("#of-new-group").value.trim();
       if (!name) { toast("분류 이름을 입력해주세요"); return; }
       if (DATA.outfitGroups.includes(name)) { toast("이미 있는 분류예요"); return; }
       DATA.outfitGroups.push(name);
@@ -969,52 +1165,54 @@ async function renderAdminApp(root) {
     });
 
     main.querySelector("#of-save").addEventListener("click", async () => {
+      const btn = main.querySelector("#of-save");
       const group = main.querySelector("#of-group").value;
       if (!previewPhoto) { toast("사진을 업로드해주세요"); return; }
-      const photo = previewPhoto;
-      const ratio = previewRatio;
-      const items = {};
+      const pieces = [];
       main.querySelectorAll("#of-cat-rows .cat-block").forEach((block) => {
         const cat = block.querySelector(".cat-select").value;
-        const name = block.querySelector(".cat-name").value.trim();
-        const link = block.querySelector(".cat-link").value.trim();
-        const size = block.querySelector(".cat-size").value.trim();
-        if (!name || !link) return;
-        if (!items[cat]) items[cat] = [];
-        items[cat].push([name, link, size]);
+        const p = {
+          brand: block.querySelector(".cat-brand").value.trim(),
+          name: block.querySelector(".cat-name").value.trim(),
+          link: block.querySelector(".cat-link").value.trim(),
+          size: block.querySelector(".cat-size").value.trim(),
+        };
+        if (cat !== NO_CAT) p.cat = cat;
+        if (p.name && p.link) pieces.push(p);
       });
+      btn.disabled = true; btn.textContent = "저장 중…";
+      const photo = await persistPhoto(previewPhoto, "looks");
       if (editing) {
         editing.photo = photo;
         editing.group = group;
-        editing.ratio = ratio;
-        editing.items = items;
+        editing.ratio = previewRatio;
+        editing.pieces = pieces;
+        editing.items = {};
       } else {
-        DATA.outfits.unshift({ id: uid(), photo, group, ratio, items });
+        DATA.outfits.unshift({ id: uid(), photo, group, ratio: previewRatio, pieces, items: {} });
       }
-      await saveData(DATA);
+      const ok = await saveData(DATA);
+      DATA = await loadData();
       renderOutfitsPage(main);
-      flashDone(main, editing ? "수정이 완료됐어요. 새 코디 등록 화면으로 돌아왔어요." : "코디가 등록됐어요");
+      if (ok) flashDone(main, editing ? "수정이 완료됐어요." : "코디가 등록됐어요");
     });
 
-    if (editing) {
-      main.querySelector("#of-cancel").addEventListener("click", () => renderOutfitsPage(main));
-    }
+    if (editing) main.querySelector("#of-cancel").addEventListener("click", () => renderOutfitsPage(main));
 
     main.querySelectorAll("[data-edit]").forEach((btn) => {
-      btn.addEventListener("click", () => renderOutfitsPage(main, btn.dataset.edit));
+      btn.addEventListener("click", () => { renderOutfitsPage(main, btn.dataset.edit); window.scrollTo({ top: 0 }); });
     });
-
     main.querySelectorAll("[data-del]").forEach((btn) => {
       btn.addEventListener("click", () => {
         armDelete(btn, async () => {
           DATA.outfits = DATA.outfits.filter((x) => x.id !== btn.dataset.del);
           await saveData(DATA);
+          DATA = await loadData();
           renderOutfitsPage(main);
           toast("삭제했어요");
         });
       });
     });
-
     const ofList = main.querySelector("#of-list");
     if (ofList) {
       makeSortable(ofList, async (orderIds) => {
@@ -1023,365 +1221,613 @@ async function renderAdminApp(root) {
         toast("순서가 저장됐어요");
       });
     }
+
+    if (!editing) setupOutfitBulk(main);
   }
 
-  // ============================================================
-  // 4/5. 추천템 & 카테고리 꿀템 모음 (같은 구조라 함수 공유)
-  // ============================================================
-  function renderGroupedPage(main, dataKey, title, sub, editing) {
-    const groups = DATA[dataKey];
-    const editItem = editing ? groups[editing.gi].items.find((x) => x.id === editing.id) : null;
-    main.innerHTML = `
-      <p class="page-title">${title}</p>
-      <p class="page-sub">${sub}</p>
-      <div class="panel" style="border-style:dashed;">
-        <h2>📄 엑셀로 한 번에 등록</h2>
-        <p class="empty-note" style="margin:0 0 10px;">엑셀 첫 줄에 <b>그룹 · 브랜드 · 상품명 · 코멘트 · 링크</b> 제목을 두고 아래로 쭉 적어주세요. 없는 그룹 이름은 자동으로 새 그룹이 생겨요. 사진은 등록 후 각 아이템 "수정"에서 넣으면 돼요.</p>
-        <div class="row-flex">
-          <input type="file" id="xl-file" accept=".xlsx,.xls,.csv" />
-          <button class="btn ghost" id="xl-template" type="button">양식 다운로드</button>
-        </div>
-        <div id="xl-preview" style="margin-top:12px;"></div>
-      </div>
-      ${groups.map((g, gi) => `
-        <div class="panel">
-          <div class="subgroup-title">
-            <input class="group-title-input" data-gi="${gi}" value="${g.title}" title="클릭해서 제목 수정" style="font-size:14px;font-weight:800;border:1px dashed var(--line);background:var(--tag-bg);border-radius:6px;padding:4px 8px;width:50%;">
-            <span style="display:flex;align-items:center;gap:10px;">
-              <span style="font-size:12px;color:var(--fg-muted);">${g.items.length}개 등록됨</span>
-              <button class="btn danger" data-del-group="${gi}" type="button" style="padding:2px 8px;">그룹 삭제</button>
-            </span>
-          </div>
-          <input class="group-sub-input" data-gi="${gi}" value="${g.sub}" placeholder="그룹 소개 (선택)" title="클릭해서 부제목 수정" style="width:100%;border:1px dashed var(--line);background:var(--tag-bg);border-radius:6px;font-size:12.5px;color:var(--fg-muted);padding:4px 8px;margin-top:6px;">
-          <p class="empty-note" style="margin:4px 0 0;">✏️ 제목·부제목을 클릭해서 바로 수정할 수 있어요 (입력 후 다른 곳을 누르면 저장돼요)</p>
-          <div id="${dataKey}-list-${gi}" style="margin-top:10px;">
-            ${g.items.length === 0 ? '<p class="empty-note">아직 등록된 아이템이 없어요.</p>' : g.items.map((it) => rowItem(it, gi)).join("")}
-          </div>
-          <hr style="border:none;border-top:1px solid var(--line);margin:14px 0;">
-          <h2 style="font-size:13px;">${editing && editing.gi === gi ? "아이템 수정" : "아이템 추가"}</h2>
-          <div class="grid2">
-            <div class="field">
-              <label>사진</label>
-              <input type="file" class="add-file" data-gi="${gi}" accept="image/*">
-              <div style="margin-top:6px;">${editing && editing.gi === gi && editItem.photo ? `<img src="${editItem.photo}" style="width:44px;height:56px;object-fit:cover;border-radius:6px;">` : ""}</div>
-            </div>
-            <div class="field"><label>브랜드</label><input class="add-brand" data-gi="${gi}" value="${editing && editing.gi === gi ? editItem.brand : ""}"></div>
-          </div>
-          <div class="grid2">
-            <div class="field"><label>제품명</label><input class="add-name" data-gi="${gi}" value="${editing && editing.gi === gi ? editItem.name : ""}"></div>
-            <div class="field"><label>링크</label><input class="add-link" data-gi="${gi}" placeholder="https://..." value="${editing && editing.gi === gi ? editItem.link : ""}"></div>
-          </div>
-          <div class="field"><label>코멘트</label><input class="add-comment" data-gi="${gi}" placeholder="예: 신상인데 가장 매력적인" value="${editing && editing.gi === gi ? (editItem.comment || "") : ""}"></div>
-          <button class="btn accent add-item-btn" data-gi="${gi}">${editing && editing.gi === gi ? "수정 저장" : "아이템 추가"}</button>
-          ${editing && editing.gi === gi ? `<button class="btn ghost cancel-edit-btn" type="button" style="margin-left:8px;">취소</button>` : ""}
-        </div>
-      `).join("")}
-      <button class="btn ghost" id="add-group-btn" type="button" style="width:100%;">+ 새 그룹 추가</button>
-    `;
+  // ---------- 실착 일괄 등록 ----------
+  function setupOutfitBulk(main) {
+    let photoFiles = [];
+    let sheetRows = null; // null = 엑셀 아직 안 고름
+    let sheetName = "";
+    const box = main.querySelector("#ob-preview");
+    const objectUrls = [];
 
-    function rowItem(it, gi) {
-      return `
-        <div class="item-row drag-row" data-id="${it.id}" data-gi="${gi}">
-          <span class="drag-handle">⋮⋮</span>
-          ${it.photo ? `<img class="thumb" src="${it.photo}">` : `<div class="thumb-ph">사진</div>`}
-          <div class="info">
-            <p class="t1">${it.brand} · ${it.name}</p>
-            <p class="t2">${it.comment || ""}</p>
-          </div>
-          <button class="btn ghost" data-edit-gi="${gi}" data-edit-id="${it.id}">수정</button>
-          <button class="btn danger" data-del-gi="${gi}" data-del-id="${it.id}">삭제</button>
-        </div>
-      `;
-    }
-
-    // ---------- 엑셀 일괄 등록 ----------
-    const XL_COLS = { group: ["그룹", "카테고리"], brand: ["브랜드"], name: ["상품명", "제품명", "이름"], comment: ["코멘트", "설명"], link: ["링크", "url", "URL"] };
-    function pickCol(row, keys) {
-      for (const k of Object.keys(row)) {
-        const kk = String(k).trim();
-        if (keys.some((x) => x.toLowerCase() === kk.toLowerCase())) return String(row[k] ?? "").trim();
-      }
-      return "";
-    }
-    let xlRows = [];
-    main.querySelector("#xl-template").addEventListener("click", () => {
+    main.querySelector("#ob-template").addEventListener("click", () => {
       const ws = XLSX.utils.aoa_to_sheet([
-        ["그룹", "브랜드", "상품명", "코멘트", "링크"],
-        ["지금 가장 잘나가는 추천템", "무신사 스탠다드", "후디드 라이트 다운 재킷", "신상인데 가장 매력적인", "https://..."],
+        ["실착 일괄 등록 양식 — 4행 제목은 그대로 두고 5행부터 적어주세요"],
+        ["사진 파일 이름의 번호(1, 2, 3…)와 사진번호를 맞춰주세요. 한 코디에 옷이 여러 개면 같은 번호로 여러 줄."],
+        [],
+        ["사진번호", "브랜드", "옷 이름", "옷 링크", "사이즈"],
+        [1, "아워데이즈", "세미 커브드 데님 팬츠", "https://...", "30"],
+        [1, "웬즈데이", "오아시스 크롭 데님 셔츠", "https://...", "L"],
+        [2, "뉴발란스", "ML2002RC", "https://...", "270"],
       ]);
+      ws["!cols"] = [{ wch: 9 }, { wch: 16 }, { wch: 30 }, { wch: 40 }, { wch: 8 }];
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "items");
-      XLSX.writeFile(wb, "md-studio-양식.xlsx");
+      XLSX.utils.book_append_sheet(wb, ws, "실착");
+      XLSX.writeFile(wb, "실착-일괄등록-양식.xlsx");
     });
-    main.querySelector("#xl-file").addEventListener("change", async (e) => {
+
+    main.querySelector("#ob-photos").addEventListener("change", (e) => {
+      photoFiles = [...e.target.files];
+      refresh();
+    });
+    main.querySelector("#ob-excel").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: "array" });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const raw = XLSX.utils.sheet_to_json(ws, { defval: "" });
-      const good = [], bad = [];
-      raw.forEach((row, i) => {
-        const r = {
-          group: pickCol(row, XL_COLS.group), brand: pickCol(row, XL_COLS.brand),
-          name: pickCol(row, XL_COLS.name), comment: pickCol(row, XL_COLS.comment), link: pickCol(row, XL_COLS.link),
-        };
-        if (!r.group && !r.brand && !r.name && !r.link) return; // 빈 줄
-        if (!r.group || !r.brand || !r.name || !r.link) bad.push({ line: i + 2, r });
-        else good.push(r);
+      try {
+        const wb = await readWorkbook(file);
+        sheetName = wb.SheetNames[0];
+        sheetRows = parseOutfitSheet(wb.Sheets[sheetName]);
+      } catch (err) {
+        sheetRows = [];
+        toast("엑셀을 읽지 못했어요: " + friendlyError(err));
+      }
+      refresh();
+    });
+
+    function parseOutfitSheet(ws) {
+      const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+      const cols = findCols(ws, 3,
+        { num: ["사진번호", "번호", "no"], brand: ["브랜드"], link: ["옷링크", "큐레이터링크", "링크"], size: ["사이즈"], name: ["옷이름", "제품명", "상품명", "이름"] },
+        { num: 0, brand: 1, name: 2, link: 3, size: 4 });
+      const rows = [];
+      for (let r = 4; r <= range.e.r; r++) {
+        const numText = cellText(ws, r, cols.num);
+        const brand = cellText(ws, r, cols.brand);
+        const name = cellText(ws, r, cols.name);
+        const link = cellLink(ws, r, cols.link);
+        const size = cellText(ws, r, cols.size);
+        if (!numText && !brand && !name && !link) continue;
+        const m = numText.match(/\d+/);
+        rows.push({ line: r + 1, num: m ? String(parseInt(m[0], 10)) : "", brand, name, link, size });
+      }
+      return rows;
+    }
+
+    function photoNum(file) {
+      const stem = file.name.replace(/\.[^.]+$/, "");
+      const m = stem.match(/^\s*(\d+)/) || stem.match(/(\d+)\s*$/);
+      return m ? String(parseInt(m[1], 10)) : "";
+    }
+
+    let looks = [];
+    function refresh() {
+      objectUrls.splice(0).forEach((u) => URL.revokeObjectURL(u));
+      looks = [];
+      if (!photoFiles.length && sheetRows === null) { box.innerHTML = ""; return; }
+      const warns = [];
+      const errs = [];
+
+      const photoMap = new Map();
+      photoFiles.forEach((f) => {
+        const n = photoNum(f);
+        if (!n) { warns.push(`번호를 못 읽은 사진: ${f.name} (파일 이름을 숫자로 바꿔주세요)`); return; }
+        if (photoMap.has(n)) { warns.push(`${n}번 사진이 2장 이상이에요 (${photoMap.get(n).name}, ${f.name}) — 첫 번째만 써요`); return; }
+        photoMap.set(n, f);
       });
-      xlRows = good;
-      const newGroups = [...new Set(good.map((r) => r.group))].filter((t) => !groups.some((g) => g.title.trim() === t));
-      const box = main.querySelector("#xl-preview");
-      if (!good.length && !bad.length) { box.innerHTML = '<p class="empty-note">읽을 수 있는 줄이 없어요. 첫 줄 제목(그룹·브랜드·상품명·코멘트·링크)을 확인해주세요.</p>'; return; }
+
+      const rowMap = new Map();
+      (sheetRows || []).forEach((row) => {
+        const problems = [];
+        if (!row.num) problems.push("사진번호");
+        if (!row.name) problems.push("옷 이름");
+        if (!/^https?:\/\//i.test(row.link)) problems.push("옷 링크");
+        if (problems.length) { errs.push(`${row.line}행: ${problems.join(", ")} 칸을 확인해주세요 → 이 줄은 빼고 등록해요`); return; }
+        if (!rowMap.has(row.num)) rowMap.set(row.num, []);
+        rowMap.get(row.num).push(row);
+      });
+
+      const nums = [...new Set([...photoMap.keys(), ...rowMap.keys()])].sort((a, b) => Number(a) - Number(b));
+      const photoOnly = [], rowOnly = [];
+      nums.forEach((n) => {
+        const f = photoMap.get(n), rows = rowMap.get(n);
+        if (f && rows) {
+          const url = URL.createObjectURL(f);
+          objectUrls.push(url);
+          looks.push({ num: n, file: f, rows, url });
+        } else if (f) photoOnly.push(n);
+        else rowOnly.push(n);
+      });
+      if (sheetRows !== null && photoOnly.length) warns.push(`사진은 있는데 엑셀에 없는 번호: ${photoOnly.join(", ")} → 등록 안 해요`);
+      if (photoFiles.length && rowOnly.length) warns.push(`엑셀엔 있는데 사진이 없는 번호: ${rowOnly.join(", ")} → 등록 안 해요`);
+
+      const waiting = !photoFiles.length ? "① 코디 사진을 골라주세요." : sheetRows === null ? "② 엑셀 파일을 골라주세요." : "";
       box.innerHTML = `
-        <p style="font-size:13px;font-weight:700;margin:0 0 8px;">등록할 아이템 ${good.length}개${newGroups.length ? ` · 새로 생길 그룹 ${newGroups.length}개 (${newGroups.join(", ")})` : ""}</p>
-        ${bad.length ? `<p class="err" style="margin:0 0 8px;">빠진 칸이 있어 건너뛸 줄 ${bad.length}개: ${bad.map((b) => b.line + "행").join(", ")} (그룹·브랜드·상품명·링크는 필수)</p>` : ""}
-        <div style="max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:8px;">
-          <table style="width:100%;border-collapse:collapse;font-size:12px;">
-            <thead><tr style="background:var(--tag-bg);"><th style="text-align:left;padding:6px 8px;">그룹</th><th style="text-align:left;padding:6px 8px;">브랜드</th><th style="text-align:left;padding:6px 8px;">상품명</th><th style="text-align:left;padding:6px 8px;">코멘트</th></tr></thead>
-            <tbody>${good.slice(0, 50).map((r) => `<tr><td style="padding:6px 8px;border-top:1px solid var(--line);">${r.group}</td><td style="padding:6px 8px;border-top:1px solid var(--line);">${r.brand}</td><td style="padding:6px 8px;border-top:1px solid var(--line);">${r.name}</td><td style="padding:6px 8px;border-top:1px solid var(--line);color:var(--fg-muted);">${r.comment}</td></tr>`).join("")}</tbody>
-          </table>
+        <div class="bulk-box">
+          <p style="font-size:13px;font-weight:800;margin:0;">사진 ${photoFiles.length}장 · 엑셀 ${(sheetRows || []).length}줄${sheetName ? ` (시트: ${esc(sheetName)})` : ""} → 등록할 코디 <span style="color:var(--accent)">${looks.length}개</span></p>
+          ${waiting ? `<p class="msg-warn">${waiting}</p>` : ""}
+          ${errs.map((t) => `<p class="msg-err">⛔ ${esc(t)}</p>`).join("")}
+          ${warns.map((t) => `<p class="msg-warn">⚠️ ${esc(t)}</p>`).join("")}
+          ${looks.length ? `
+            <div class="look-prev-grid">
+              ${looks.map((l) => `
+                <div class="look-prev">
+                  <div style="position:relative;"><img src="${l.url}"><span class="lp-num">${l.num}</span></div>
+                  <div style="padding:8px;">
+                    ${l.rows.map((r) => `<p style="margin:0 0 4px;line-height:1.35;"><b>${esc(r.brand)}</b> ${esc(r.name)}${r.size ? ` <span style="color:var(--fg-muted)">(${esc(r.size)})</span>` : ""}</p>`).join("")}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+            <button class="btn accent" id="ob-commit" type="button" style="margin-top:12px;">${looks.length}개 등록하기</button>
+            <span class="empty-note" id="ob-status" style="margin-left:8px;"></span>
+          ` : ""}
         </div>
-        ${good.length > 50 ? `<p class="empty-note">…외 ${good.length - 50}개</p>` : ""}
-        <button class="btn accent" id="xl-commit" type="button" style="margin-top:10px;" ${good.length ? "" : "disabled"}>${good.length}개 등록하기</button>
       `;
+      const commit = box.querySelector("#ob-commit");
+      if (commit) commit.addEventListener("click", () => commitLooks(commit));
+    }
+
+    async function commitLooks(btn) {
+      const status = box.querySelector("#ob-status");
+      const group = main.querySelector("#ob-group").value;
+      btn.disabled = true;
+      const created = [];
+      try {
+        for (let i = 0; i < looks.length; i++) {
+          const l = looks[i];
+          btn.textContent = `사진 올리는 중 ${i + 1}/${looks.length}…`;
+          const up = await uploadImageFile(l.file, "looks", 1400);
+          created.push({
+            id: uid(), photo: up.url, ratio: up.ratio, group, items: {},
+            pieces: l.rows.map((r) => ({ brand: r.brand, name: r.name, link: r.link, size: r.size })),
+          });
+        }
+        btn.textContent = "저장 중…";
+        const fresh = await loadData();
+        fresh.outfits = created.concat(fresh.outfits || []);
+        const ok = await saveSiteDataToSupabase(fresh);
+        if (!ok) throw new Error("저장에 실패했어요");
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = `${looks.length}개 등록하기`;
+        if (status) { status.textContent = "❌ " + friendlyError(err); status.style.color = "var(--danger)"; }
+        toast("등록하지 못했어요: " + friendlyError(err));
+        return;
+      }
+      DATA = await loadData();
+      renderOutfitsPage(main);
+      flashDone(main, `코디 ${created.length}개를 "${group}" 분류에 등록했어요`);
+    }
+  }
+
+  // ============================================================
+  // 4. 추천템 (편) — Supabase episodes / episode_items 표
+  // ============================================================
+  const EP_LABELS = ["국밥", "힙함", "남친룩", "옷쟁이"];
+  const EP_EMOJI = { 국밥: "🍚", 힙함: "🔥", 남친룩: "🤍", 옷쟁이: "👑" };
+  const EP_EXPECT = { 국밥: 9, 힙함: 9, 남친룩: 9, 옷쟁이: 3 };
+  const EP_EXPECT_BRANDS = { 국밥: 3, 힙함: 3, 남친룩: 3, 옷쟁이: 1 };
+  let EPISODES_CACHE = null;
+
+  function normLabel(s) {
+    s = String(s || "");
+    if (s.includes("국밥") || s.includes("🍚")) return "국밥";
+    if (s.includes("힙") || s.includes("🔥")) return "힙함";
+    if (s.includes("남친") || s.includes("🤍")) return "남친룩";
+    if (s.includes("옷쟁이") || s.includes("👑")) return "옷쟁이";
+    return "";
+  }
+  function normSeries(s) {
+    s = String(s || "");
+    if (s.includes("가성비")) return "가성비";
+    if (s.includes("가심비")) return "가심비";
+    return "";
+  }
+
+  async function fetchEpisodes() {
+    const { data, error } = await supabaseClient
+      .from("episodes")
+      .select("id,title,series,upload_date,reel_url,thumbnail_url,pick_comment,created_at,episode_items(count)")
+      .order("upload_date", { ascending: false })
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data || []).map((e) => ({ ...e, itemCount: (e.episode_items && e.episode_items[0] && e.episode_items[0].count) || 0 }));
+  }
+
+  // 편 하나 저장 (같은 제목이면 덮어쓰기) — 제품은 통째로 교체
+  async function saveEpisode(ep, items, thumbUrl, existingId) {
+    const payload = {
+      title: ep.title,
+      series: ep.series,
+      upload_date: ep.upload_date,
+      reel_url: ep.reel_url || null,
+      pick_comment: ep.pick_comment || null,
+    };
+    if (thumbUrl !== undefined) payload.thumbnail_url = thumbUrl;
+    let row;
+    if (existingId) {
+      const { data, error } = await supabaseClient.from("episodes").update(payload).eq("id", existingId).select("id").single();
+      if (error) throw error;
+      row = data;
+    } else {
+      const { data, error } = await supabaseClient.from("episodes").upsert(payload, { onConflict: "title" }).select("id").single();
+      if (error) throw error;
+      row = data;
+    }
+    const del = await supabaseClient.from("episode_items").delete().eq("episode_id", row.id);
+    if (del.error) throw del.error;
+    if (items.length) {
+      const ins = await supabaseClient.from("episode_items").insert(items.map((it, i) => ({
+        episode_id: row.id,
+        label: it.label,
+        brand: it.brand,
+        product_name: it.product_name,
+        curator_url: it.curator_url,
+        image_url: it.image_url || null,
+        sort_order: i,
+      })));
+      if (ins.error) throw ins.error;
+    }
+    return row.id;
+  }
+
+  // 시트 하나 → 편 하나
+  function parseEpisodeSheet(ws, sheetName) {
+    const title = cellText(ws, 3, 1);
+    const seriesRaw = cellText(ws, 4, 1);
+    const dateTxt = cellText(ws, 5, 1);
+    const upload_date = cellDate(ws, 5, 1);
+    const reel_url = cellLink(ws, 6, 1);
+    const pick_comment = cellText(ws, 7, 1);
+    if (!title && !seriesRaw && !reel_url) return { skip: true, sheetName };
+
+    const errors = [], warnings = [];
+    const series = normSeries(seriesRaw) || normSeries(title);
+    if (!title) errors.push("B4 제목이 비어 있어요");
+    if (!series) errors.push(`B5 시리즈는 "가성비" 또는 "가심비"여야 해요 (지금: ${seriesRaw || "빈칸"})`);
+    if (!upload_date) errors.push(`B6 업로드 날짜를 못 읽었어요 (지금: ${dateTxt || "빈칸"}) — 2026-11-16 형식으로 적어주세요`);
+    if (reel_url && !/^https?:\/\//i.test(reel_url)) errors.push("B7 릴스 링크가 https:// 로 시작하지 않아요");
+    if (!reel_url) warnings.push("B7 릴스 링크가 비어 있어요 (영상 다시 보기 버튼이 안 보여요)");
+    if (!pick_comment) warnings.push("B8 옷쟁이 한마디가 비어 있어요");
+
+    const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+    const cols = findCols(ws, 9,
+      { label: ["라벨", "구분", "섹션"], brand: ["브랜드"], name: ["제품명", "상품명", "이름"], link: ["큐레이터링크", "큐레이터"], image: ["사진링크", "이미지링크", "사진", "이미지"] },
+      { label: 0, brand: 1, name: 2, link: 3, image: 4 });
+    const items = [];
+    let curLabel = "", curBrand = "";
+    let noImage = 0;
+    for (let r = 10; r <= range.e.r; r++) {
+      const rawLabel = cellText(ws, r, cols.label);
+      const brand = cellText(ws, r, cols.brand);
+      const name = cellText(ws, r, cols.name);
+      const link = cellLink(ws, r, cols.link);
+      const image = cellLink(ws, r, cols.image);
+      if (!rawLabel && !brand && !name && !link) continue;
+      if (rawLabel) {
+        const nl = normLabel(rawLabel);
+        if (nl !== curLabel) curBrand = "";
+        curLabel = nl || ("?" + rawLabel);
+      }
+      if (brand) curBrand = brand;
+      if (!name && !link) continue; // 라벨만 적힌 줄(구분선)은 건너뛰기
+      const line = r + 1;
+      const it = { label: curLabel, brand: brand || curBrand, product_name: name, curator_url: link, image_url: "", line };
+      if (!EP_LABELS.includes(it.label)) errors.push(`${line}행: 라벨을 못 읽었어요 (${rawLabel || "빈칸"}) — 국밥/힙함/남친룩/옷쟁이 중 하나`);
+      if (!it.brand) errors.push(`${line}행: 브랜드가 비어 있어요`);
+      if (!name) errors.push(`${line}행: 제품명이 비어 있어요`);
+      if (!/^https?:\/\//i.test(link)) errors.push(`${line}행: 큐레이터 링크가 없거나 https:// 로 시작하지 않아요`);
+      if (/^https?:\/\//i.test(image)) it.image_url = image; else noImage++;
+      items.push(it);
+    }
+    if (noImage) warnings.push(`사진 링크가 없는 제품 ${noImage}개 (사이트에 "사진" 자리로 보여요)`);
+    EP_LABELS.forEach((l) => {
+      const list = items.filter((x) => x.label === l);
+      const brands = new Set(list.map((x) => x.brand));
+      if (list.length !== EP_EXPECT[l]) warnings.push(`${EP_EMOJI[l]} ${l} 제품이 ${list.length}개예요 (보통 ${EP_EXPECT[l]}개)`);
+      else if (brands.size !== EP_EXPECT_BRANDS[l]) warnings.push(`${EP_EMOJI[l]} ${l} 브랜드가 ${brands.size}개예요 (보통 ${EP_EXPECT_BRANDS[l]}개)`);
+    });
+    if (!items.length) errors.push("11행부터 제품을 하나도 못 읽었어요");
+    // 라벨 순서대로 정렬 (같은 라벨 안에서는 엑셀 순서 유지)
+    items.sort((a, b) => EP_LABELS.indexOf(a.label) - EP_LABELS.indexOf(b.label) || a.line - b.line);
+    return { sheetName, title, series, upload_date, reel_url, pick_comment, items, errors, warnings };
+  }
+
+  function seriesChip(s) {
+    const color = s === "가심비" ? "background:#ff3d9a;color:#fff;" : "background:#c6ff3d;color:#191817;";
+    return `<span class="tag-chip" style="${color}">${esc(s || "?")}</span>`;
+  }
+  function labelCounts(items) {
+    return EP_LABELS.map((l) => `${EP_EMOJI[l]} ${items.filter((x) => x.label === l).length}`).join(" · ");
+  }
+
+  async function renderEpisodesPage(main) {
+    main.innerHTML = `<p class="page-title">추천템 (편)</p><div class="loading">불러오는 중…</div>`;
+    let loadErr = "";
+    try { EPISODES_CACHE = await fetchEpisodes(); } catch (err) { EPISODES_CACHE = []; loadErr = friendlyError(err); }
+    const episodes = EPISODES_CACHE;
+
+    main.innerHTML = `
+      <p class="page-title">추천템 (편)</p>
+      <p class="page-sub">릴스 한 편 = 엑셀 시트 한 개. 시트가 여러 개면 한 번에 여러 편이 등록돼요. 같은 제목을 다시 올리면 덮어써요.</p>
+      ${loadErr ? `<div class="panel" style="border-color:#f0b4b4;background:#fff8f8;"><p class="msg-err" style="margin:0;">⛔ ${esc(loadErr)}</p></div>` : ""}
+      <div class="panel" style="border-style:dashed;">
+        <h2>📄 엑셀로 편 등록</h2>
+        <p class="empty-note" style="margin:0 0 10px;">
+          B4 제목 · B5 시리즈(가성비/가심비) · B6 업로드 날짜 · B7 릴스 링크 · B8 옷쟁이 한마디<br>
+          10행 제목: 라벨 · 브랜드 · 제품명 · 큐레이터 링크 · 사진 링크 → 11행부터 제품 30줄 (오른쪽 참고용 열은 무시해요)
+        </p>
+        <div class="row-flex">
+          <input type="file" id="ep-file" accept=".xlsx,.xls" style="flex:1;" />
+          <button class="btn ghost" id="ep-template" type="button">양식 다운로드</button>
+        </div>
+        <div id="ep-preview"></div>
+      </div>
+      <div class="panel">
+        <h2>등록된 편 (${episodes.length})</h2>
+        <div id="ep-list">
+          ${episodes.length === 0 ? '<p class="empty-note">아직 없어요.</p>' : episodes.map((e) => `
+            <div class="item-row">
+              ${e.thumbnail_url ? `<img class="thumb" src="${esc(e.thumbnail_url)}" style="aspect-ratio:9/16;height:auto;width:40px;" loading="lazy">` : `<div class="thumb-ph" style="width:40px;height:71px;">썸네일</div>`}
+              <div class="info">
+                <p class="t1">${seriesChip(e.series)}${esc(e.title)}</p>
+                <p class="t2">${esc(e.upload_date)} · 제품 ${e.itemCount}개${e.reel_url ? "" : " · 릴스 링크 없음"}</p>
+              </div>
+              <button class="btn ghost" data-ep-edit="${esc(e.id)}">수정</button>
+              <button class="btn danger" data-ep-del="${esc(e.id)}">삭제</button>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+
+    main.querySelector("#ep-template").addEventListener("click", downloadEpisodeTemplate);
+    main.querySelector("#ep-file").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
       e.target.value = "";
-      const commit = main.querySelector("#xl-commit");
-      if (commit) commit.addEventListener("click", async () => {
-        commit.disabled = true; commit.textContent = "등록 중…";
-        xlRows.forEach((r) => {
-          let g = groups.find((x) => x.title.trim() === r.group);
-          if (!g) { g = { id: uid(), title: r.group, sub: "", items: [] }; groups.push(g); }
-          g.items.push({ id: uid(), photo: "", ratio: "4/5", brand: r.brand, name: r.name, link: r.link, comment: r.comment });
-        });
-        await saveData(DATA);
-        renderGroupedPage(main, dataKey, title, sub);
-        flashDone(main, `${xlRows.length}개 아이템을 등록했어요. 이제 각 아이템 "수정"에서 사진을 넣어주세요.`);
-      });
+      let wb;
+      try { wb = await readWorkbook(file); } catch (err) { toast("엑셀을 읽지 못했어요"); return; }
+      const parsed = wb.SheetNames.map((n) => parseEpisodeSheet(wb.Sheets[n], n));
+      showEpisodePreview(main, parsed.filter((p) => !p.skip), parsed.filter((p) => p.skip).map((p) => p.sheetName), episodes);
     });
 
-    main.querySelectorAll(".group-title-input").forEach((input) => {
-      input.addEventListener("change", async () => {
-        groups[Number(input.dataset.gi)].title = input.value.trim();
-        await saveData(DATA);
-        toast("그룹 이름이 저장됐어요");
-      });
+    main.querySelectorAll("[data-ep-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => renderEpisodeEdit(main, btn.dataset.epEdit));
     });
-    main.querySelectorAll(".group-sub-input").forEach((input) => {
-      input.addEventListener("change", async () => {
-        groups[Number(input.dataset.gi)].sub = input.value.trim();
-        await saveData(DATA);
-        toast("저장됐어요");
-      });
-    });
-
-    main.querySelector("#add-group-btn").addEventListener("click", async () => {
-      groups.push({ id: uid(), title: "새 그룹", sub: "", items: [] });
-      await saveData(DATA);
-      renderGroupedPage(main, dataKey, title, sub);
-      toast("그룹이 추가됐어요");
-    });
-
-    main.querySelectorAll("[data-del-group]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        if (groups.length <= 1) { toast("최소 1개의 그룹은 있어야 해요"); return; }
-        armDelete(btn, async () => {
-          groups.splice(Number(btn.dataset.delGroup), 1);
-          await saveData(DATA);
-          renderGroupedPage(main, dataKey, title, sub);
-          toast("그룹을 삭제했어요");
-        });
-      });
-    });
-
-    main.querySelectorAll(".cancel-edit-btn").forEach((btn) => {
-      btn.addEventListener("click", () => renderGroupedPage(main, dataKey, title, sub));
-    });
-
-    main.querySelectorAll("[data-edit-id]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        renderGroupedPage(main, dataKey, title, sub, { gi: Number(btn.dataset.editGi), id: btn.dataset.editId });
-      });
-    });
-
-    const pendingItemPhotos = {};
-    const pendingItemRatios = {};
-    main.querySelectorAll(".add-file").forEach((input) => {
-      input.addEventListener("change", async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const gi = input.dataset.gi;
-        const cropped = await pickAndCrop(file, { title: "아이템 사진 자르기" });
-        e.target.value = "";
-        if (!cropped) return;
-        pendingItemPhotos[gi] = cropped.dataUrl;
-        pendingItemRatios[gi] = cropped.ratio;
-        let prev = input.parentElement.querySelector(".add-file-preview");
-        if (!prev) {
-          prev = document.createElement("div");
-          prev.className = "add-file-preview";
-          prev.style.marginTop = "6px";
-          input.parentElement.appendChild(prev);
-        }
-        prev.innerHTML = `<img src="${cropped.dataUrl}" style="width:44px;aspect-ratio:${cropped.ratio};object-fit:cover;border-radius:6px;">`;
-      });
-    });
-
-    main.querySelectorAll(".add-item-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const gi = Number(btn.dataset.gi);
-        const brand = main.querySelector(`.add-brand[data-gi="${gi}"]`).value.trim();
-        const name = main.querySelector(`.add-name[data-gi="${gi}"]`).value.trim();
-        const link = main.querySelector(`.add-link[data-gi="${gi}"]`).value.trim();
-        const comment = main.querySelector(`.add-comment[data-gi="${gi}"]`).value.trim();
-        if (!brand || !name || !link) { toast("브랜드, 제품명, 링크는 필수예요"); return; }
-        const isEditingThis = editing && editing.gi === gi;
-        let photo = isEditingThis ? editItem.photo || "" : "";
-        let ratio = isEditingThis ? editItem.ratio || "4/5" : "4/5";
-        if (pendingItemPhotos[gi]) { photo = pendingItemPhotos[gi]; ratio = pendingItemRatios[gi] || ratio; }
-        if (isEditingThis) {
-          editItem.photo = photo;
-          editItem.ratio = ratio;
-          editItem.brand = brand;
-          editItem.name = name;
-          editItem.link = link;
-          editItem.comment = comment;
-        } else {
-          groups[gi].items.push({ id: uid(), photo, ratio, brand, name, link, comment });
-        }
-        await saveData(DATA);
-        renderGroupedPage(main, dataKey, title, sub);
-        flashDone(main, isEditingThis ? "수정이 완료됐어요." : "아이템이 등록됐어요");
-      });
-    });
-
-    main.querySelectorAll("[data-del-id]").forEach((btn) => {
+    main.querySelectorAll("[data-ep-del]").forEach((btn) => {
       btn.addEventListener("click", () => {
         armDelete(btn, async () => {
-          const gi = Number(btn.dataset.delGi);
-          groups[gi].items = groups[gi].items.filter((x) => x.id !== btn.dataset.delId);
-          await saveData(DATA);
-          renderGroupedPage(main, dataKey, title, sub);
+          btn.disabled = true;
+          const { error } = await supabaseClient.from("episodes").delete().eq("id", btn.dataset.epDel);
+          if (error) { toast("삭제하지 못했어요: " + friendlyError(error)); btn.disabled = false; return; }
+          await renderEpisodesPage(main);
           toast("삭제했어요");
         });
-      });
-    });
-
-    groups.forEach((g, gi) => {
-      const listEl = main.querySelector(`#${dataKey}-list-${gi}`);
-      if (!listEl) return;
-      makeSortable(listEl, async (orderIds) => {
-        groups[gi].items = orderIds.map((id) => g.items.find((x) => x.id === id)).filter(Boolean);
-        await saveData(DATA);
-        toast("순서가 저장됐어요");
       });
     });
   }
 
-  // ============================================================
-  // 6. 꿀팁 릴스
-  // ============================================================
-  function renderReelsPage(main, editingId) {
-    const editing = editingId ? DATA.reels.find((x) => x.id === editingId) : null;
-    main.innerHTML = `
-      <p class="page-title">꿀팁 릴스</p>
-      <p class="page-sub">썸네일 + 캡션 + 인스타 링크만 넣으면 돼요.</p>
-      <div class="panel">
-        <h2>${editing ? "릴스 수정" : "새 릴스 등록"}</h2>
-        <div class="field">
-          <label>썸네일 사진</label>
-          <input type="file" id="rl-file" accept="image/*">
-          <div style="margin-top:8px;">${editing && editing.photo ? `<img src="${editing.photo}" style="width:48px;height:60px;object-fit:cover;border-radius:6px;">` : ""}</div>
-        </div>
-        <div class="field"><label>캡션</label><input id="rl-caption" placeholder="예: 패션 입문자를 위한 현시점 1순위 기본템" value="${editing ? editing.caption : ""}"></div>
-        <div class="field"><label>인스타 릴스 링크</label><input id="rl-link" placeholder="https://instagram.com/reel/..." value="${editing ? editing.link : ""}"></div>
-        <button class="btn accent" id="rl-add">${editing ? "수정 저장" : "등록하기"}</button>
-        ${editing ? `<button class="btn ghost" id="rl-cancel" style="margin-left:8px;">취소</button>` : ""}
-      </div>
-      <div class="panel">
-        <h2>등록된 릴스 (${DATA.reels.length})</h2>
-        <div id="rl-list">${DATA.reels.length === 0 ? '<p class="empty-note">아직 없어요.</p>' : DATA.reels.map(rowReel).join("")}</div>
+  function showEpisodePreview(main, eps, skipped, existing) {
+    const box = main.querySelector("#ep-preview");
+    const seen = new Set();
+    eps.forEach((ep) => {
+      if (!ep.errors.length && ep.title && seen.has(ep.title)) ep.errors.push("같은 파일 안에 제목이 같은 시트가 있어요 (위 시트와 제목을 다르게 해주세요)");
+      if (!ep.errors.length) seen.add(ep.title);
+      ep.existing = existing.find((x) => x.title === ep.title) || null;
+      ep.thumbFile = null;
+    });
+    const good = eps.filter((ep) => !ep.errors.length);
+    const itemTotal = good.reduce((a, ep) => a + ep.items.length, 0);
+
+    box.innerHTML = `
+      <div style="margin-top:14px;">
+        <p style="font-size:13px;font-weight:800;margin:0 0 8px;">시트 ${eps.length}개 읽음 → 등록 가능 <span style="color:var(--accent)">${good.length}편</span> (제품 ${itemTotal}개)</p>
+        ${skipped.length ? `<p class="empty-note" style="margin:0 0 8px;">B4 제목이 비어서 건너뛴 시트: ${skipped.map(esc).join(", ")}</p>` : ""}
+        ${eps.map((ep, i) => `
+          <div class="ep-prev ${ep.errors.length ? "bad" : ""}" data-i="${i}">
+            <div class="ep-prev-head">
+              <div class="ep-prev-thumb" id="ep-thumb-${i}">${ep.existing && ep.existing.thumbnail_url ? `<img src="${esc(ep.existing.thumbnail_url)}">` : "썸네일<br>없음"}</div>
+              <div class="info" style="flex:1;min-width:0;">
+                <p class="t1" style="margin:0;font-size:13.5px;font-weight:800;">${seriesChip(ep.series)}${esc(ep.title || "(제목 없음)")} ${ep.existing ? `<span class="tag-chip" style="background:#fff1d6;color:#a86a00;">덮어쓰기</span>` : `<span class="tag-chip" style="background:#e9f7ec;color:#1f6b35;">새 편</span>`}</p>
+                <p class="t2" style="margin:3px 0 0;font-size:12px;color:var(--fg-muted);">시트 "${esc(ep.sheetName)}" · ${esc(ep.upload_date || "날짜?")} · ${labelCounts(ep.items)}</p>
+                ${ep.pick_comment ? `<p style="margin:4px 0 0;font-size:12px;">👑 "${esc(ep.pick_comment)}"</p>` : ""}
+                ${ep.errors.length ? "" : `<label class="btn ghost file-btn" style="margin-top:8px;">썸네일 고르기 (9:16)<input type="file" accept="image/*" data-thumb="${i}" hidden></label>`}
+              </div>
+            </div>
+            ${ep.errors.map((t) => `<p class="msg-err">⛔ ${esc(t)}</p>`).join("")}
+            ${ep.warnings.map((t) => `<p class="msg-warn">⚠️ ${esc(t)}</p>`).join("")}
+            <details style="margin-top:8px;"><summary style="font-size:12px;cursor:pointer;color:var(--fg-muted);">제품 ${ep.items.length}개 보기</summary>
+              <table class="mini-table"><tbody>
+                ${ep.items.map((it) => `<tr><td>${EP_EMOJI[it.label] || "❓"} ${esc(it.label)}</td><td><b>${esc(it.brand)}</b></td><td>${esc(it.product_name)}</td><td>${it.image_url ? `<img src="${esc(it.image_url)}" style="width:28px;height:34px;object-fit:cover;border-radius:4px;" referrerpolicy="no-referrer">` : "-"}</td></tr>`).join("")}
+              </tbody></table>
+            </details>
+          </div>
+        `).join("")}
+        ${good.length ? `<button class="btn accent" id="ep-commit" type="button">${good.length}편 등록하기 (제품 ${itemTotal}개)</button>` : `<p class="msg-err">⛔ 등록할 수 있는 편이 없어요. 위 빨간 줄을 고친 뒤 다시 올려주세요.</p>`}
+        <div id="ep-commit-status" style="margin-top:8px;"></div>
       </div>
     `;
 
-    function rowReel(r) {
-      return `
-        <div class="item-row drag-row" data-id="${r.id}">
-          <span class="drag-handle">⋮⋮</span>
-          ${r.photo ? `<img class="thumb" src="${r.photo}">` : `<div class="thumb-ph">사진</div>`}
-          <div class="info"><p class="t1">${r.caption}</p></div>
-          <button class="btn ghost" data-edit="${r.id}">수정</button>
-          <button class="btn danger" data-del="${r.id}">삭제</button>
+    box.querySelectorAll("[data-thumb]").forEach((input) => {
+      input.addEventListener("change", (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        const i = Number(input.dataset.thumb);
+        eps[i].thumbFile = f;
+        const url = URL.createObjectURL(f);
+        box.querySelector(`#ep-thumb-${i}`).innerHTML = `<img src="${url}">`;
+      });
+    });
+
+    const commit = box.querySelector("#ep-commit");
+    if (commit) commit.addEventListener("click", async () => {
+      commit.disabled = true;
+      const status = box.querySelector("#ep-commit-status");
+      const done = [], failed = [];
+      for (let i = 0; i < good.length; i++) {
+        const ep = good[i];
+        commit.textContent = `저장 중 ${i + 1}/${good.length} — ${ep.title}`;
+        try {
+          let thumbUrl;
+          if (ep.thumbFile) thumbUrl = (await uploadImageFile(ep.thumbFile, "thumbs", 1080)).url;
+          await saveEpisode(ep, ep.items, thumbUrl, null);
+          done.push(ep.title);
+        } catch (err) {
+          failed.push(`${ep.title}: ${friendlyError(err)}`);
+        }
+      }
+      // 저장 끝 → 목록을 서버에서 다시 불러와 바로 반영
+      await renderEpisodesPage(main);
+      if (done.length) flashDone(main, `${done.length}편 등록 완료: ${done.join(", ")}`);
+      if (failed.length) {
+        const warn = document.createElement("div");
+        warn.className = "panel";
+        warn.style.cssText = "border-color:#f0b4b4;background:#fff8f8;";
+        warn.innerHTML = `<p class="msg-err" style="margin:0 0 4px;font-weight:800;">⛔ 저장 못 한 편 ${failed.length}개</p>${failed.map((t) => `<p class="msg-err">${esc(t)}</p>`).join("")}`;
+        main.insertBefore(warn, main.children[2] || null);
+      }
+    });
+  }
+
+  function downloadEpisodeTemplate() {
+    const rows = [
+      ["광만두 추천템 등록 양식 — 시트 하나 = 편 하나 (시트를 복사해서 여러 편을 한 파일에 넣어도 돼요)"],
+      [],
+      [],
+      ["제목", "가성비 데님 팬츠"],
+      ["시리즈", "가성비"],
+      ["업로드 날짜", "2026-11-16"],
+      ["릴스 링크", "https://www.instagram.com/reel/..."],
+      ["옷쟁이 한마디", "이건 진짜 내가 매일 입는 바지"],
+      [],
+      ["라벨", "브랜드", "제품명", "큐레이터 링크", "사진 링크"],
+    ];
+    const plan = [["🍚 국밥", 9], ["🔥 힙함", 9], ["🤍 남친룩", 9], ["👑 옷쟁이", 3]];
+    plan.forEach(([label, n]) => { for (let i = 0; i < n; i++) rows.push([label, "", "", "", ""]); });
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"] = [{ wch: 14 }, { wch: 18 }, { wch: 34 }, { wch: 40 }, { wch: 40 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "1편");
+    XLSX.writeFile(wb, "추천템-편-양식.xlsx");
+  }
+
+  // ---------- 편 수정 ----------
+  async function renderEpisodeEdit(main, id) {
+    main.innerHTML = `<p class="page-title">편 수정</p><div class="loading">불러오는 중…</div>`;
+    window.scrollTo({ top: 0 });
+    const [epRes, itRes] = await Promise.all([
+      supabaseClient.from("episodes").select("*").eq("id", id).single(),
+      supabaseClient.from("episode_items").select("*").eq("episode_id", id).order("sort_order"),
+    ]);
+    if (epRes.error || itRes.error) {
+      main.innerHTML = `<p class="page-title">편 수정</p><p class="msg-err">⛔ ${esc(friendlyError(epRes.error || itRes.error))}</p><button class="btn ghost" id="ep-back">← 목록으로</button>`;
+      main.querySelector("#ep-back").addEventListener("click", () => renderEpisodesPage(main));
+      return;
+    }
+    const ep = epRes.data;
+    let thumbFile = null;
+
+    main.innerHTML = `
+      <p class="page-title">편 수정</p>
+      <p class="page-sub"><a href="#" id="ep-back" style="color:var(--fg-muted);">← 목록으로</a></p>
+      <div class="panel">
+        <h2>편 정보</h2>
+        <div class="row-flex" style="align-items:flex-start;gap:16px;">
+          <div>
+            <div class="ep-prev-thumb" id="ee-thumb" style="width:72px;">${ep.thumbnail_url ? `<img src="${esc(ep.thumbnail_url)}">` : "썸네일<br>없음"}</div>
+            <label class="btn ghost file-btn" style="margin-top:6px;">변경<input type="file" accept="image/*" id="ee-thumb-file" hidden></label>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div class="field"><label>제목</label><input id="ee-title" value="${esc(ep.title)}"></div>
+            <div class="grid2">
+              <div class="field"><label>시리즈</label><select id="ee-series">${["가성비", "가심비"].map((s) => `<option ${s === ep.series ? "selected" : ""}>${s}</option>`).join("")}</select></div>
+              <div class="field"><label>업로드 날짜</label><input type="date" id="ee-date" value="${esc(ep.upload_date)}"></div>
+            </div>
+          </div>
         </div>
+        <div class="field"><label>릴스 링크</label><input id="ee-reel" value="${esc(ep.reel_url || "")}" placeholder="https://www.instagram.com/reel/..."></div>
+        <div class="field"><label>옷쟁이 한마디</label><input id="ee-comment" value="${esc(ep.pick_comment || "")}"></div>
+      </div>
+      <div class="panel">
+        <h2>제품 (<span id="ee-count"></span>)</h2>
+        <div id="ee-items"></div>
+        <button class="btn ghost" id="ee-add" type="button" style="margin-top:6px;">+ 제품 추가</button>
+      </div>
+      <button class="btn accent" id="ee-save">수정 저장</button>
+      <button class="btn ghost" id="ee-cancel" style="margin-left:8px;">취소</button>
+      <div id="ee-msg" style="margin-top:10px;"></div>
+    `;
+
+    const itemsBox = main.querySelector("#ee-items");
+    function addItemRow(it) {
+      it = it || { label: "국밥" };
+      const row = document.createElement("div");
+      row.className = "ee-row";
+      row.innerHTML = `
+        <select class="ee-label">${EP_LABELS.map((l) => `<option value="${l}" ${l === it.label ? "selected" : ""}>${EP_EMOJI[l]} ${l}</option>`).join("")}</select>
+        <input class="ee-brand" placeholder="브랜드" value="${esc(it.brand || "")}">
+        <input class="ee-name" placeholder="제품명" value="${esc(it.product_name || "")}">
+        <input class="ee-link" placeholder="큐레이터 링크 https://..." value="${esc(it.curator_url || "")}">
+        <input class="ee-img" placeholder="사진 링크 https://..." value="${esc(it.image_url || "")}">
+        <button type="button" class="btn danger ee-rm" title="이 제품 삭제">✕</button>
       `;
+      row.querySelector(".ee-rm").addEventListener("click", () => { row.remove(); updateCount(); });
+      itemsBox.appendChild(row);
+      updateCount();
     }
+    function updateCount() { main.querySelector("#ee-count").textContent = `${itemsBox.children.length}개`; }
+    (itRes.data || []).forEach(addItemRow);
+    if (!itemsBox.children.length) addItemRow();
 
-    let reelPhoto = editing ? editing.photo || "" : "";
-    let reelRatio = editing ? editing.ratio || "9/16" : "9/16";
-    main.querySelector("#rl-file").addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const cropped = await pickAndCrop(file, { title: "릴스 썸네일 자르기" });
-      e.target.value = "";
-      if (!cropped) return;
-      reelPhoto = cropped.dataUrl;
-      reelRatio = cropped.ratio;
-      let prev = e.target.parentElement.querySelector(".rl-preview");
-      if (!prev) {
-        prev = document.createElement("div");
-        prev.className = "rl-preview";
-        prev.style.marginTop = "8px";
-        e.target.parentElement.appendChild(prev);
-      }
-      prev.innerHTML = `<img src="${reelPhoto}" style="width:48px;aspect-ratio:${reelRatio};object-fit:cover;border-radius:6px;">`;
+    main.querySelector("#ee-add").addEventListener("click", () => addItemRow());
+    const back = (e) => { if (e) e.preventDefault(); renderEpisodesPage(main); };
+    main.querySelector("#ep-back").addEventListener("click", back);
+    main.querySelector("#ee-cancel").addEventListener("click", back);
+    main.querySelector("#ee-thumb-file").addEventListener("change", (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      thumbFile = f;
+      main.querySelector("#ee-thumb").innerHTML = `<img src="${URL.createObjectURL(f)}">`;
     });
 
-    main.querySelector("#rl-add").addEventListener("click", async () => {
-      const caption = main.querySelector("#rl-caption").value.trim();
-      const link = main.querySelector("#rl-link").value.trim();
-      if (!caption || !link) { toast("캡션과 링크는 필수예요"); return; }
-      const photo = reelPhoto;
-      if (editing) {
-        editing.photo = photo;
-        editing.ratio = reelRatio;
-        editing.caption = caption;
-        editing.link = link;
-      } else {
-        DATA.reels.unshift({ id: uid(), photo, ratio: reelRatio, caption, link });
-      }
-      await saveData(DATA);
-      renderReelsPage(main);
-      flashDone(main, editing ? "수정이 완료됐어요. 새 릴스 등록 화면으로 돌아왔어요." : "릴스가 등록됐어요");
-    });
-
-    if (editing) {
-      main.querySelector("#rl-cancel").addEventListener("click", () => renderReelsPage(main));
-    }
-
-    main.querySelectorAll("[data-edit]").forEach((btn) => {
-      btn.addEventListener("click", () => renderReelsPage(main, btn.dataset.edit));
-    });
-
-    main.querySelectorAll("[data-del]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        armDelete(btn, async () => {
-          DATA.reels = DATA.reels.filter((x) => x.id !== btn.dataset.del);
-          await saveData(DATA);
-          renderReelsPage(main);
-          toast("삭제했어요");
-        });
+    main.querySelector("#ee-save").addEventListener("click", async () => {
+      const btn = main.querySelector("#ee-save");
+      const msg = main.querySelector("#ee-msg");
+      const meta = {
+        title: main.querySelector("#ee-title").value.trim(),
+        series: main.querySelector("#ee-series").value,
+        upload_date: main.querySelector("#ee-date").value,
+        reel_url: main.querySelector("#ee-reel").value.trim(),
+        pick_comment: main.querySelector("#ee-comment").value.trim(),
+      };
+      const errs = [];
+      if (!meta.title) errs.push("제목을 입력해주세요");
+      if (!meta.upload_date) errs.push("업로드 날짜를 입력해주세요");
+      if (meta.reel_url && !/^https?:\/\//i.test(meta.reel_url)) errs.push("릴스 링크는 https:// 로 시작해야 해요");
+      const items = [];
+      [...itemsBox.children].forEach((row, i) => {
+        const it = {
+          label: row.querySelector(".ee-label").value,
+          brand: row.querySelector(".ee-brand").value.trim(),
+          product_name: row.querySelector(".ee-name").value.trim(),
+          curator_url: row.querySelector(".ee-link").value.trim(),
+          image_url: row.querySelector(".ee-img").value.trim(),
+        };
+        if (!it.brand && !it.product_name && !it.curator_url) return; // 빈 줄은 무시
+        if (!it.brand || !it.product_name) errs.push(`${i + 1}번째 제품: 브랜드와 제품명을 채워주세요`);
+        if (!/^https?:\/\//i.test(it.curator_url)) errs.push(`${i + 1}번째 제품: 큐레이터 링크가 https:// 로 시작해야 해요`);
+        if (it.image_url && !/^https?:\/\//i.test(it.image_url)) errs.push(`${i + 1}번째 제품: 사진 링크가 https:// 로 시작해야 해요`);
+        items.push(it);
       });
+      if (errs.length) { msg.innerHTML = errs.map((t) => `<p class="msg-err">⛔ ${esc(t)}</p>`).join(""); return; }
+      items.sort((a, b) => EP_LABELS.indexOf(a.label) - EP_LABELS.indexOf(b.label));
+      btn.disabled = true; btn.textContent = "저장 중…";
+      try {
+        let thumbUrl;
+        if (thumbFile) thumbUrl = (await uploadImageFile(thumbFile, "thumbs", 1080)).url;
+        await saveEpisode(meta, items, thumbUrl, ep.id);
+      } catch (err) {
+        btn.disabled = false; btn.textContent = "수정 저장";
+        msg.innerHTML = `<p class="msg-err">⛔ ${esc(friendlyError(err))}</p>`;
+        return;
+      }
+      await renderEpisodesPage(main);
+      flashDone(main, `"${meta.title}" 수정 완료`);
     });
-
-    const rlList = main.querySelector("#rl-list");
-    if (rlList) {
-      makeSortable(rlList, async (orderIds) => {
-        DATA.reels = orderIds.map((id) => DATA.reels.find((x) => x.id === id)).filter(Boolean);
-        await saveData(DATA);
-        toast("순서가 저장됐어요");
-      });
-    }
   }
   const { data: sessionData } = await supabaseClient.auth.getSession();
   if (sessionData && sessionData.session) {
