@@ -683,14 +683,15 @@
   /* ===== 추천템 탭: 편마다 한 줄 (썸네일 + 라벨 + 옆으로 넘기는 제품) ===== */
   #app-root .rec-row { display: flex; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
   #app-root .rec-row:last-child { border-bottom: none; }
-  #app-root .rec-thumb { position: relative; flex: 0 0 92px; width: 92px; height: 115px; align-self: flex-start; border-radius: 12px; overflow: hidden; background: #1b1a19; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+  #app-root .rec-thumb { position: relative; flex: 0 0 104px; width: 104px; aspect-ratio: 9/16; align-self: flex-start; border-radius: 12px; overflow: hidden; background: #1b1a19; display: flex; align-items: center; justify-content: center; text-decoration: none; }
   #app-root .rec-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   #app-root .rec-thumb-ph { color: #fff; font-size: 12px; font-weight: 800; text-align: center; padding: 0 8px; line-height: 1.3; letter-spacing: -0.3px; }
   #app-root .rec-thumb .rec-play { position: absolute; right: 6px; bottom: 6px; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,.92); color: #141312; font-size: 8px; display: flex; align-items: center; justify-content: center; padding-left: 2px; box-sizing: border-box; }
   #app-root .rec-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  #app-root .rec-head { display: flex; align-items: baseline; gap: 8px; margin: 2px 0 9px; }
+  #app-root .rec-head { display: flex; align-items: baseline; gap: 8px; margin: 4px 0 10px; }
+  #app-root .rec-pick-empty { font-size: 11px; color: var(--fg-muted); margin: 0; padding: 40px 0; }
   #app-root .rec-title { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; margin: 0; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  #app-root .rec-more { font-size: 11px; color: var(--fg-muted); font-weight: 600; text-decoration: none; white-space: nowrap; }
+  #app-root .rec-more { font-size: 9.5px; color: #a9a196; font-weight: 400; text-decoration: none; white-space: nowrap; font-family: "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif; letter-spacing: -0.1px; }
   #app-root .rec-chips { display: flex; gap: 14px; margin: 0 0 10px; overflow-x: auto; scrollbar-width: none; }
   #app-root .rec-chips::-webkit-scrollbar { display: none; }
   #app-root .rec-chips button { flex: none; border: none; background: none; color: #b3ada4; font-size: 12px; font-weight: 700; padding: 0 0 3px; cursor: pointer; font-family: inherit; border-bottom: 1.5px solid transparent; }
@@ -707,7 +708,11 @@
   /* ===== 실착 탭: LOOK 작은 그리드 + 컷 구분 ===== */
   #app-root .look-head { display: flex; align-items: baseline; gap: 6px; margin: 0 0 12px; }
   #app-root .look-head .section-title { margin: 0; }
-  #app-root .look-hint { font-size: 9.5px; color: #b1a998; margin: 0; letter-spacing: -0.1px; font-weight: 400; }
+  #app-root .look-hint { font-size: 8.5px; color: #b5aea3; margin: 0; letter-spacing: -0.2px; font-weight: 400; font-family: "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif; }
+  #app-root .look-group { margin: 0 0 22px; }
+  #app-root .look-group-title { font-size: 12px; font-weight: 700; margin: 0 0 8px; color: var(--fg); }
+  #app-root .look-more { display: block; width: 100%; margin: 10px 0 0; padding: 10px 0; border: 1px solid var(--line); border-radius: 10px; background: #fff; font-family: "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif; font-size: 11.5px; color: #6b665f; cursor: pointer; }
+  #app-root .feed-list.look-grid { display: grid; padding: 0 20px 40px; }
   #app-root .look-cuts { display: flex; gap: 14px; margin: 0 0 12px; }
   #app-root .look-cuts button { border: none; background: none; padding: 0 0 3px; font-family: inherit; font-size: 12px; font-weight: 700; color: #b3ada4; cursor: pointer; border-bottom: 1.5px solid transparent; }
   #app-root .look-cuts button.active { color: var(--fg); border-bottom-color: var(--fg); }
@@ -716,7 +721,7 @@
   #app-root .look-cell { position: relative; aspect-ratio: 2/3; overflow: hidden; background: var(--tag-bg); cursor: pointer; border-radius: 4px; }
   #app-root .look-cell .ph { width: 100%; height: 100%; object-fit: cover; display: flex; align-items: center; justify-content: center; color: #b7ae9c; font-size: 10px; }
   #app-root .look-cell:active { opacity: 0.8; }
-  #app-root .back-header-hint { font-size: 9.5px !important; font-weight: 400 !important; color: #b1a998 !important; }
+  #app-root .back-header-hint { font-size: 8.5px !important; font-weight: 400 !important; color: #b5aea3 !important; font-family: "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif; letter-spacing: -0.2px; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -953,15 +958,10 @@ async function renderPublicSite(root) {
       <div class="feed-backdrop" id="feed-backdrop">
         <div class="feed-header">
           <button class="back-link" id="feed-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
-          <p class="feed-title">LOOK</p>
+          <p class="feed-title">${esc(groupName || "LOOK")}</p>
         </div>
-        <div class="feed-list">
-          ${list.map((o) => `
-            <div class="polaroid outfit-card" data-outfit-id="${esc(o.id)}">
-              ${photoTag(o.photo, "", `style="aspect-ratio:${esc(o.ratio || "2/3")};"`)}
-              <span class="polaroid-click">Tap in</span>
-            </div>
-          `).join("")}
+        <div class="feed-list look-grid">
+          ${list.map((o) => `<div class="look-cell outfit-card" data-outfit-id="${esc(o.id)}">${photoTag(o.photo, "")}</div>`).join("")}
         </div>
       </div>
     `;
@@ -1191,7 +1191,7 @@ async function renderPublicSite(root) {
         <div class="rec-body">
           <div class="rec-head">
             <p class="rec-title">${esc(e.title)}</p>
-            <a class="rec-more" href="#ep=${esc(e.id)}">전체 →</a>
+            <a class="rec-more" href="#ep=${esc(e.id)}">전체보기</a>
           </div>
           <div class="rec-chips"></div>
           <div class="rec-scroll"><p class="rec-loading">불러오는 중…</p></div>
@@ -1217,14 +1217,15 @@ async function renderPublicSite(root) {
       try { items = await loadEpisodeItemsFromSupabase(ep.id); itemsCache.set(ep.id, items); }
       catch (e) { row.querySelector(".rec-scroll").innerHTML = `<p class="rec-loading">제품을 불러오지 못했어요.</p>`; return; }
     }
-    const labels = EP_LABELS.filter((l) => items.some((it) => it.label === l.key));
+    const labels = EP_LABELS.filter((l) => l.key === "옷쟁이" || items.some((it) => it.label === l.key));
     const chips = row.querySelector(".rec-chips");
     const scroll = row.querySelector(".rec-scroll");
-    if (!labels.length) { scroll.innerHTML = `<p class="rec-loading">아직 등록된 제품이 없어요.</p>`; return; }
+    if (!items.length) { scroll.innerHTML = `<p class="rec-loading">아직 등록된 제품이 없어요.</p>`; return; }
     chips.innerHTML = labels.map((l) => `<button type="button" data-label="${esc(l.key)}">${esc(l.key)}</button>`).join("");
     const show = (key) => {
       chips.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.label === key));
-      scroll.innerHTML = items.filter((it) => it.label === key).map(recProdHtml).join("");
+      const list = items.filter((it) => it.label === key);
+      scroll.innerHTML = list.length ? list.map(recProdHtml).join("") : `<p class="rec-pick-empty">광만두 원픽, 곧 공개돼요</p>`;
       scroll.scrollLeft = 0;
     };
     chips.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => show(b.dataset.label)));
@@ -1304,8 +1305,7 @@ async function renderPublicSite(root) {
           <p class="section-title">LOOK</p>
           <p class="look-hint">코디 사진을 클릭하시면, 링크로 바로 이동 가능합니다</p>
         </div>
-        ${outfitGroups.length > 1 ? `<div class="look-cuts" id="look-cuts">${outfitGroups.map((g) => `<button type="button" data-group="${esc(g)}">${esc(g)}</button>`).join("")}</div>` : ""}
-        <div class="look-grid" id="look-grid"></div>
+        <div id="look-groups"></div>
       </section>
 
       <section id="tab-picks" class="section">
@@ -1338,19 +1338,21 @@ async function renderPublicSite(root) {
     if (e.target.closest('a[href^="#ep="]')) openedFromList = true;
   });
 
-  // ---------- 실착 컷 구분 + 그리드 ----------
-  let lookGroup = outfitGroups.includes(savedUI.lookGroup) ? savedUI.lookGroup : (outfitGroups[0] || null);
-  function renderLookGrid() {
-    const list = (outfitGroups.length > 1 && lookGroup) ? outfits.filter((o) => o.group === lookGroup) : outfits;
-    root.querySelector("#look-grid").innerHTML = list.map((o) => `
-      <div class="look-cell outfit-card" data-outfit-id="${esc(o.id)}">${photoTag(o.photo, "")}</div>`).join("");
-    root.querySelectorAll("#look-cuts button").forEach((b) => b.classList.toggle("active", b.dataset.group === lookGroup));
-  }
-  renderLookGrid();
-  root.querySelectorAll("#look-cuts button").forEach((b) => b.addEventListener("click", () => {
-    lookGroup = b.dataset.group; writeUI({ lookGroup }); renderLookGrid();
-  }));
-  root.querySelector("#look-grid").addEventListener("click", (e) => {
+  // ---------- 실착: 분류(타이트 컷 → 전체 컷)마다 9개 + 더보기 ----------
+  const LOOK_MAX = 9;
+  const lookCell = (o) => `<div class="look-cell outfit-card" data-outfit-id="${esc(o.id)}">${photoTag(o.photo, "")}</div>`;
+  root.querySelector("#look-groups").innerHTML = (outfitGroups.length ? outfitGroups : [null]).map((g) => {
+    const list = g ? outfits.filter((o) => o.group === g) : outfits;
+    return `
+      <div class="look-group">
+        ${g && outfitGroups.length > 1 ? `<p class="look-group-title">${esc(g)}</p>` : ""}
+        <div class="look-grid">${list.slice(0, LOOK_MAX).map(lookCell).join("")}</div>
+        ${list.length > LOOK_MAX ? `<button type="button" class="look-more" data-group="${esc(g || "")}">더보기</button>` : ""}
+      </div>`;
+  }).join("");
+  root.querySelector("#look-groups").addEventListener("click", (e) => {
+    const more = e.target.closest(".look-more");
+    if (more) { openOutfitFeed(more.dataset.group || undefined); return; }
     const card = e.target.closest(".outfit-card");
     const outfit = card && outfits.find((o) => String(o.id) === card.dataset.outfitId);
     if (outfit) openOutfitModal(outfit);
