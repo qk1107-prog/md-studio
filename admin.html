@@ -1428,10 +1428,10 @@ async function renderAdminApp(root) {
   // ============================================================
   // 4. 추천템 (편) — Supabase episodes / episode_items 표
   // ============================================================
-  const EP_LABELS = ["국밥", "힙함", "남친룩", "옷쟁이"];
-  const EP_EMOJI = { 국밥: "🍚", 힙함: "🔥", 남친룩: "🤍", 옷쟁이: "👑" };
-  const EP_EXPECT = { 국밥: 9, 힙함: 9, 남친룩: 9, 옷쟁이: 3 };
-  const EP_EXPECT_BRANDS = { 국밥: 3, 힙함: 3, 남친룩: 3, 옷쟁이: 1 };
+  const EP_LABELS = ["국밥", "힙함", "남친룩", "옷쟁이", "루키"];
+  const EP_EMOJI = { 국밥: "🍚", 힙함: "🔥", 남친룩: "🤍", 옷쟁이: "👑", 루키: "🌱" };
+  const EP_EXPECT = { 국밥: 9, 힙함: 9, 남친룩: 9, 옷쟁이: 3, 루키: 1 };
+  const EP_EXPECT_BRANDS = { 국밥: 3, 힙함: 3, 남친룩: 3, 옷쟁이: 1, 루키: 1 };
   let EPISODES_CACHE = null;
 
   function normLabel(s) {
@@ -1440,6 +1440,7 @@ async function renderAdminApp(root) {
     if (s.includes("힙") || s.includes("🔥")) return "힙함";
     if (s.includes("남친") || s.includes("🤍")) return "남친룩";
     if (s.includes("옷쟁이") || s.includes("👑")) return "옷쟁이";
+    if (s.includes("루키") || s.includes("🌱")) return "루키";
     return "";
   }
   function normSeries(s) {
@@ -1538,7 +1539,7 @@ async function renderAdminApp(root) {
       if (!name && !link) continue; // 라벨만 적힌 줄(구분선)은 건너뛰기
       const line = r + 1;
       const it = { label: curLabel, brand: brand || curBrand, product_name: name, curator_url: link, image_url: "", line };
-      if (!EP_LABELS.includes(it.label)) errors.push(`${line}행: 라벨을 못 읽었어요 (${rawLabel || "빈칸"}) — 국밥/힙함/남친룩/옷쟁이 중 하나`);
+      if (!EP_LABELS.includes(it.label)) errors.push(`${line}행: 라벨을 못 읽었어요 (${rawLabel || "빈칸"}) — 국밥/힙함/남친룩/옷쟁이/루키 중 하나`);
       if (!it.brand) errors.push(`${line}행: 브랜드가 비어 있어요`);
       if (!name) errors.push(`${line}행: 제품명이 비어 있어요`);
       if (!/^https?:\/\//i.test(link)) errors.push(`${line}행: 큐레이터 링크가 없거나 https:// 로 시작하지 않아요`);
@@ -1728,7 +1729,7 @@ async function renderAdminApp(root) {
       [],
       ["라벨", "브랜드", "제품명", "큐레이터 링크", "사진 링크"],
     ];
-    const plan = [["🍚 국밥", 9], ["🔥 힙함", 9], ["🤍 남친룩", 9], ["👑 옷쟁이", 3]];
+    const plan = [["🍚 국밥", 9], ["🔥 힙함", 9], ["🤍 남친룩", 9], ["👑 옷쟁이", 3], ["🌱 루키", 1]];
     plan.forEach(([label, n]) => { for (let i = 0; i < n; i++) rows.push([label, "", "", "", ""]); });
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws["!cols"] = [{ wch: 14 }, { wch: 18 }, { wch: 34 }, { wch: 40 }, { wch: 40 }];

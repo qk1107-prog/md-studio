@@ -784,6 +784,7 @@ const EP_LABELS = [
   { key: "힙함", emoji: "🔥" },
   { key: "남친룩", emoji: "🤍" },
   { key: "옷쟁이", emoji: "👑" },
+  { key: "루키", emoji: "🌱" },
 ];
 
 async function renderPublicSite(root) {
@@ -1055,6 +1056,10 @@ async function renderPublicSite(root) {
       return `
         <section class="ep-sec${isPick ? " is-pick" : ""}" data-label="${esc(key)}">
           <div class="ep-sec-head"><span class="ep-sec-emoji">${emoji}</span><h2>${esc(key)}</h2></div>
+          ${key === "루키" ? `
+            <div class="ep-onepick">
+              <span class="ep-onepick-badge">광만두가 발굴한 신생 브랜드</span>
+            </div>` : ""}
           ${isPick ? `
             <div class="ep-onepick">
               <span class="ep-onepick-badge">광만두 원픽</span>
