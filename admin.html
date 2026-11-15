@@ -737,6 +737,22 @@ async function renderAdminApp(root) {
         <button class="btn accent" id="site-save">저장하기</button>
         <span class="save-msg" id="site-save-msg" style="display:none;">저장됐어요</span>
       </div>
+      <div class="panel">
+        <h2>🔒 관리자 비밀번호 변경</h2>
+        <p class="empty-note" style="margin-bottom:10px;">8자 이상, 영문·숫자·기호를 섞어 길게 만들어 주세요. 바꾼 뒤에는 이 기기에서 계속 로그인돼 있어요.</p>
+        <div class="grid2">
+          <div class="field">
+            <label>새 비밀번호</label>
+            <input id="pw-new" type="password" autocomplete="new-password" />
+          </div>
+          <div class="field">
+            <label>새 비밀번호 확인</label>
+            <input id="pw-new2" type="password" autocomplete="new-password" />
+          </div>
+        </div>
+        <button class="btn accent" id="pw-save">비밀번호 바꾸기</button>
+        <span class="save-msg" id="pw-msg" style="display:none;"></span>
+      </div>
     `;
     main.querySelector("#site-avatar-file").addEventListener("change", async (e) => {
       const file = e.target.files[0];
@@ -759,6 +775,22 @@ async function renderAdminApp(root) {
       const msg = main.querySelector("#site-save-msg");
       msg.style.display = "inline";
       toast("사이트 설정이 저장됐어요");
+    });
+    main.querySelector("#pw-save").addEventListener("click", async () => {
+      const p1 = main.querySelector("#pw-new").value;
+      const p2 = main.querySelector("#pw-new2").value;
+      const msg = main.querySelector("#pw-msg");
+      const show = (t) => { msg.textContent = t; msg.style.display = "inline"; };
+      if (p1.length < 8) { show("8자 이상으로 입력해 주세요"); return; }
+      if (p1 !== p2) { show("두 칸이 서로 달라요"); return; }
+      const btn = main.querySelector("#pw-save");
+      btn.disabled = true;
+      const { error } = await supabaseClient.auth.updateUser({ password: p1 });
+      btn.disabled = false;
+      main.querySelector("#pw-new").value = ""; main.querySelector("#pw-new2").value = "";
+      if (error) { show("변경 실패: " + error.message); return; }
+      show("비밀번호가 바뀌었어요");
+      toast("비밀번호가 바뀌었어요");
     });
   }
 
