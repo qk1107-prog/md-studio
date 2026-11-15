@@ -692,7 +692,7 @@
   #app-root .rec-pick-empty { font-size: 11px; color: var(--fg-muted); margin: 0; padding: 40px 0; }
   #app-root .rec-title { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; margin: 0; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   #app-root .rec-more { font-size: 9.5px; color: #a9a196; font-weight: 400; text-decoration: none; white-space: nowrap; font-family: "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif; letter-spacing: -0.1px; }
-  #app-root .rec-chips { display: flex; gap: 14px; margin: 0 0 10px; overflow-x: auto; scrollbar-width: none; }
+  #app-root .rec-chips { display: flex; gap: 11px; margin: 0 0 10px; overflow-x: auto; scrollbar-width: none; }
   #app-root .rec-chips::-webkit-scrollbar { display: none; }
   #app-root .rec-chips button { flex: none; border: none; background: none; color: #b3ada4; font-size: 12px; font-weight: 700; padding: 0 0 3px; cursor: pointer; font-family: inherit; border-bottom: 1.5px solid transparent; }
   #app-root .rec-chips button.active { color: var(--fg); border-bottom-color: var(--fg); }
@@ -946,9 +946,19 @@ async function renderPublicSite(root) {
     writeUI({ outfitId: outfit.id });
   }
 
+  // 실착 전체보기: 주소에 #looks=… 을 붙여서 뒤로가기(스와이프)로 닫혀요
   function openOutfitFeed(groupName) {
+    location.hash = "looks=" + encodeURIComponent(groupName || "all");
+  }
+  function closeOutfitFeed() {
+    const b = root.querySelector("#feed-backdrop");
+    writeUI({ feed: null });
+    if (b) animateOverlayOut(b);
+  }
+  function showOutfitFeed(groupName) {
     writeUI({ feed: { type: "outfit", key: groupName || null } });
     const existing = root.querySelector("#feed-backdrop");
+    if (existing && existing.dataset.group === (groupName || "")) return;
     if (existing) existing.remove();
 
     const list = groupName ? outfits.filter((o) => o.group === groupName) : outfits;
@@ -957,7 +967,6 @@ async function renderPublicSite(root) {
     holder.innerHTML = `
       <div class="feed-backdrop" id="feed-backdrop">
         <div class="feed-header">
-          <button class="back-link" id="feed-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
           <p class="feed-title">${esc(groupName || "LOOK")}</p>
         </div>
         <div class="feed-list look-grid">
@@ -969,7 +978,7 @@ async function renderPublicSite(root) {
     animateOverlayIn(root.querySelector("#feed-backdrop"));
 
     const backdrop = root.querySelector("#feed-backdrop");
-    root.querySelector("#feed-close").addEventListener("click", () => { writeUI({ feed: null }); animateOverlayOut(backdrop); });
+    backdrop.dataset.group = groupName || "";
     backdrop.querySelectorAll(".outfit-card").forEach((card) => {
       card.addEventListener("click", () => {
         const outfit = outfits.find((o) => String(o.id) === card.dataset.outfitId);
@@ -1173,6 +1182,9 @@ async function renderPublicSite(root) {
     const o = l && outfits.find((x) => String(x.id) === l[1]);
     if (o) showOutfitModal(o);
     else closeOutfitModal();
+    const f = location.hash.match(/^#looks=(.+)$/);
+    if (f) { const g = decodeURIComponent(f[1]); showOutfitFeed(g === "all" ? "" : g); }
+    else if (!o) closeOutfitFeed();
   }
 
   // ---------- 추천템 탭: 편마다 한 줄 ----------
@@ -1417,14 +1429,14 @@ async function renderPublicSite(root) {
 
   // 무신사 갔다가 돌아왔을 때 보던 화면 그대로 복원
   try {
-    if (savedUI.feed && savedUI.feed.type === "outfit") openOutfitFeed(savedUI.feed.key || undefined);
+    if (savedUI.feed && savedUI.feed.type === "outfit" && !location.hash) history.replaceState(null, "", "#looks=" + encodeURIComponent(savedUI.feed.key || "all"));
     if (savedUI.outfitId && !location.hash) {
       const o = outfits.find((x) => String(x.id) === String(savedUI.outfitId));
       if (o) history.replaceState(null, "", "#look=" + o.id);
     }
   } catch (e) {}
   window.addEventListener("hashchange", routeFromHash);
-  if (/^#(ep|look)=/.test(location.hash)) routeFromHash();
+  if (/^#(ep|look|looks)=/.test(location.hash)) routeFromHash();
   finishIntro();
 
 
@@ -1438,7 +1450,7 @@ async function renderPublicSite(root) {
     const feedBackdrop = root.querySelector("#feed-backdrop");
     if (feedBackdrop) animateOverlayOut(feedBackdrop);
     writeUI({ outfitId: null, feed: null });
-    if (/^#look=/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search);
+    if (/^#looks?=/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search);
     document.body.style.overflow = "";
     setActive(TAB_ORDER.indexOf("outfits"));
     window.scrollTo({ top: 0, behavior: "smooth" });
