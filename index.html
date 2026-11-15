@@ -679,6 +679,44 @@
   #app-root .ep-sec.is-pick .ep-prod { box-shadow: 0 0 0 1.5px var(--fg); }
   #app-root .ep-note { font-size: 11px; color: var(--fg-muted); text-align: center; margin: 34px 0 0; line-height: 1.6; }
   #app-root .ep-loading { text-align: center; color: var(--fg-muted); font-size: 13px; padding: 40px 0; }
+
+  /* ===== 메인: 추천송 줄 (썸네일 + 라벨 칩 + 옆으로 넘기는 제품) ===== */
+  #app-root .rec-section { padding: 6px 0 4px; }
+  #app-root .rec-row { display: flex; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+  #app-root .rec-row:last-child { border-bottom: none; }
+  #app-root .rec-thumb { position: relative; flex: 0 0 74px; width: 74px; aspect-ratio: 9/16; border-radius: 10px; overflow: hidden; background: #141312; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+  #app-root .rec-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #app-root .rec-thumb-ph { color: #fff; font-size: 11px; font-weight: 900; text-align: center; padding: 0 6px; line-height: 1.25; letter-spacing: -0.3px; }
+  #app-root .rec-thumb .rec-play { position: absolute; right: 6px; bottom: 6px; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,.92); color: #141312; font-size: 8px; display: flex; align-items: center; justify-content: center; padding-left: 2px; box-sizing: border-box; }
+  #app-root .rec-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  #app-root .rec-head { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; }
+  #app-root .rec-head .ep-series { font-size: 9.5px; padding: 2px 6px; }
+  #app-root .rec-title { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; margin: 0; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #app-root .rec-more { font-size: 11.5px; color: var(--fg-muted); font-weight: 600; text-decoration: none; white-space: nowrap; }
+  #app-root .rec-chips { display: flex; gap: 5px; margin: 0 0 9px; overflow-x: auto; scrollbar-width: none; }
+  #app-root .rec-chips::-webkit-scrollbar { display: none; }
+  #app-root .rec-chips button { flex: none; border: none; background: var(--tag-bg); color: #6b665f; font-size: 11.5px; font-weight: 700; padding: 5px 10px; border-radius: 999px; cursor: pointer; font-family: inherit; }
+  #app-root .rec-chips button.active { background: var(--fg); color: #fff; }
+  #app-root .rec-scroll { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; margin-right: -20px; padding-right: 20px; }
+  #app-root .rec-scroll::-webkit-scrollbar { display: none; }
+  #app-root .rec-prod { flex: 0 0 92px; width: 92px; scroll-snap-align: start; text-decoration: none; color: var(--fg); }
+  #app-root .rec-prod-img { width: 92px; aspect-ratio: 5/6; border-radius: 8px; overflow: hidden; background: #f2f0eb; display: flex; align-items: center; justify-content: center; color: #b7ae9c; font-size: 10px; }
+  #app-root .rec-prod-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #app-root .rec-prod-brand { font-size: 10px; font-weight: 800; color: var(--fg-muted); margin: 5px 0 1px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #app-root .rec-prod-name { font-size: 11px; line-height: 1.3; margin: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  #app-root .rec-loading { font-size: 11.5px; color: var(--fg-muted); padding: 24px 0; }
+
+  /* ===== 메인: LOOK 작은 그리드 ===== */
+  #app-root .look-section { padding: 18px 20px 0; border-top: 8px solid #f6f5f2; }
+  #app-root .look-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
+  #app-root .look-head .section-title { margin: 0; }
+  #app-root .look-hint { font-size: 11px; color: #a49c8c; margin: 0; }
+  #app-root .look-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  @media (min-width: 560px) { #app-root .look-grid { grid-template-columns: repeat(4, 1fr); } }
+  #app-root .look-cell { position: relative; aspect-ratio: 2/3; overflow: hidden; background: var(--tag-bg); cursor: pointer; border-radius: 4px; }
+  #app-root .look-cell .ph { width: 100%; height: 100%; object-fit: cover; display: flex; align-items: center; justify-content: center; color: #b7ae9c; font-size: 10px; }
+  #app-root .look-cell:active { opacity: 0.8; }
+  #app-root .collab-section { border-top: 8px solid #f6f5f2; padding-top: 14px; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -856,7 +894,7 @@ async function renderPublicSite(root) {
     return `
       <div class="outfit-modal-backdrop" id="outfit-modal-backdrop">
         <div class="outfit-modal">
-          <div class="back-header"><button id="outfit-modal-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button><p class="back-header-title">LOOK <span class="back-header-hint">제품 이름을 누르면 구매 링크로 이동해요</span></p></div>
+          <div class="back-header"><p class="back-header-title">LOOK <span class="back-header-hint">제품 이름을 누르면 구매 링크로 이동해요</span></p></div>
           <div class="outfit-photo-frame">
             ${photoTag(outfit.photo, "outfit-photo", `style="aspect-ratio:${esc(outfit.ratio || "2/3")};"`)}
           </div>
@@ -877,8 +915,19 @@ async function renderPublicSite(root) {
     setTimeout(() => { backdrop.remove(); if (onDone) onDone(); }, 300);
   }
 
+  // 코디 상세: 주소에 #look=… 을 붙여서, 아이폰 뒤로가기(스와이프)로 바로 닫혀요
   function openOutfitModal(outfit) {
+    if (location.hash !== "#look=" + outfit.id) location.hash = "look=" + outfit.id;
+    else showOutfitModal(outfit);
+  }
+  function closeOutfitModal() {
+    const b = root.querySelector("#outfit-modal-backdrop");
+    writeUI({ outfitId: null });
+    if (b) { document.body.style.overflow = ""; animateOverlayOut(b); }
+  }
+  function showOutfitModal(outfit) {
     const existing = root.querySelector("#outfit-modal-backdrop");
+    if (existing && existing.dataset.look === String(outfit.id)) return;
     if (existing) existing.remove();
 
     const holder = document.createElement("div");
@@ -886,10 +935,10 @@ async function renderPublicSite(root) {
     root.appendChild(holder.firstElementChild);
 
     const backdrop = root.querySelector("#outfit-modal-backdrop");
+    backdrop.dataset.look = String(outfit.id);
     animateOverlayIn(backdrop);
+    document.body.style.overflow = "hidden";
     writeUI({ outfitId: outfit.id });
-    const close = () => { writeUI({ outfitId: null }); animateOverlayOut(backdrop); };
-    root.querySelector("#outfit-modal-close").addEventListener("click", close);
   }
 
   function openOutfitFeed(groupName) {
@@ -1120,6 +1169,66 @@ async function renderPublicSite(root) {
     const m = location.hash.match(/^#ep=([\w-]+)/);
     if (m) openEpisode(m[1]);
     else closeEpisode();
+    const l = location.hash.match(/^#look=([\w-]+)/);
+    const o = l && outfits.find((x) => String(x.id) === l[1]);
+    if (o) showOutfitModal(o);
+    else closeOutfitModal();
+  }
+
+  // ---------- 메인 추천송 줄 ----------
+  function recRowsHtml() {
+    if (EPISODES === null) return `<p class="ep-empty">추천템을 불러오지 못했어요.<br>잠시 후 다시 들어와 주세요.</p>`;
+    if (!episodes.length) return `<p class="ep-empty">첫 편이 곧 올라와요 🎵</p>`;
+    return episodes.map((e) => `
+      <div class="rec-row" data-ep="${esc(e.id)}">
+        <a class="rec-thumb" href="#ep=${esc(e.id)}" aria-label="${esc(e.title)} 전체 보기">
+          ${safeImg(e.thumbnail_url)
+            ? `<img src="${esc(safeImg(e.thumbnail_url))}" alt="" loading="lazy" decoding="async">`
+            : `<span class="rec-thumb-ph">${esc(e.title)}</span>`}
+          <span class="rec-play">▶</span>
+        </a>
+        <div class="rec-body">
+          <div class="rec-head">
+            <span class="ep-series ${seriesClass(e.series)}">${esc(e.series)}</span>
+            <p class="rec-title">${esc(e.title)}</p>
+            <a class="rec-more" href="#ep=${esc(e.id)}">전체 →</a>
+          </div>
+          <div class="rec-chips"></div>
+          <div class="rec-scroll"><p class="rec-loading">불러오는 중…</p></div>
+        </div>
+      </div>
+    `).join("");
+  }
+  function recProdHtml(it) {
+    const link = safeUrl(it.curator_url);
+    const img = safeImg(it.image_url);
+    return `
+      <a class="rec-prod" href="${esc(link || "#")}" target="_blank" rel="noopener">
+        <div class="rec-prod-img">${img ? `<img src="${esc(img)}" alt="${esc(it.product_name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : "사진"}</div>
+        <p class="rec-prod-brand">${esc(it.brand)}</p>
+        <p class="rec-prod-name">${esc(it.product_name)}</p>
+      </a>`;
+  }
+  async function fillRecRow(row) {
+    const ep = episodes.find((e) => String(e.id) === row.dataset.ep);
+    if (!ep) return;
+    let items = itemsCache.get(ep.id);
+    if (!items) {
+      try { items = await loadEpisodeItemsFromSupabase(ep.id); itemsCache.set(ep.id, items); }
+      catch (e) { row.querySelector(".rec-scroll").innerHTML = `<p class="rec-loading">제품을 불러오지 못했어요.</p>`; return; }
+    }
+    const labels = EP_LABELS.filter((l) => items.some((it) => it.label === l.key));
+    const chips = row.querySelector(".rec-chips");
+    const scroll = row.querySelector(".rec-scroll");
+    if (!labels.length) { scroll.innerHTML = `<p class="rec-loading">아직 등록된 제품이 없어요.</p>`; return; }
+    chips.innerHTML = labels.map((l) => `<button type="button" data-label="${esc(l.key)}">${l.emoji} ${esc(l.key)}</button>`).join("");
+    const show = (key) => {
+      chips.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.label === key));
+      scroll.innerHTML = items.filter((it) => it.label === key).map(recProdHtml).join("");
+      scroll.scrollLeft = 0;
+    };
+    chips.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => show(b.dataset.label)));
+    show(labels[0].key);
   }
 
   // ============================================================
@@ -1153,6 +1262,8 @@ async function renderPublicSite(root) {
       <hr class="head-divider">
     </header>
 
+    <section class="rec-section" id="rec-list">${recRowsHtml()}</section>
+
     <div class="collab-section">
       <p class="collab-label">LINE UP</p>
       <div class="collab-scroll" id="collab-scroll">
@@ -1173,130 +1284,42 @@ async function renderPublicSite(root) {
       </div>
     </div>
 
-    <nav class="tabs">
-      <button data-tab="outfits" class="active">실착</button>
-      <button data-tab="picks">추천템</button>
-    </nav>
-
-    <div class="wrap" id="tab-viewport">
-      <div class="tab-slider" id="tab-slider">
-      <section id="tab-outfits" class="section">
-        <div class="section-head">
+    <div class="wrap">
+      <section class="look-section" id="tab-outfits">
+        <div class="look-head">
           <p class="section-title">LOOK</p>
+          <p class="look-hint">코디 사진을 클릭하시면, 링크로 바로 이동 가능합니다</p>
         </div>
-        ${outfitGroups.map((groupName) => `
-          <div class="outfit-group">
-            <div class="outfit-group-head" style="justify-content:flex-end;">
-              <span class="see-all outfit-see-all" data-group="${esc(groupName)}" style="cursor:pointer;">전체보기 →</span>
+        <div class="look-grid">
+          ${outfits.map((o) => `
+            <div class="look-cell outfit-card" data-outfit-id="${esc(o.id)}">
+              ${photoTag(o.photo, "")}
             </div>
-            <div class="polaroid-scroll">
-              ${outfits.filter((o) => o.group === groupName).map((o) => `
-                <div class="polaroid outfit-card" data-outfit-id="${esc(o.id)}">
-                  ${photoTag(o.photo, "", `style="aspect-ratio:${esc(o.ratio || "2/3")};"`)}
-                  <span class="polaroid-click">Tap in</span>
-                </div>
-              `).join("")}
-            </div>
-          </div>
-        `).join("")}
-      </section>
-
-      <section id="tab-picks" class="section">
-        <div class="ep-filter" id="ep-filter">
-          <button type="button" data-f="all">전체</button>
-          <button type="button" data-f="가성비">가성비</button>
-          <button type="button" data-f="가심비">가심비</button>
+          `).join("")}
         </div>
-        <div id="ep-list">${episodeGridHtml()}</div>
       </section>
-      </div>
       <div class="site-footer">
         <p class="footer-brand">${esc(site.footer)}</p>
       </div>
     </div>
   `;
 
-  // ---------- 추천템 필터 ----------
-  const filterBtns = root.querySelectorAll("#ep-filter button");
-  const syncFilter = () => filterBtns.forEach((b) => b.classList.toggle("active", b.dataset.f === epFilter));
-  syncFilter();
-  filterBtns.forEach((b) => b.addEventListener("click", () => {
-    epFilter = b.dataset.f;
-    writeUI({ epFilter });
-    syncFilter();
-    root.querySelector("#ep-list").innerHTML = episodeGridHtml();
-  }));
-  root.querySelector("#ep-list").addEventListener("click", (e) => {
-    if (e.target.closest(".ep-card")) openedFromList = true;
+  // ---------- 추천송 줄 채우기 ----------
+  root.querySelectorAll("#rec-list .rec-row").forEach(fillRecRow);
+  root.querySelector("#rec-list").addEventListener("click", (e) => {
+    if (e.target.closest('a[href^="#ep="]')) openedFromList = true;
   });
-
-  // ---------- 탭 ----------
-  const TAB_ORDER = ["outfits", "picks"];
-  const buttons = root.querySelectorAll("nav.tabs button");
-  const slider = root.querySelector("#tab-slider");
-  const viewport = root.querySelector("#tab-viewport");
-  let activeIndex = 0;
-  const step = 100 / TAB_ORDER.length;
-
-  function setActive(index, opts) {
-    opts = opts || {};
-    activeIndex = Math.max(0, Math.min(TAB_ORDER.length - 1, index));
-    slider.style.transition = opts.instant ? "none" : "";
-    slider.style.transform = `translateX(-${activeIndex * step}%)`;
-    buttons.forEach((b, i) => b.classList.toggle("active", i === activeIndex));
-    writeUI({ tab: activeIndex });
-    if (opts.instant) slider.getBoundingClientRect(); // 강제 리플로우
-  }
-
-  buttons.forEach((btn, i) => {
-    btn.addEventListener("click", () => setActive(i));
-  });
-
-  // 스와이프 제스처 (가로로 넘기는 사진 줄 위에서는 탭이 안 넘어가게)
-  let touchStartX = 0, touchStartY = 0, touchCurrentX = 0, dragging = false, viewportWidth = 0, decided = false, horizontal = false;
-  viewport.addEventListener("touchstart", (e) => {
-    if (e.target.closest(".polaroid-scroll")) { dragging = false; return; }
-    dragging = true; decided = false; horizontal = false;
-    touchStartX = touchCurrentX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    viewportWidth = viewport.getBoundingClientRect().width;
-  }, { passive: true });
-  viewport.addEventListener("touchmove", (e) => {
-    if (!dragging) return;
-    touchCurrentX = e.touches[0].clientX;
-    const dx = touchCurrentX - touchStartX;
-    const dy = e.touches[0].clientY - touchStartY;
-    if (!decided && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
-      decided = true;
-      horizontal = Math.abs(dx) > Math.abs(dy);
-      if (horizontal) slider.style.transition = "none";
-    }
-    if (horizontal) slider.style.transform = `translateX(calc(-${activeIndex * step}% + ${dx}px))`;
-  }, { passive: true });
-  viewport.addEventListener("touchend", () => {
-    if (!dragging) return;
-    dragging = false;
-    if (!horizontal) return;
-    slider.style.transition = "";
-    const dx = touchCurrentX - touchStartX;
-    if (Math.abs(dx) > viewportWidth * 0.16) setActive(activeIndex + (dx < 0 ? 1 : -1));
-    else setActive(activeIndex);
-  });
-
-  // 처음 열 때: 추천템 링크(#ep=…)로 들어오면 추천템 탭, 아니면 보던 탭
-  const startTab = location.hash.startsWith("#ep=") ? 1 : (Number.isInteger(savedUI.tab) ? savedUI.tab : 0);
-  setActive(startTab, { instant: true });
 
   // 무신사 갔다가 돌아왔을 때 보던 화면 그대로 복원
   try {
     if (savedUI.feed && savedUI.feed.type === "outfit") openOutfitFeed(savedUI.feed.key || undefined);
-    if (savedUI.outfitId) {
+    if (savedUI.outfitId && !location.hash) {
       const o = outfits.find((x) => String(x.id) === String(savedUI.outfitId));
-      if (o) openOutfitModal(o);
+      if (o) { history.replaceState(null, "", "#look=" + o.id); }
     }
   } catch (e) {}
   window.addEventListener("hashchange", routeFromHash);
-  if (location.hash.startsWith("#ep=")) routeFromHash();
+  if (/^#(ep|look)=/.test(location.hash)) routeFromHash();
   finishIntro();
 
   root.querySelectorAll("#tab-outfits .outfit-card").forEach((card) => {
@@ -1316,7 +1339,8 @@ async function renderPublicSite(root) {
     const feedBackdrop = root.querySelector("#feed-backdrop");
     if (feedBackdrop) animateOverlayOut(feedBackdrop);
     writeUI({ outfitId: null, feed: null });
-    setActive(TAB_ORDER.indexOf("outfits"));
+    if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+    document.body.style.overflow = "";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   ["#brand-home", "#brand-home-text", "#brand-home-2"].forEach((sel) => {
