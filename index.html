@@ -1007,7 +1007,7 @@ async function renderPublicSite(root) {
   }
 
   function episodeGridHtml() {
-    if (EPISODES === null) return `<p class="ep-empty">추천템을 불러오지 못했어요.<br>잠시 후 다시 들어와 주세요.</p>`;
+    if (EPISODES === null) return `<p class="ep-empty">추천 브랜드+꿀템을 불러오지 못했어요.<br>잠시 후 다시 들어와 주세요.</p>`;
     const list = epFilter === "all" ? episodes : episodes.filter((e) => e.series === epFilter);
     if (!list.length) return `<p class="ep-empty">${episodes.length ? "아직 이 시리즈 편이 없어요." : "첫 편이 곧 올라와요 🎵"}</p>`;
     return `<div class="ep-grid">${list.map((e) => `
@@ -1199,7 +1199,7 @@ async function renderPublicSite(root) {
 
   // ---------- 추천템 탭: 편마다 한 줄 ----------
   function recRowsHtml() {
-    if (EPISODES === null) return `<p class="ep-empty">추천템을 불러오지 못했어요.<br>잠시 후 다시 들어와 주세요.</p>`;
+    if (EPISODES === null) return `<p class="ep-empty">추천 브랜드+꿀템을 불러오지 못했어요.<br>잠시 후 다시 들어와 주세요.</p>`;
     const list = epFilter === "all" ? episodes : episodes.filter((e) => e.series === epFilter);
     if (!list.length) return `<p class="ep-empty">${episodes.length ? "아직 이 시리즈 편이 없어요." : "첫 편이 곧 올라와요 🎵"}</p>`;
     return list.map((e) => `
@@ -1317,7 +1317,7 @@ async function renderPublicSite(root) {
 
     <nav class="tabs">
       <button data-tab="outfits" class="active">실착</button>
-      <button data-tab="picks">추천템</button>
+      <button data-tab="picks">추천 브랜드+꿀템</button>
     </nav>
 
     <div class="wrap" id="tab-viewport">
