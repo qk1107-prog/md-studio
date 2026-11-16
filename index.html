@@ -47,9 +47,9 @@
   #app-root .wish-t { margin: 0; font-size: 13px; font-weight: 700; color: var(--fg); }
   #app-root .wish-s { margin: 2px 0 10px; font-size: 11px; color: #9a9a9a; }
   #app-root .wish-box textarea, #app-root .wish-box input[type=text] { width: 100%; box-sizing: border-box; border: 1px solid #e2e2df; border-radius: 8px; padding: 9px 10px; font: inherit; font-size: 13px; background: #fff; color: var(--fg); resize: none; }
-  #app-root .wish-row { display: flex; gap: 6px; margin-top: 6px; }
+  #app-root .wish-row { display: flex; justify-content: flex-end; margin-top: 6px; }
   #app-root .wish-row input { flex: 1; }
-  #app-root .wish-row button { flex: none; border: 0; border-radius: 8px; padding: 0 16px; background: #111; color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+  #app-root .wish-row button { flex: none; border: 0; border-radius: 8px; padding: 9px 18px; background: #111; color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
   #app-root .wish-row button:disabled { opacity: .5; }
   #app-root .wish-done { margin: 8px 0 0; font-size: 11.5px; color: #6f6f6b; }
   #app-root .site-footer {
@@ -1361,7 +1361,6 @@ async function renderPublicSite(root) {
         <textarea id="wish-msg" maxlength="200" rows="2" placeholder="예) 3만원대 블랙 와이드 데님 / 키 작은 사람 숏패딩"></textarea>
         <input type="text" id="wish-hp" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
         <div class="wish-row">
-          <input type="text" id="wish-ig" maxlength="40" placeholder="인스타 아이디 (선택)">
           <button type="submit" id="wish-btn">보내기</button>
         </div>
         <p class="wish-done" id="wish-done" hidden></p>
@@ -1380,17 +1379,16 @@ async function renderPublicSite(root) {
     f.addEventListener("submit", async (e) => {
       e.preventDefault();
       const msg = f.querySelector("#wish-msg").value.trim();
-      const ig = f.querySelector("#wish-ig").value.trim().replace(/^@/, "");
       if (f.querySelector("#wish-hp").value) return;
       if (msg.length < 2) { done.hidden = false; done.textContent = "찾는 옷을 조금만 더 적어주세요"; return; }
       let last = 0; try { last = Number(localStorage.getItem("wish_last") || 0); } catch (_) {}
       if (Date.now() - last < 30000) { done.hidden = false; done.textContent = "잠시 후 다시 보내주세요"; return; }
       const btn = f.querySelector("#wish-btn"); btn.disabled = true;
-      const { error } = await supabaseClient.from("wish_requests").insert({ message: msg, contact: ig || null });
+      const { error } = await supabaseClient.from("wish_requests").insert({ message: msg });
       btn.disabled = false; done.hidden = false;
       if (error) { done.textContent = "전송에 실패했어요. 잠시 후 다시 시도해 주세요"; return; }
       try { localStorage.setItem("wish_last", String(Date.now())); } catch (_) {}
-      f.querySelector("#wish-msg").value = ""; f.querySelector("#wish-ig").value = "";
+      f.querySelector("#wish-msg").value = "";
       done.textContent = "접수됐어요! 곧 실물 확인해서 올려볼게요-:)";
     });
   })();
