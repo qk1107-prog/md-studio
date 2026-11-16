@@ -680,6 +680,9 @@
   #app-root .ep-note { font-size: 11px; color: var(--fg-muted); text-align: center; margin: 34px 0 0; line-height: 1.6; }
   #app-root .ep-loading { text-align: center; color: var(--fg-muted); font-size: 13px; padding: 40px 0; }
 
+  #app-root .rec-notice { margin: 18px 0 8px; padding: 14px 16px; background: #f6f6f4; border: 1px dashed #d4d4d0; border-radius: 10px; color: #8a8a86; font-size: 12px; line-height: 1.6; }
+  #app-root .rec-notice p { margin: 0; }
+  #app-root .rec-notice .rec-notice-t { font-weight: 700; color: #6f6f6b; margin-bottom: 4px; }
   /* ===== 추천템 탭: 편마다 한 줄 (썸네일 + 라벨 + 옆으로 넘기는 제품) ===== */
   #app-root .rec-row { display: flex; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
   #app-root .rec-row:last-child { border-bottom: none; }
@@ -1203,9 +1206,12 @@ async function renderPublicSite(root) {
     if (EPISODES === null) return `<p class="ep-empty">추천 브랜드+꿀템을 불러오지 못했어요.<br>잠시 후 다시 들어와 주세요.</p>`;
     const list = epFilter === "all" ? episodes : episodes.filter((e) => e.series === epFilter);
     if (!list.length) return `<p class="ep-empty">${episodes.length ? "아직 이 시리즈 편이 없어요." : "첫 편이 곧 올라와요 🎵"}</p>`;
-    return list.map((e) => `
+    const notice = `<div class="rec-notice"><p class="rec-notice-t">📌 업로드 예정</p><p>날마다 모든 카테고리 가성비·가심비가 업로드 예정입니다.<br>플리스 → 니트 → 롱슬리브 → 패딩 → 코트, 계속 올라와요-:)</p></div>`;
+    return list.map((e) => {
+      const reel = safeUrl(e.reel_url);
+      return `
       <div class="rec-row" data-ep="${esc(e.id)}">
-        <a class="rec-thumb" href="#ep=${esc(e.id)}" aria-label="${esc(e.title)} 전체 보기">
+        <a class="rec-thumb" href="${reel ? esc(reel) : `#ep=${esc(e.id)}`}"${reel ? ` target="_blank" rel="noopener"` : ""} aria-label="${esc(e.title)} ${reel ? "릴스로 보기" : "전체 보기"}">
           ${safeImg(e.thumbnail_url)
             ? `<img src="${esc(safeImg(e.thumbnail_url))}" alt="" loading="lazy" decoding="async">`
             : `<span class="rec-thumb-ph">${esc(e.title)}</span>`}
@@ -1220,7 +1226,7 @@ async function renderPublicSite(root) {
           <div class="rec-scroll"><p class="rec-loading">불러오는 중…</p></div>
         </div>
       </div>
-    `).join("");
+    `;}).join("") + notice;
   }
   function recProdHtml(it) {
     const link = safeUrl(it.curator_url);
