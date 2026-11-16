@@ -43,6 +43,15 @@
   #app-root img.ph { object-fit: cover; display: block; width: 100%; height: 100%; }
   #app-root .ph > img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
   #app-root .wrap { max-width: 720px; margin: 0 auto; padding: 0 0 90px; overflow: hidden; }
+  #app-root .wish-box { position: relative; margin: 26px 16px 0; padding: 14px 14px 12px; border: 1px solid #ececea; border-radius: 12px; background: #fafaf8; }
+  #app-root .wish-t { margin: 0; font-size: 13px; font-weight: 700; color: var(--fg); }
+  #app-root .wish-s { margin: 2px 0 10px; font-size: 11px; color: #9a9a9a; }
+  #app-root .wish-box textarea, #app-root .wish-box input[type=text] { width: 100%; box-sizing: border-box; border: 1px solid #e2e2df; border-radius: 8px; padding: 9px 10px; font: inherit; font-size: 13px; background: #fff; color: var(--fg); resize: none; }
+  #app-root .wish-row { display: flex; gap: 6px; margin-top: 6px; }
+  #app-root .wish-row input { flex: 1; }
+  #app-root .wish-row button { flex: none; border: 0; border-radius: 8px; padding: 0 16px; background: #111; color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+  #app-root .wish-row button:disabled { opacity: .5; }
+  #app-root .wish-done { margin: 8px 0 0; font-size: 11.5px; color: #6f6f6b; }
   #app-root .site-footer {
     text-align: center;
     padding: 28px 30px 10px;
@@ -1346,11 +1355,45 @@ async function renderPublicSite(root) {
         <div id="ep-list"></div>
       </section>
       </div>
+      <form class="wish-box" id="wish-form" autocomplete="off">
+        <p class="wish-t">🙋 찾는 옷이 있다면 적어주세요</p>
+        <p class="wish-s">광만두가 직접 보고, 실물 확인해서 올려드릴게요</p>
+        <textarea id="wish-msg" maxlength="200" rows="2" placeholder="예) 3만원대 블랙 와이드 데님 / 키 작은 사람 숏패딩"></textarea>
+        <input type="text" id="wish-hp" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
+        <div class="wish-row">
+          <input type="text" id="wish-ig" maxlength="40" placeholder="인스타 아이디 (선택)">
+          <button type="submit" id="wish-btn">보내기</button>
+        </div>
+        <p class="wish-done" id="wish-done" hidden></p>
+      </form>
       <div class="site-footer">
         <p class="footer-brand">${esc(site.footer)}</p>
       </div>
     </div>
   `;
+
+  // ---------- 원하는 옷 요청 ----------
+  (() => {
+    const f = root.querySelector("#wish-form");
+    if (!f) return;
+    const done = f.querySelector("#wish-done");
+    f.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = f.querySelector("#wish-msg").value.trim();
+      const ig = f.querySelector("#wish-ig").value.trim().replace(/^@/, "");
+      if (f.querySelector("#wish-hp").value) return;
+      if (msg.length < 2) { done.hidden = false; done.textContent = "찾는 옷을 조금만 더 적어주세요"; return; }
+      let last = 0; try { last = Number(localStorage.getItem("wish_last") || 0); } catch (_) {}
+      if (Date.now() - last < 30000) { done.hidden = false; done.textContent = "잠시 후 다시 보내주세요"; return; }
+      const btn = f.querySelector("#wish-btn"); btn.disabled = true;
+      const { error } = await supabaseClient.from("wish_requests").insert({ message: msg, contact: ig || null });
+      btn.disabled = false; done.hidden = false;
+      if (error) { done.textContent = "전송에 실패했어요. 잠시 후 다시 시도해 주세요"; return; }
+      try { localStorage.setItem("wish_last", String(Date.now())); } catch (_) {}
+      f.querySelector("#wish-msg").value = ""; f.querySelector("#wish-ig").value = "";
+      done.textContent = "접수됐어요! 곧 실물 확인해서 올려볼게요-:)";
+    });
+  })();
 
   // ---------- 추천템 필터 ----------
   const filterBtns = root.querySelectorAll("#ep-filter button");
@@ -1375,7 +1418,7 @@ async function renderPublicSite(root) {
     return `
       <div class="look-group">
         ${g && outfitGroups.length > 1 ? `<p class="look-group-title">${esc(g)}</p>` : ""}
-        ${g === "DAILY" ? `<p class="look-group-note">데일리는 무신사 블프 오픈과 동시에 업데이트됩니다</p>` : ""}
+        ${g === "DAILY" ? `<p class="look-group-note">데일리는 무신사 블프 전까지 모두 업데이트됩니다</p>` : ""}
         <div class="look-grid-wrap${list.length > LOOK_MAX ? " has-more" : ""}">
           <div class="look-grid">${list.slice(0, LOOK_MAX).map(lookCell).join("")}</div>
           ${list.length > LOOK_MAX ? `<button type="button" class="look-more look-more-over" data-group="${esc(g || "")}">더보기 +${list.length - LOOK_MAX}</button>` : ""}
