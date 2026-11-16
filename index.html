@@ -1215,7 +1215,7 @@ async function renderPublicSite(root) {
     if (EPISODES === null) return `<p class="ep-empty">추천 브랜드+꿀템을 불러오지 못했어요.<br>잠시 후 다시 들어와 주세요.</p>`;
     const list = epFilter === "all" ? episodes : episodes.filter((e) => e.series === epFilter);
     if (!list.length) return `<p class="ep-empty">${episodes.length ? "아직 이 시리즈 편이 없어요." : "첫 편이 곧 올라와요 🎵"}</p>`;
-    const notice = `<div class="rec-notice"><p class="rec-notice-t">📌 업로드 예정</p><p>날마다 모든 카테고리 가성비·가심비가 업로드 예정입니다.<br>플리스 → 니트 → 롱슬리브 → 패딩 → 코트, 계속 올라와요-:)</p></div>`;
+    const notice = `<div class="rec-notice"><p class="rec-notice-t">📌 업로드 예정</p><p>날마다 모든 카테고리 가성비·가심비가 업로드 예정입니다.<br>플리스 → 니트 → 롱슬리브 → 패딩 → 코트 등 계속 올라와요-:)<br>카테고리가 아니더라도 실착 찐템들, 실착 꿀템 정리들도 함께 올라옵니다</p></div>`;
     return list.map((e) => {
       const reel = safeUrl(e.reel_url);
       return `
