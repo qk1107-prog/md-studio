@@ -711,6 +711,7 @@
   #app-root .look-hint { font-size: 8.5px; color: #b5aea3; margin: 0; letter-spacing: -0.2px; font-weight: 400; font-family: "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif; }
   #app-root .look-group { margin: 0 0 22px; }
   #app-root .look-group-title { font-size: 12px; font-weight: 700; margin: 0 0 8px; color: var(--fg); }
+  #app-root .look-group-note { font-size: 11px; margin: -4px 0 8px; color: #9a9a9a; }
   #app-root .look-more { display: block; width: 100%; margin: 10px 0 0; padding: 10px 0; border: 1px solid var(--line); border-radius: 10px; background: #fff; font-family: "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif; font-size: 11.5px; color: #6b665f; cursor: pointer; }
   #app-root .look-grid-wrap { position: relative; }
   #app-root .look-grid-wrap.has-more::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: calc((100% - 8px) / 3); background: linear-gradient(to bottom, rgba(14,13,12,0) 0%, rgba(14,13,12,.45) 55%, rgba(14,13,12,.72) 100%); border-radius: 0 0 4px 4px; pointer-events: none; }
@@ -1272,7 +1273,7 @@ async function renderPublicSite(root) {
 
   // 컷 구분(타이트 컷 / 전체 컷 등): 어드민 분류 순서대로, 코디가 있는 분류만
   const outfitGroups = (() => {
-    const has = [...new Set(outfits.map((o) => o.group).filter(Boolean))];
+    const has = [...new Set([...outfits.map((o) => o.group).filter(Boolean), "DAILY"])];
     const order = (ADMIN && Array.isArray(ADMIN.outfitGroups)) ? ADMIN.outfitGroups : [];
     return [...order.filter((g) => has.includes(g)), ...has.filter((g) => !order.includes(g))];
   })();
@@ -1368,6 +1369,7 @@ async function renderPublicSite(root) {
     return `
       <div class="look-group">
         ${g && outfitGroups.length > 1 ? `<p class="look-group-title">${esc(g)}</p>` : ""}
+        ${g === "DAILY" ? `<p class="look-group-note">데일리는 무신사 블프 오픈과 동시에 업데이트됩니다</p>` : ""}
         <div class="look-grid-wrap${list.length > LOOK_MAX ? " has-more" : ""}">
           <div class="look-grid">${list.slice(0, LOOK_MAX).map(lookCell).join("")}</div>
           ${list.length > LOOK_MAX ? `<button type="button" class="look-more look-more-over" data-group="${esc(g || "")}">더보기 +${list.length - LOOK_MAX}</button>` : ""}
