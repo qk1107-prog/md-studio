@@ -718,6 +718,8 @@
   #app-root .feed-list.look-grid { display: grid; padding: 0 20px 40px; }
   #app-root .look-cuts { display: flex; gap: 14px; margin: 0 0 12px; }
   #app-root .look-cuts button { border: none; background: none; padding: 0 0 3px; font-family: inherit; font-size: 12px; font-weight: 700; color: #b3ada4; cursor: pointer; border-bottom: 1.5px solid transparent; }
+  #app-root .outfit-reel { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 18px 0 6px; padding: 13px 0; border-radius: 12px; background: #141312; color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; letter-spacing: -0.2px; }
+  #app-root .outfit-reel-ic { width: 20px; height: 20px; border-radius: 50%; background: #E4FF1A; color: #141312; font-size: 8px; display: inline-flex; align-items: center; justify-content: center; padding-left: 2px; box-sizing: border-box; }
   #app-root .look-cuts button.active { color: var(--fg); border-bottom-color: var(--fg); }
   #app-root .look-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
   #app-root .look-cell { position: relative; aspect-ratio: 2/3; overflow: hidden; background: var(--tag-bg); cursor: pointer; border-radius: 4px; }
@@ -907,6 +909,7 @@ async function renderPublicSite(root) {
             ${photoTag(outfit.photo, "outfit-photo", `style="aspect-ratio:${esc(outfit.ratio || "2/3")};"`)}
           </div>
           ${catHtml}
+          ${safeUrl(outfit.reel) ? `<a class="outfit-reel" href="${esc(safeUrl(outfit.reel))}" target="_blank" rel="noopener"><span class="outfit-reel-ic">▶</span>이 코디 릴스로 보기</a>` : ""}
         </div>
       </div>
     `;
