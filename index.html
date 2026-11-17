@@ -589,7 +589,8 @@
   #app-root .story-title small { display: block; font-size: 10px; color: #a9a196; font-weight: 600; margin-top: 2px; }
   #app-root .cat-thumb { background: #f3f1ee !important; }
   #app-root .cat-thumb img { object-fit: cover; }
-  #app-root .cat-thumb .cat-thumb-name { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 8px; color: #fff; font-size: 13px; font-weight: 900; letter-spacing: -0.4px; background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,.65)); text-align: left; }
+  #app-root .cat-thumb .cat-thumb-name { position: absolute; left: 6px; bottom: 6px; max-width: calc(100% - 12px); padding: 4px 9px 4px; border-radius: 999px; background: rgba(17,17,17,0.82); color: #fff; font-size: 11.5px; font-weight: 800; letter-spacing: -0.3px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 2px 6px rgba(0,0,0,0.18); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  #app-root .tab-play { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin-right: 4px; border-radius: 50%; background: #ff3d3f; color: #fff; font-size: 7px; vertical-align: 1px; padding-left: 1px; box-sizing: border-box; }
   #app-root .tab-intro { margin: 0 0 4px; font-size: 11px; color: #a9a196; }
 
   /* ===== 실착 상세: 브랜드가 따로 저장된 아이템 ===== */
@@ -1578,8 +1579,8 @@ async function renderPublicSite(root) {
     <nav class="tabs">
       ${BF_ON ? `<button data-tab="bf">🔥 무진장 블프</button>` : ""}
       <button data-tab="outfits" class="active">실착</button>
+      <button data-tab="stories"><span class="tab-play">▶</span>릴스 꿀템</button>
       <button data-tab="picks">추천 브랜드+꿀템</button>
-      <button data-tab="stories">꿀템 스토리</button>
       <button data-tab="cats">카테고리 꿀템</button>
     </nav>
 
@@ -1594,6 +1595,11 @@ async function renderPublicSite(root) {
         <div id="look-groups"></div>
       </section>
 
+      <section id="tab-stories" class="section">
+        <p class="tab-intro">릴스 하나에 꿀템 여러 개 — 썸네일을 누르면 릴스로, 제품을 누르면 바로 구매 링크로 가요</p>
+        <div id="story-list"></div>
+      </section>
+
       <section id="tab-picks" class="section">
         <div class="ep-filter" id="ep-filter">
           <button type="button" data-f="all">전체</button>
@@ -1603,13 +1609,7 @@ async function renderPublicSite(root) {
         <div id="ep-list"></div>
       </section>
 
-      <section id="tab-stories" class="section">
-        <p class="tab-intro">릴스 하나에 꿀템 여러 개 — 썸네일을 누르면 릴스로, 제품을 누르면 바로 구매 링크로 가요</p>
-        <div id="story-list"></div>
-      </section>
-
       <section id="tab-cats" class="section">
-        <p class="tab-intro">광만두 큐레이션 샵에서 제일 많이 팔린 순 · 카테고리별 TOP 20</p>
         <div id="cat-list"></div>
       </section>
       </div>
@@ -2012,11 +2012,11 @@ async function renderPublicSite(root) {
           <span class="rec-play">▶</span>
         </a>
         <div class="rec-body">
-          <p class="story-title">${esc(st.title)}<small>꿀템 ${(st.items || []).length}개 · 릴스로 보기 ▶</small></p>
+          <p class="story-title">${esc(st.title)}<small>꿀템 ${(st.items || []).length}개</small></p>
           <div class="rec-scroll">${(st.items || []).map(prod).join("")}</div>
         </div>
       </div>`;
-    }).join("") : `<p class="ep-empty">꿀템 스토리가 곧 올라와요 🎵</p>`;
+    }).join("") : `<p class="ep-empty">릴스 꿀템이 곧 올라와요 🎵</p>`;
 
     const cats = (ADMIN && Array.isArray(ADMIN.catPicks)) ? ADMIN.catPicks : [];
     const cBox = root.querySelector("#cat-list");
@@ -2028,7 +2028,7 @@ async function renderPublicSite(root) {
           <span class="cat-thumb-name">${esc(c.cat)}</span>
         </a>
         <div class="rec-body">
-          <p class="story-title">${esc(c.cat)} TOP ${c.items.length}<small>많이 팔린 순 · 옆으로 넘겨보세요 →</small></p>
+          <p class="story-title">${esc(c.cat)} TOP ${c.items.length}<small>옆으로 넘겨보세요 →</small></p>
           <div class="rec-scroll">${c.items.map(prod).join("")}</div>
         </div>
       </div>`;
@@ -2036,7 +2036,7 @@ async function renderPublicSite(root) {
   })();
 
   // ---------- 탭 ----------
-  const TAB_ORDER = BF_ON ? ["bf", "outfits", "picks", "stories", "cats"] : ["outfits", "picks", "stories", "cats"];
+  const TAB_ORDER = BF_ON ? ["bf", "outfits", "stories", "picks", "cats"] : ["outfits", "stories", "picks", "cats"];
   const buttons = root.querySelectorAll("nav.tabs button");
   const slider = root.querySelector("#tab-slider");
   const viewport = root.querySelector("#tab-viewport");
