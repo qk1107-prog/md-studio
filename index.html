@@ -73,12 +73,12 @@
   }
   #app-root .tab-slider {
     display: flex;
-    width: 200%;
+    width: 400%;
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
   #app-root .tab-slider > .section {
-    flex: 0 0 50%;
-    width: 50%;
+    flex: 0 0 25%;
+    width: 25%;
     box-sizing: border-box;
   }
 
@@ -581,7 +581,13 @@
   #app-root .feed-list .polaroid .ph { aspect-ratio: 2/3; }
 
   /* 탭 2개는 반반 */
-  #app-root nav.tabs button { flex: 1; }
+  #app-root nav.tabs button { flex: 1 1 auto; font-size: 12px; padding: 9px 10px; }
+  #app-root .story-title { margin: 0 0 8px; font-size: 13px; font-weight: 800; letter-spacing: -0.4px; line-height: 1.35; }
+  #app-root .story-title small { display: block; font-size: 10px; color: #a9a196; font-weight: 600; margin-top: 2px; }
+  #app-root .cat-thumb { background: #f3f1ee !important; }
+  #app-root .cat-thumb img { object-fit: cover; }
+  #app-root .cat-thumb .cat-thumb-name { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 8px; color: #fff; font-size: 13px; font-weight: 900; letter-spacing: -0.4px; background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,.65)); text-align: left; }
+  #app-root .tab-intro { margin: 0 0 4px; font-size: 11px; color: #a9a196; }
 
   /* ===== 실착 상세: 브랜드가 따로 저장된 아이템 ===== */
   #app-root .outfit-cat .cat-chip .chip-sep { opacity: 0.5; margin: 0 4px; }
@@ -1428,6 +1434,8 @@ async function renderPublicSite(root) {
     <nav class="tabs">
       <button data-tab="outfits" class="active">실착</button>
       <button data-tab="picks">추천 브랜드+꿀템</button>
+      <button data-tab="stories">꿀템 스토리</button>
+      <button data-tab="cats">카테고리 꿀템</button>
     </nav>
 
     <div class="wrap" id="tab-viewport">
@@ -1447,6 +1455,16 @@ async function renderPublicSite(root) {
           <button type="button" data-f="가심비">가심비</button>
         </div>
         <div id="ep-list"></div>
+      </section>
+
+      <section id="tab-stories" class="section">
+        <p class="tab-intro">릴스 하나에 꿀템 여러 개 — 썸네일을 누르면 릴스로, 제품을 누르면 바로 구매 링크로 가요</p>
+        <div id="story-list"></div>
+      </section>
+
+      <section id="tab-cats" class="section">
+        <p class="tab-intro">광만두 큐레이션 샵에서 제일 많이 팔린 순 · 카테고리별 TOP 20</p>
+        <div id="cat-list"></div>
       </section>
       </div>
       <form class="wish-box" id="wish-form" autocomplete="off">
@@ -1754,8 +1772,51 @@ async function renderPublicSite(root) {
     if (outfit) openOutfitModal(outfit);
   });
 
+  // ---------- 꿀템 스토리 / 카테고리 꿀템 ----------
+  (() => {
+    const prod = (it) => {
+      const link = safeUrl(it.link); const img = safeImg(it.img);
+      return `<a class="rec-prod" href="${esc(link || "#")}" target="_blank" rel="noopener">
+        <div class="rec-prod-img">${img ? `<img src="${esc(img)}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : "사진"}</div>
+        <p class="rec-prod-brand">${esc(it.brand)}</p>
+        <p class="rec-prod-name">${esc(it.name)}</p>
+      </a>`;
+    };
+    const stories = (ADMIN && Array.isArray(ADMIN.stories)) ? ADMIN.stories : [];
+    const sBox = root.querySelector("#story-list");
+    if (sBox) sBox.innerHTML = stories.length ? stories.map((st) => {
+      const reel = safeUrl(st.reel); const th = safeImg(st.thumb);
+      return `<div class="rec-row">
+        <a class="rec-thumb" href="${esc(reel || "#")}" target="_blank" rel="noopener" aria-label="${esc(st.title)} 릴스로 보기">
+          ${th ? `<img src="${esc(th)}" alt="" loading="lazy" decoding="async">` : `<span class="rec-thumb-ph">${esc(st.title)}</span>`}
+          <span class="rec-play">▶</span>
+        </a>
+        <div class="rec-body">
+          <p class="story-title">${esc(st.title)}<small>꿀템 ${(st.items || []).length}개 · 릴스로 보기 ▶</small></p>
+          <div class="rec-scroll">${(st.items || []).map(prod).join("")}</div>
+        </div>
+      </div>`;
+    }).join("") : `<p class="ep-empty">꿀템 스토리가 곧 올라와요 🎵</p>`;
+
+    const cats = (ADMIN && Array.isArray(ADMIN.catPicks)) ? ADMIN.catPicks : [];
+    const cBox = root.querySelector("#cat-list");
+    if (cBox) cBox.innerHTML = cats.length ? cats.filter((c) => (c.items || []).length).map((c) => {
+      const first = c.items[0]; const th = safeImg(first.img);
+      return `<div class="rec-row">
+        <a class="rec-thumb cat-thumb" href="${esc(safeUrl(first.link) || "#")}" target="_blank" rel="noopener" aria-label="${esc(c.cat)} 1위">
+          ${th ? `<img src="${esc(th)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}
+          <span class="cat-thumb-name">${esc(c.cat)}</span>
+        </a>
+        <div class="rec-body">
+          <p class="story-title">${esc(c.cat)} TOP ${c.items.length}<small>많이 팔린 순 · 옆으로 넘겨보세요 →</small></p>
+          <div class="rec-scroll">${c.items.map(prod).join("")}</div>
+        </div>
+      </div>`;
+    }).join("") : `<p class="ep-empty">카테고리 꿀템이 곧 올라와요</p>`;
+  })();
+
   // ---------- 탭 ----------
-  const TAB_ORDER = ["outfits", "picks"];
+  const TAB_ORDER = ["outfits", "picks", "stories", "cats"];
   const buttons = root.querySelectorAll("nav.tabs button");
   const slider = root.querySelector("#tab-slider");
   const viewport = root.querySelector("#tab-viewport");
