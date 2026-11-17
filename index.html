@@ -1836,7 +1836,16 @@ async function renderPublicSite(root) {
         const seen = {}, perBrand = {};
         const NOT_CLOTH = /벨트|양말|삭스|socks?|모자|볼캡|캡\b|비니|beanie|cap\b|가방|백팩|토트|숄더백|크로스백|지갑|머플러|목도리|장갑|키링|반지|목걸이|팔찌|선글라스|안경|향수|크림|로션|팬티|드로즈|브리프|트렁크/i;
         arr = pool.filter((o) => { const id = gidOf(o); if (!id || seen[id] || NOT_CLOTH.test(String(o.name || ""))) return false; seen[id] = 1; return true; })
-          .map((o) => ({ o, sc: Math.sqrt(Number(o.rv) || 0) * (1 + (Number(o.rate) || 0) / 60) }))
+          .filter((o) => { // 블프 시작 후: 직전가보다 실제로 안 내린 상품은 PICK에서 제외
+            if (nowFn() < T_TEASE || !Object.keys(NOWP).length) return true;
+            const id = gidOf(o), pre = PRE[id] ? Number(PRE[id][0]) : 0, cur = priceNow(o, id);
+            return !pre || !cur || cur < pre;
+          })
+          .map((o) => {
+            const id = gidOf(o), pre = PRE[id] ? Number(PRE[id][0]) : 0, cur = nowFn() >= T_TEASE ? priceNow(o, id) : 0;
+            const real = pre && cur && cur < pre ? (1 - cur / pre) * 100 : (Number(o.rate) || 0);
+            return { o, sc: Math.sqrt(Number(o.rv) || 0) * (1 + real / 60) };
+          })
           .sort((a, b) => b.sc - a.sc)
           .filter(({ o }) => { const b = o.brand || ""; perBrand[b] = (perBrand[b] || 0) + 1; return perBrand[b] <= 2; })
           .slice(0, 12).map(({ o }) => o);
