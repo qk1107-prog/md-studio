@@ -1012,6 +1012,13 @@ function safeImg(u) {
   return /^(https?:\/\/|data:image\/)/i.test(u) ? u : "";
 }
 
+// 편 제목에서 시리즈 이름(가성비/가심비) 중복 제거: "가성비 플리스" → "플리스"
+function shortTitle(e) {
+  const t = String((e && e.title) || "").trim(), sr = String((e && e.series) || "").trim();
+  if (sr && t.startsWith(sr)) { const r = t.slice(sr.length).trim(); if (r) return r; }
+  return t;
+}
+
 const EP_LABELS = [
   { key: "국밥", emoji: "🍚" },
   { key: "힙함", emoji: "🔥" },
@@ -1253,7 +1260,7 @@ async function renderPublicSite(root) {
           <span class="ep-series ${seriesClass(e.series)}">${esc(e.series)}</span>
           <span class="ep-play">▶</span>
         </div>
-        <p class="ep-card-title">${esc(e.title)}</p>
+        <p class="ep-card-title">${esc(shortTitle(e))}</p>
         <p class="ep-card-date">${fmtDate(e.upload_date)}</p>
       </a>
     `).join("")}</div>`;
@@ -1279,7 +1286,7 @@ async function renderPublicSite(root) {
         <div class="ep-prod-info">
           <p class="ep-prod-brand">${esc(it.brand)}</p>
           <p class="ep-prod-name">${esc(it.product_name)}</p>
-          <span class="ep-prod-btn">무신사에서 보기</span>
+          <span class="ep-prod-btn">바로 보기</span>
         </div>
       </a>
     `;
@@ -1338,7 +1345,7 @@ async function renderPublicSite(root) {
         <div class="ep-wrap">
           <div class="ep-hero">
             <span class="ep-series ${seriesClass(ep.series)}">${esc(ep.series)}</span>
-            <h1 class="ep-hero-title">${esc(ep.title)}</h1>
+            <h1 class="ep-hero-title">${esc(shortTitle(ep))}</h1>
             ${reel ? `<a class="ep-replay" href="${esc(reel)}" target="_blank" rel="noopener">▶ 영상 다시 보기</a>` : ""}
           </div>
           <div id="ep-sections"><p class="ep-loading">불러오는 중…</p></div>
@@ -1449,7 +1456,7 @@ async function renderPublicSite(root) {
         </a>
         <div class="rec-body">
           <div class="rec-head">
-            <p class="rec-title">${esc(e.title)}</p>
+            <p class="rec-title">${esc(shortTitle(e))}</p>
             <a class="rec-more" href="#ep=${esc(e.id)}">전체보기</a>
           </div>
           <div class="rec-chips"></div>
