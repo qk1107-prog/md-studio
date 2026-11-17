@@ -1642,7 +1642,7 @@ async function renderPublicSite(root) {
       } else {
         phase = "live";
         const day = (BFD.days && BFD.days[key]) || (preview ? (BFD.sample || null) : null) || {};
-        const hot = day.hot || [], sig = day.sig || [], brands = day.brands || [];
+        const hot = day.hot || [...(day.hotA || []), ...(day.hotB || [])], sig = day.sig || [], brands = day.brands || [];
         const sched = SCHEDULE.find(([k]) => k === key.slice(5));
         const dayNo = Math.floor((now - at(2026, 11, 22, 0)) / 864e5) + 1;
         const endLeft = Math.ceil((T_END - now) / 864e5);
@@ -1661,12 +1661,20 @@ async function renderPublicSite(root) {
               ${tile("bf-brand", "🏷️", "브랜드특가", "회차별 브랜드데이", cd(mid, "종료까지"), false, brands.length)}
             </div>
           </div>
-          <div class="bf-sec" id="bf-hot"><div class="bf-sec-head"><p class="bf-h">🔥 오늘의 하루특가</p><span class="bf-sec-note">오늘 자정에 끝나요</span></div>${gridBlock("hot", hot, true)}</div>
+          <div class="bf-sec" id="bf-hot"><div class="bf-sec-head"><p class="bf-h">🔥 오늘의 하루특가</p><span class="bf-sec-note">오늘 자정에 끝나요</span></div>
+            ${(day.hotA || day.hotB) ? `<div class="bf-chips" id="bf-hot-tabs"><button type="button" data-k="hotA" class="active">🍚 가성비<i>${(day.hotA || []).length}</i></button><button type="button" data-k="hotB">💸 가심비<i>${(day.hotB || []).length}</i></button></div><div id="bf-hot-grid">${gridBlock("hot", day.hotA || [], true)}</div>` : gridBlock("hot", hot, true)}
+          </div>
           <div class="bf-sec" id="bf-sig"><div class="bf-sec-head"><p class="bf-h">✨ 시그니처특가 꿀템</p><span class="bf-sec-note">블프 기간 내내 이 가격</span></div>${gridBlock("sig", sig, false)}</div>
           <div class="bf-sec" id="bf-brand"><div class="bf-sec-head"><p class="bf-h">🏷️ 오늘의 브랜드특가</p><span class="bf-sec-note">브랜드 누르면 꿀템만</span></div>
             ${brands.length ? `<div class="bf-chips" id="bf-brands">${brands.map((b, i) => `<button type="button" data-i="${i}" class="${i === 0 ? "active" : ""}">${esc(b.brand)}${b.rate ? `<i>~${esc(b.rate)}%</i>` : ""}</button>`).join("")}</div><div id="bf-brand-items">${gridBlock("brand", brands[0].items || [], false)}</div>` : `<p class="bf-empty">오늘 브랜드특가 정리 중이에요 · 곧 올라와요</p>`}
           </div>
           ${brandDaySec(key.slice(5), preview ? (BFD.sample && BFD.sample.brandDay) : null)}${bestSec()}${liveSec(`${c.m}/${c.d}`, true)}<div class="bf-divider"></div>`;
+        const ht = zone.querySelector("#bf-hot-tabs");
+        if (ht) ht.addEventListener("click", (e) => {
+          const b = e.target.closest("button"); if (!b) return;
+          ht.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+          zone.querySelector("#bf-hot-grid").innerHTML = gridBlock("hot", day[b.dataset.k] || [], true);
+        });
         const bb = zone.querySelector("#bf-brands");
         if (bb) bb.addEventListener("click", (e) => {
           const b = e.target.closest("button"); if (!b) return;
