@@ -1541,7 +1541,9 @@ async function renderPublicSite(root) {
     // 작년 무진장 BEST 20 — 카테고리별
     const BEST_ALL = (BFD.best || []).map((p, i) => Object.assign({}, p, { rank: i + 1 }));
     const BC = BFD.bestCats || {};
-    const BEST_TABS = [["TOP 20", BEST_ALL], ["아우터", BC["아우터"] || []], ["상의", BC["상의"] || []], ["팬츠", BC["팬츠"] || []], ["악세사리", BC["ACC"] || []]].filter(([, a]) => a.length);
+    const BEST_TABS = (BFD.bestTabs && Object.keys(BFD.bestTabs).length)
+      ? Object.entries(BFD.bestTabs).filter(([, a]) => a && a.length)
+      : [["TOP 20", BEST_ALL], ["아우터", BC["아우터"] || []], ["상의", BC["상의"] || []], ["팬츠", BC["팬츠"] || []], ["악세사리", BC["ACC"] || []]].filter(([, a]) => a.length);
     let bestTab = 0;
     function bestSec() {
       if (!BEST_TABS.length) return "";
