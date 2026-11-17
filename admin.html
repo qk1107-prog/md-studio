@@ -646,6 +646,7 @@ async function renderAdminApp(root) {
     { key: "outfits", label: "실착 (LOOK)" },
     { key: "episodes", label: "추천템 (편)" },
     { key: "wishes", label: "원하는 옷 요청" },
+    { key: "stats", label: "📊 방문·클릭 기록" },
   ];
 
   function renderShell() {
@@ -695,6 +696,75 @@ async function renderAdminApp(root) {
     if (currentPage === "outfits") return renderOutfitsPage(main);
     if (currentPage === "episodes") return renderEpisodesPage(main);
     if (currentPage === "wishes") return renderWishesPage(main);
+    if (currentPage === "stats") return renderStatsPage(main);
+  }
+
+  // ============================================================
+  // 방문·클릭 기록
+  // ============================================================
+  async function fetchEvents(sinceIso) {
+    const out = [];
+    for (let from = 0; from < 50000; from += 1000) {
+      const { data, error } = await supabaseClient.from("site_events")
+        .select("created_at,kind,vid,tab,label,url,ref,device")
+        .gte("created_at", sinceIso).order("created_at", { ascending: false }).range(from, from + 999);
+      if (error) throw error;
+      out.push(...data);
+      if (data.length < 1000) break;
+    }
+    return out;
+  }
+  const TAB_NAMES = { bf: "무진장 블프", outfits: "실착", picks: "추천 브랜드+꿀템", stories: "꿀템 스토리", cats: "카테고리 꿀템", top: "상단 라인업" };
+  const kstDay = (t) => new Date(t).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+  const kstTime = (t) => new Date(t).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  const devName = (d) => { d = d || ""; const base = d.replace(/^(ig|kakao)-/, ""); const app = d.startsWith("ig-") ? "인스타 앱" : d.startsWith("kakao-") ? "카톡 앱" : "브라우저"; return app + " · " + ({ ios: "아이폰", android: "안드로이드", pc: "PC" }[base] || base); };
+  let statsDays = 7;
+  async function renderStatsPage(main) {
+    try { localStorage.setItem("mds_owner", "1"); } catch (e) {}
+    main.innerHTML = `<p class="page-title">📊 방문·클릭 기록</p>
+      <p class="page-sub">MD STUDIO에 들어온 방문과, 어떤 무신사(큐레이터) 링크를 몇 번 눌렀는지 기록이에요. 방문자 화면엔 보이지 않아요. 이 브라우저(관리자)의 방문은 기록에서 빠져요.</p>
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+        ${[[1, "오늘"], [7, "최근 7일"], [30, "최근 30일"], [90, "최근 90일"]].map(([d, l]) => `<button class="btn ${d === statsDays ? "" : "ghost"}" data-days="${d}">${l}</button>`).join("")}
+        <button class="btn ghost" id="st-csv">⬇︎ 엑셀(CSV) 저장</button>
+      </div>
+      <div id="st-body"><div class="loading">불러오는 중…</div></div>`;
+    main.querySelectorAll("[data-days]").forEach((b) => b.addEventListener("click", () => { statsDays = +b.dataset.days; renderStatsPage(main); }));
+    const since = new Date();
+    if (statsDays === 1) { const d = kstDay(Date.now()); since.setTime(new Date(d + "T00:00:00+09:00").getTime()); } else since.setTime(Date.now() - statsDays * 864e5);
+    let ev;
+    try { ev = await fetchEvents(since.toISOString()); } catch (err) { main.querySelector("#st-body").innerHTML = `<p class="msg-err">⛔ ${esc(err.message || String(err))}</p>`; return; }
+    const visits = ev.filter((e) => e.kind === "visit"), clicks = ev.filter((e) => e.kind === "click");
+    const isMs = (u) => /musinsa\.com/i.test(u || "");
+    const msClicks = clicks.filter((e) => isMs(e.url));
+    const uniq = (a) => new Set(a.map((e) => e.vid)).size;
+    const cnt = (arr, key) => { const m = new Map(); arr.forEach((e) => { const k = key(e); m.set(k, (m.get(k) || 0) + 1); }); return [...m.entries()].sort((a, b) => b[1] - a[1]); };
+    // 일별
+    const days = new Map();
+    ev.forEach((e) => { const d = kstDay(e.created_at); if (!days.has(d)) days.set(d, { v: 0, vids: new Set(), c: 0, m: 0, cv: new Set() }); const o = days.get(d); if (e.kind === "visit") { o.v++; o.vids.add(e.vid); } else { o.c++; if (isMs(e.url)) { o.m++; o.cv.add(e.vid); } } });
+    // 링크별
+    const links = new Map();
+    msClicks.forEach((e) => { const k = e.url; if (!links.has(k)) links.set(k, { url: k, label: e.label, tabs: new Set(), n: 0, vids: new Set(), last: e.created_at }); const o = links.get(k); o.n++; o.vids.add(e.vid); o.tabs.add(TAB_NAMES[e.tab] || e.tab); });
+    const linkRows = [...links.values()].sort((a, b) => b.n - a.n);
+    const code = (u) => (u.match(/curator\/goods\/([A-Za-z0-9]+)/) || [])[1] || "";
+    const box = (n, l) => `<div style="flex:1;min-width:120px;background:var(--bg-soft,#f6f6f6);border-radius:12px;padding:12px 14px;"><div style="font-size:22px;font-weight:700;">${n.toLocaleString()}</div><div style="font-size:12px;color:var(--fg-muted);margin-top:2px;">${l}</div></div>`;
+    const tbl = (head, rows) => `<table class="mini-table"><thead><tr>${head.map((h) => `<td style="font-weight:600;">${h}</td>`).join("")}</tr></thead><tbody>${rows.join("") || `<tr><td colspan="${head.length}" style="color:var(--fg-muted);">아직 기록이 없어요</td></tr>`}</tbody></table>`;
+    main.querySelector("#st-body").innerHTML = `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+        ${box(visits.length, "방문 수")}${box(uniq(visits), "방문한 사람 (중복 제외)")}${box(msClicks.length, "무신사 링크 클릭")}${box(uniq(msClicks), "링크 누른 사람 (중복 제외)")}
+      </div>
+      <div class="panel"><h2>날짜별</h2>${tbl(["날짜", "방문", "사람", "무신사 링크 클릭", "누른 사람"], [...days.entries()].sort((a, b) => b[0].localeCompare(a[0])).map(([d, o]) => `<tr><td>${d}</td><td>${o.v}</td><td>${o.vids.size}</td><td>${o.m}</td><td>${o.cv.size}</td></tr>`))}</div>
+      <div class="panel"><h2>많이 눌린 링크 (${linkRows.length}개)</h2>${tbl(["#", "상품", "어디서", "클릭", "사람", "큐레이터 코드"], linkRows.slice(0, 200).map((o, i) => `<tr><td>${i + 1}</td><td>${esc(o.label || "")}</td><td>${esc([...o.tabs].join(", "))}</td><td><b>${o.n}</b></td><td>${o.vids.size}</td><td><a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(code(o.url) || "링크")}</a></td></tr>`))}</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="panel" style="flex:1;min-width:240px;"><h2>탭별 클릭</h2>${tbl(["탭", "클릭"], cnt(msClicks, (e) => TAB_NAMES[e.tab] || e.tab).map(([k, n]) => `<tr><td>${esc(k)}</td><td>${n}</td></tr>`))}</div>
+        <div class="panel" style="flex:1;min-width:240px;"><h2>어디서 들어왔나</h2>${tbl(["경로", "방문"], cnt(visits, (e) => devName(e.device)).map(([k, n]) => `<tr><td>${esc(k)}</td><td>${n}</td></tr>`))}</div>
+      </div>
+      <div class="panel"><h2>최근 클릭 기록 (최대 300개)</h2>${tbl(["시간", "탭", "상품", "방문자", "기기"], msClicks.slice(0, 300).map((e) => `<tr><td style="white-space:nowrap;">${kstTime(e.created_at)}</td><td>${esc(TAB_NAMES[e.tab] || e.tab)}</td><td>${esc(e.label || "")}</td><td>#${esc((e.vid || "").slice(0, 5))}</td><td>${esc(devName(e.device))}</td></tr>`))}</div>`;
+    main.querySelector("#st-csv").addEventListener("click", () => {
+      const q = (v) => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
+      const lines = [["시간(KST)", "종류", "방문자", "탭", "상품", "링크", "유입", "기기"].map(q).join(",")].concat(ev.map((e) => [kstTime(e.created_at), e.kind === "visit" ? "방문" : "클릭", e.vid, TAB_NAMES[e.tab] || e.tab, e.label, e.url, e.ref, devName(e.device)].map(q).join(",")));
+      const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "mdstudio_기록_" + kstDay(Date.now()) + ".csv"; a.click();
+    });
   }
 
   // ============================================================

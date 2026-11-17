@@ -920,6 +920,32 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ---------- 방문·클릭 기록 (관리자 페이지에서만 확인) ----------
+(function(){
+  try{
+    const URL_="https://cbuydjkvvzbluyohdkie.supabase.co/rest/v1/site_events";
+    const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
+    const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}};
+    if(/[?&]owner=1/.test(location.search)) ls("mds_owner","1");
+    if(ls("mds_owner")==="1") return;
+    let vid=ls("mds_vid"); if(!vid){vid=Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); ls("mds_vid",vid);}
+    const ua=navigator.userAgent||"";
+    const device=(/Instagram/.test(ua)?"ig-":/KAKAOTALK/i.test(ua)?"kakao-":"")+(/iPhone|iPad|iPod/.test(ua)?"ios":/Android/.test(ua)?"android":"pc");
+    const cut=(t,n)=>(t||"").replace(/\s+/g," ").trim().slice(0,n);
+    const send=(row)=>{try{fetch(URL_,{method:"POST",keepalive:true,headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(Object.assign({vid,device},row))}).catch(()=>{});}catch(e){}};
+    let ref=""; try{ref=document.referrer?new URL(document.referrer).hostname:"";}catch(e){}
+    const utm=(location.search.match(/utm_source=([^&]+)/)||[])[1];
+    send({kind:"visit",ref:cut((utm?"utm:"+decodeURIComponent(utm)+" ":"")+ref,300),tab:cut(location.hash,40),url:cut(location.pathname+location.search,500)});
+    document.addEventListener("click",function(ev){
+      const a=ev.target&&ev.target.closest&&ev.target.closest("a[href]"); if(!a) return;
+      const href=a.getAttribute("href")||""; if(!/^https?:/i.test(href)) return;
+      const sec=a.closest("section[id],[id^='tab-']"); const tab=sec?sec.id.replace(/^tab-/,""):"top";
+      send({kind:"click",tab:cut(tab,40),label:cut(a.getAttribute("aria-label")||a.innerText||a.textContent,200),url:cut(href,500)});
+    },true);
+  }catch(e){}
+})();
+</script>
+<script>
 // ============================================================
 // Supabase 연결 설정 (공개용 anon 키 — 읽기만 가능하도록 보안 규칙이 걸려 있어요)
 // ============================================================
