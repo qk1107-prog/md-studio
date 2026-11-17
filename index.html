@@ -739,6 +739,65 @@
   #app-root .look-cell .ph { width: 100%; height: 100%; object-fit: cover; display: flex; align-items: center; justify-content: center; color: #b7ae9c; font-size: 10px; }
   #app-root .look-cell:active { opacity: 0.8; }
   #app-root .back-header-hint { font-size: 8.5px !important; font-weight: 400 !important; color: #b5aea3 !important; font-family: "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif; letter-spacing: -0.2px; }
+  /* ---------- 무진장 블프 (기간 한정) ---------- */
+  #app-root .bf-zone { max-width: 720px; margin: 0 auto; padding: 18px 16px 4px; }
+  #app-root .bf-card { position: relative; overflow: hidden; border-radius: 18px; background: #0f0e0d; color: #fff; padding: 18px 18px 16px; }
+  #app-root .bf-card::before { content: ""; position: absolute; inset: -40% -30% auto auto; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(255,61,63,.55), rgba(255,61,63,0) 70%); pointer-events: none; }
+  #app-root .bf-top { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  #app-root .bf-tag { display: inline-flex; align-items: center; gap: 6px; background: #ff3d3f; color: #fff; font-size: 10px; font-weight: 900; letter-spacing: 1.2px; padding: 5px 9px 4px; border-radius: 999px; }
+  #app-root .bf-tag .bf-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: bfPulse 1.2s infinite; }
+  @keyframes bfPulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+  #app-root .bf-sub { font-size: 10.5px; color: #a8a29a; font-weight: 700; letter-spacing: .3px; }
+  #app-root .bf-dday { font-size: 30px; font-weight: 900; letter-spacing: -1px; line-height: 1; color: #E4FF1A; }
+  #app-root .bf-title { position: relative; margin: 14px 0 4px; font-size: 21px; font-weight: 900; line-height: 1.25; letter-spacing: -0.8px; }
+  #app-root .bf-title em { font-style: normal; color: #E4FF1A; }
+  #app-root .bf-desc { position: relative; margin: 0; font-size: 12px; color: #bdb7ae; line-height: 1.5; letter-spacing: -0.2px; }
+  #app-root .bf-count { position: relative; margin: 16px 0 0; display: flex; align-items: flex-end; gap: 6px; }
+  #app-root .bf-count-label { font-size: 10.5px; color: #a8a29a; font-weight: 700; margin: 0 0 6px; }
+  #app-root .bf-count .u { display: flex; flex-direction: column; align-items: center; }
+  #app-root .bf-count .n { min-width: 46px; text-align: center; font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 7px 4px 6px; }
+  #app-root .bf-count .l { font-size: 8.5px; color: #8d877f; margin-top: 4px; letter-spacing: .6px; font-weight: 700; }
+  #app-root .bf-count .c { font-size: 20px; font-weight: 900; color: #5c5750; padding-bottom: 22px; }
+  #app-root .bf-days { position: relative; display: flex; gap: 6px; overflow-x: auto; margin: 16px -18px 0; padding: 0 18px 2px; scrollbar-width: none; }
+  #app-root .bf-days::-webkit-scrollbar { display: none; }
+  #app-root .bf-day { flex: none; border: 1px solid rgba(255,255,255,.14); border-radius: 10px; padding: 7px 10px 6px; min-width: 64px; }
+  #app-root .bf-day b { display: block; font-size: 11px; font-weight: 900; letter-spacing: -0.2px; }
+  #app-root .bf-day span { display: block; font-size: 10px; color: #a8a29a; margin-top: 2px; white-space: nowrap; }
+  #app-root .bf-day.hot { border-color: #ff3d3f; background: rgba(255,61,63,.14); }
+  #app-root .bf-day.now { border-color: #E4FF1A; background: #E4FF1A; }
+  #app-root .bf-day.now b, #app-root .bf-day.now span { color: #141312; }
+  #app-root .bf-day.past { opacity: .35; }
+  #app-root .bf-locks { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  #app-root .bf-lock { border-radius: 12px; background: rgba(255,255,255,.06); padding: 11px 12px 10px; }
+  #app-root .bf-lock p { margin: 0; }
+  #app-root .bf-lock .t { font-size: 12.5px; font-weight: 800; letter-spacing: -0.3px; }
+  #app-root .bf-lock .s { font-size: 10px; color: #a8a29a; margin-top: 3px; }
+  /* LIVE: 오늘의 꿀템 */
+  #app-root .bf-today { position: relative; display: flex; align-items: center; gap: 6px; margin: 12px 0 0; flex-wrap: wrap; }
+  #app-root .bf-theme { font-size: 11px; font-weight: 800; color: #141312; background: #E4FF1A; border-radius: 999px; padding: 4px 9px 3px; }
+  #app-root .bf-sec { margin: 22px 0 0; }
+  #app-root .bf-sec-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 2px 10px; }
+  #app-root .bf-sec-title { margin: 0; font-size: 16px; font-weight: 900; letter-spacing: -0.6px; }
+  #app-root .bf-sec-title small { font-size: 11px; color: #ff3d3f; font-weight: 800; margin-left: 4px; letter-spacing: 0; }
+  #app-root .bf-sec-note { font-size: 9.5px; color: #a9a196; }
+  #app-root .bf-rail { display: flex; gap: 10px; overflow-x: auto; margin: 0 -16px; padding: 0 16px 4px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  #app-root .bf-rail::-webkit-scrollbar { display: none; }
+  #app-root .bf-item { flex: none; width: 136px; scroll-snap-align: start; color: inherit; text-decoration: none; }
+  #app-root .bf-item .im { position: relative; aspect-ratio: 4/5; border-radius: 12px; overflow: hidden; background: #f3f1ee; }
+  #app-root .bf-item .im img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #app-root .bf-item .rk { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 900; color: #fff; background: #141312; border-radius: 6px; padding: 3px 6px 2px; }
+  #app-root .bf-item .br { margin: 8px 0 0; font-size: 10.5px; font-weight: 800; color: #141312; }
+  #app-root .bf-item .nm { margin: 2px 0 0; font-size: 11.5px; color: #59544d; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  #app-root .bf-item .pr { margin: 5px 0 0; font-size: 13px; font-weight: 900; letter-spacing: -0.3px; }
+  #app-root .bf-item .pr i { font-style: normal; color: #ff3d3f; margin-right: 4px; }
+  #app-root .bf-item .cm { margin: 5px 0 0; font-size: 10.5px; color: #8a8378; line-height: 1.35; }
+  #app-root .bf-brands { display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px 12px; padding: 0 16px; scrollbar-width: none; }
+  #app-root .bf-brands::-webkit-scrollbar { display: none; }
+  #app-root .bf-brands button { flex: none; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 12px 6px; font-family: inherit; font-size: 12px; font-weight: 800; color: #141312; cursor: pointer; }
+  #app-root .bf-brands button i { font-style: normal; color: #ff3d3f; margin-left: 4px; }
+  #app-root .bf-brands button.active { background: #141312; border-color: #141312; color: #fff; }
+  #app-root .bf-empty { margin: 0; padding: 22px 0; text-align: center; font-size: 12px; color: #a9a196; border: 1px dashed var(--line); border-radius: 12px; }
+  #app-root .bf-preview-flag { display: inline-block; margin: 0 0 8px; font-size: 10px; font-weight: 800; color: #ff3d3f; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1311,6 +1370,8 @@ async function renderPublicSite(root) {
       <hr class="head-divider">
     </header>
 
+    <div class="bf-zone" id="bf-zone" hidden></div>
+
     <div class="collab-section">
       <p class="collab-label">LINE UP</p>
       <div class="collab-scroll" id="collab-scroll">
@@ -1370,6 +1431,127 @@ async function renderPublicSite(root) {
       </div>
     </div>
   `;
+
+  // ---------- 무진장 블프 (기간 한정, 메인 최상단) ----------
+  // 켜기: site_data.value.bf.on = true  /  시안 보기: 주소 뒤에 ?bf=pre | ?bf=tease | ?bf=live
+  // 매일 데이터: site_data.value.bf.days["2026-11-22"] = { hot:[상품…], brands:[{brand, rate, items:[상품…]}] }
+  //   상품 = { brand, name, sale, rate, img, link(큐레이터), comment }
+  (() => {
+    const zone = root.querySelector("#bf-zone");
+    if (!zone) return;
+    const BFD = (ADMIN && ADMIN.bf) || {};
+    let qs = ""; try { qs = new URLSearchParams(location.search).get("bf") || ""; } catch (e) {}
+    const preview = ["pre", "tease", "live"].includes(qs) ? qs : "";
+    if (!BFD.on && !preview) return;
+
+    const KST = 9 * 3600 * 1000;
+    const at = (y, mo, d, h, mi) => Date.UTC(y, mo - 1, d, h, mi || 0) - KST;
+    const T_TEASE = at(2026, 11, 20, 19), T_OPEN = at(2026, 11, 22, 19), T_END = at(2026, 12, 3, 0);
+    const SCHEDULE = [
+      ["11-20", "티징", "hot"], ["11-22", "본편 오픈 · 아우터·킥스", "hot"], ["11-23", "아우터·킥스"], ["11-24", "아우터·킥스"],
+      ["11-25", "상의·하의"], ["11-26", "상의·하의"], ["11-27", "상의·하의 · 단독 하루특가", "hot"], ["11-28", "뷰티·잡화"], ["11-29", "뷰티·잡화"],
+      ["11-30", "무료배송·무탠다드"], ["12-01", "무료배송·무탠다드"], ["12-02", "앙코르 · 파이널 하루특가", "hot"],
+    ];
+    const SAMPLE = {"hot": [{"brand": "니티드", "name": "코튼 미니멀 라운드 니트 BLACK", "sale": 29800, "rate": 70, "img": "https://image.msscdn.net/images/goods_img/20220831/2757451/2757451_17864227925485_500.jpg", "link": "https://www.musinsa.com/curator/goods/6th327LP", "comment": "블프가 1장에 3만원 안쪽, 국밥 라운드"}, {"brand": "어널러코드", "name": "헤어리 믹스 니트 (브라운)", "sale": 31950, "rate": 55, "img": "https://image.msscdn.net/images/goods_img/20240912/4438543/4438543_17659364573877_500.png", "link": "https://www.musinsa.com/curator/goods/2TcLz6PY", "comment": "헤어리 브라운 55% — 오늘이 최저가"}, {"brand": "블론드나인", "name": "크루넥 리브 니트 스웨터_아이보리", "sale": 29800, "rate": 55, "img": "https://image.msscdn.net/images/goods_img/20201202/1710363/1710363_1_500.jpg", "link": "https://www.musinsa.com/curator/goods/z2JpN9TF", "comment": "남친룩 아이보리 필수템"}, {"brand": "워크온바디오프", "name": "레스티드 세미 오버핏 모크넥 니트 (4color)", "sale": 24900, "rate": 31, "img": "https://image.msscdn.net/images/goods_img/20251111/5717292/5717292_17628566884439_500.jpg", "link": "https://www.musinsa.com/curator/goods/4bfWKxVy", "comment": "후기 6천개 모크넥, 색깔별로"}, {"brand": "이티씨이", "name": "SMOCKING WOOL KNIT ZIP UP (CHARCOAL)", "sale": 113400, "rate": 40, "img": "https://image.msscdn.net/images/goods_img/20251020/5613101/5613101_17611125257602_500.jpg", "link": "https://www.musinsa.com/curator/goods/wLQVWkjR", "comment": "스모킹 집업 40%, 힙함 끝판"}, {"brand": "해칭룸", "name": "Archive Cardigan Dark Navy", "sale": 100800, "rate": 40, "img": "https://image.msscdn.net/images/goods_img/20230907/3539737/3539737_16940675355502_500.jpg", "link": "https://www.musinsa.com/curator/goods/52rOIhTV", "comment": "옷쟁이 가디건 40%"}], "brands": [{"brand": "르아르", "rate": 37, "items": [{"brand": "르아르", "name": "리브드 오버핏 헨리넥 니트 [블랙]", "sale": 49000, "rate": 37, "img": "https://image.msscdn.net/images/goods_img/20240830/4387116/4387116_17907275940694_500.jpg", "link": "https://www.musinsa.com/curator/goods/pHjOtqwJ", "comment": ""}, {"brand": "르아르", "name": "리브드 오버핏 헨리넥 니트 [그레이]", "sale": 49000, "rate": 34, "img": "https://image.msscdn.net/images/goods_img/20250902/5388581/5388581_17621450173570_500.jpg", "link": "https://www.musinsa.com/curator/goods/6DzVzZmb", "comment": ""}, {"brand": "르아르", "name": "리브드 오버핏 헨리넥 니트 [오트밀]", "sale": 49000, "rate": 37, "img": "https://image.msscdn.net/images/goods_img/20240830/4387120/4387120_17919434012113_500.jpg", "link": "https://www.musinsa.com/curator/goods/oIarkYEm", "comment": ""}, {"brand": "르아르", "name": "퓨어 코튼 브이넥 니트 [블랙]", "sale": 49000, "rate": 11, "img": "https://image.msscdn.net/images/goods_img/20250130/4747222/4747222_17912583450910_500.jpg", "link": "https://www.musinsa.com/curator/goods/Akltwm4P", "comment": ""}]}, {"brand": "이티씨이", "rate": 40, "items": [{"brand": "이티씨이", "name": "SMOCKING WOOL KNIT ZIP UP (CHARCOAL)", "sale": 113400, "rate": 40, "img": "https://image.msscdn.net/images/goods_img/20251020/5613101/5613101_17611125257602_500.jpg", "link": "https://www.musinsa.com/curator/goods/wLQVWkjR", "comment": ""}, {"brand": "이티씨이", "name": "(BASE) LAYERED CUFF ROUND KNIT (GRAY)", "sale": 87750, "rate": 35, "img": "https://image.msscdn.net/images/goods_img/20251020/5612245/5612245_17611122784216_500.jpg", "link": "https://www.musinsa.com/curator/goods/a001XXQK", "comment": ""}, {"brand": "이티씨이", "name": "GLOVE WAFFLE KNIT (BLACK)", "sale": 76300, "rate": 30, "img": "https://image.msscdn.net/images/goods_img/20250212/4780964/4780964_17393431682682_500.jpg", "link": "https://www.musinsa.com/curator/goods/o9fVNQWf", "comment": ""}, {"brand": "이티씨이", "name": "DAMAGED CROP NET KNIT ZIP UP (BLACK)", "sale": 110600, "rate": 30, "img": "https://image.msscdn.net/images/goods_img/20260219/6028680/6028680_17714746948190_500.jpg", "link": "https://www.musinsa.com/curator/goods/og4tI0zX", "comment": ""}]}, {"brand": "블론드나인", "rate": 55, "items": [{"brand": "블론드나인", "name": "크루넥 리브 니트 스웨터_블랙", "sale": 29800, "rate": 55, "img": "https://image.msscdn.net/images/goods_img/20201202/1710327/1710327_1_500.jpg", "link": "https://www.musinsa.com/curator/goods/uyri0hIJ", "comment": ""}, {"brand": "블론드나인", "name": "크루넥 리브 니트 스웨터_네이비", "sale": 29800, "rate": 55, "img": "https://image.msscdn.net/images/goods_img/20201202/1710358/1710358_1_500.jpg", "link": "https://www.musinsa.com/curator/goods/OJ9T1cYx", "comment": ""}, {"brand": "블론드나인", "name": "크루넥 리브 니트 스웨터_아이보리", "sale": 29800, "rate": 55, "img": "https://image.msscdn.net/images/goods_img/20201202/1710363/1710363_1_500.jpg", "link": "https://www.musinsa.com/curator/goods/z2JpN9TF", "comment": ""}, {"brand": "블론드나인", "name": "크루넥 리브 니트 스웨터_브라운", "sale": 29800, "rate": 55, "img": "https://image.msscdn.net/images/goods_img/20201202/1710495/1710495_1_500.jpg", "link": "https://www.musinsa.com/curator/goods/oyqf3TCz", "comment": ""}]}]};
+
+    const nowFn = () => {
+      if (preview === "pre") return at(2026, 11, 17, 20);
+      if (preview === "tease") return at(2026, 11, 21, 12);
+      if (preview === "live") return at(2026, 11, 24, 14);
+      return Date.now();
+    };
+    const kstParts = (t) => { const d = new Date(t + KST); return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate(), w: "일월화수목금토"[d.getUTCDay()] }; };
+    const pad = (n) => String(n).padStart(2, "0");
+    const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
+
+    function itemCard(p, rank) {
+      const link = safeUrl(p.link) || "#";
+      const img = safeImg(p.img);
+      return `<a class="bf-item" href="${esc(link)}" target="_blank" rel="noopener">
+        <div class="im">${img ? `<img src="${esc(img)}" loading="lazy" alt="">` : ""}${rank ? `<span class="rk">${rank}</span>` : ""}</div>
+        <p class="br">${esc(p.brand)}</p>
+        <p class="nm">${esc(p.name)}</p>
+        <p class="pr">${p.rate ? `<i>${esc(p.rate)}%</i>` : ""}${p.sale ? esc(won(p.sale)) : ""}</p>
+        ${p.comment ? `<p class="cm">${esc(p.comment)}</p>` : ""}
+      </a>`;
+    }
+
+    function daysStrip(now) {
+      const cur = kstParts(now); const key = pad(cur.m) + "-" + pad(cur.d);
+      return `<div class="bf-days">${SCHEDULE.map(([k, label, hot]) => {
+        const st = k === key ? "now" : (k < key && now > T_TEASE ? "past" : (hot ? "hot" : ""));
+        return `<div class="bf-day ${st}"><b>${k.replace("-", ".")}</b><span>${esc(label)}</span></div>`;
+      }).join("")}</div>`;
+    }
+
+    let timer = null;
+    function render() {
+      const now = nowFn();
+      if (now >= T_END) { zone.hidden = true; if (timer) clearInterval(timer); return; }
+      zone.hidden = false;
+      const flag = preview ? `<p class="bf-preview-flag">● 시안 미리보기 (${preview}) — 실제 사이트엔 아직 안 보여요</p>` : "";
+
+      if (now < T_OPEN) {
+        const target = now < T_TEASE ? T_TEASE : T_OPEN;
+        const left = Math.max(0, target - now);
+        const dd = Math.floor(left / 864e5), hh = Math.floor(left / 36e5) % 24, mm = Math.floor(left / 6e4) % 60, ss = Math.floor(left / 1e3) % 60;
+        const dday = Math.ceil((T_OPEN - now) / 864e5);
+        zone.innerHTML = `${flag}<div class="bf-card">
+          <div class="bf-top"><span class="bf-tag">BLACK FRIDAY</span><span class="bf-dday">D-${dday}</span></div>
+          <p class="bf-title">무진장 블프,<br><em>광만두가 매일</em> 골라드려요</p>
+          <p class="bf-desc">하루특가 · 브랜드특가 중에 진짜 살 만한 꿀템만<br>매일 자정 여기서 정리해요</p>
+          <p class="bf-count-label" style="position:relative;margin:16px 0 0;">${now < T_TEASE ? "티징 오픈까지 · 11.20(금) 19:00" : "본편 오픈까지 · 11.22(일) 19:00"}</p>
+          <div class="bf-count" style="margin-top:6px;">
+            <div class="u"><span class="n">${pad(dd)}</span><span class="l">DAY</span></div><span class="c">:</span>
+            <div class="u"><span class="n">${pad(hh)}</span><span class="l">HOUR</span></div><span class="c">:</span>
+            <div class="u"><span class="n">${pad(mm)}</span><span class="l">MIN</span></div><span class="c">:</span>
+            <div class="u"><span class="n">${pad(ss)}</span><span class="l">SEC</span></div>
+          </div>
+          ${daysStrip(now)}
+          <div class="bf-locks">
+            <div class="bf-lock"><p class="t">🔥 오늘의 하루특가</p><p class="s">11.22 19:00 OPEN</p></div>
+            <div class="bf-lock"><p class="t">🏷️ 오늘의 브랜드특가</p><p class="s">매일 자정 업데이트</p></div>
+          </div>
+        </div>`;
+        if (!timer) timer = setInterval(() => { if (preview) return; render(); }, 1000);
+        return;
+      }
+
+      if (timer) { clearInterval(timer); timer = null; }
+      const cur = kstParts(now);
+      const key = `${cur.y}-${pad(cur.m)}-${pad(cur.d)}`;
+      const day = (BFD.days && BFD.days[key]) || (preview ? SAMPLE : null);
+      const sched = SCHEDULE.find(([k]) => k === key.slice(5));
+      const dayNo = Math.floor((now - at(2026, 11, 22, 0)) / 864e5) + 1;
+      const endLeft = Math.ceil((T_END - now) / 864e5);
+      const hot = (day && day.hot) || [];
+      const brands = (day && day.brands) || [];
+
+      zone.innerHTML = `${flag}<div class="bf-card">
+          <div class="bf-top"><span class="bf-tag"><span class="bf-live-dot"></span>BLACK FRIDAY LIVE</span><span class="bf-sub">종료까지 D-${endLeft}</span></div>
+          <p class="bf-title">무진장 블프 <em>DAY ${dayNo}</em><br>${cur.m}.${pad(cur.d)} (${cur.w}) 꿀템 정리</p>
+          <div class="bf-today">${sched ? `<span class="bf-theme">오늘 · ${esc(sched[1])}</span>` : ""}<span class="bf-sub">매일 자정 업데이트</span></div>
+          ${daysStrip(now)}
+        </div>
+        <div class="bf-sec">
+          <div class="bf-sec-head"><p class="bf-sec-title">🔥 오늘의 하루특가 <small>TODAY ONLY</small></p><span class="bf-sec-note">품절되면 바로 교체해요</span></div>
+          ${hot.length ? `<div class="bf-rail">${hot.map((p, i) => itemCard(p, i + 1)).join("")}</div>` : `<p class="bf-empty">오늘 하루특가 꿀템 정리 중이에요 · 곧 올라와요</p>`}
+        </div>
+        <div class="bf-sec">
+          <div class="bf-sec-head"><p class="bf-sec-title">🏷️ 오늘의 브랜드특가</p><span class="bf-sec-note">브랜드 누르면 꿀템만 모아봐요</span></div>
+          ${brands.length ? `<div class="bf-brands" id="bf-brands">${brands.map((b, i) => `<button type="button" data-i="${i}" class="${i === 0 ? "active" : ""}">${esc(b.brand)}${b.rate ? `<i>~${esc(b.rate)}%</i>` : ""}</button>`).join("")}</div>
+          <div class="bf-rail" id="bf-brand-items">${(brands[0].items || []).map((p) => itemCard(p)).join("")}</div>` : `<p class="bf-empty">오늘 브랜드특가 정리 중이에요 · 곧 올라와요</p>`}
+        </div>`;
+
+      const bb = zone.querySelector("#bf-brands");
+      if (bb) bb.addEventListener("click", (e) => {
+        const b = e.target.closest("button"); if (!b) return;
+        bb.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+        zone.querySelector("#bf-brand-items").innerHTML = (brands[+b.dataset.i].items || []).map((p) => itemCard(p)).join("");
+      });
+    }
+    render();
+  })();
 
   // ---------- 원하는 옷 요청 ----------
   (() => {
