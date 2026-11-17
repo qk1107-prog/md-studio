@@ -1543,6 +1543,8 @@ async function renderPublicSite(root) {
           <div class="bf-rail" id="bf-brand-items">${(brands[0].items || []).map((p) => itemCard(p)).join("")}</div>` : `<p class="bf-empty">오늘 브랜드특가 정리 중이에요 · 곧 올라와요</p>`}
         </div>`;
 
+      const nowDay = zone.querySelector(".bf-day.now");
+      if (nowDay) nowDay.parentNode.scrollLeft = Math.max(0, nowDay.offsetLeft - 60);
       const bb = zone.querySelector("#bf-brands");
       if (bb) bb.addEventListener("click", (e) => {
         const b = e.target.closest("button"); if (!b) return;
