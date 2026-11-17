@@ -624,6 +624,7 @@
     display: inline-block; font-size: 10.5px; font-weight: 800; padding: 3px 9px;
     border-radius: 20px; letter-spacing: 0.2px; line-height: 1.4;
   }
+  #app-root .rec-title .rec-series { position: static; display: inline-block; vertical-align: 1px; margin-right: 6px; font-size: 10px; padding: 2px 7px; }
   #app-root .ep-series.s-value { background: #c6ff3d; color: #141312; }
   #app-root .ep-series.s-heart { background: #ff3d9a; color: #fff; }
   #app-root .ep-card-title { font-size: 13.5px; font-weight: 800; margin: 9px 0 0; line-height: 1.3; letter-spacing: -0.2px; }
@@ -1456,7 +1457,7 @@ async function renderPublicSite(root) {
         </a>
         <div class="rec-body">
           <div class="rec-head">
-            <p class="rec-title">${esc(shortTitle(e))}</p>
+            <p class="rec-title">${e.series ? `<span class="ep-series ${seriesClass(e.series)} rec-series">${esc(e.series)}</span>` : ""}${esc(shortTitle(e))}</p>
             <a class="rec-more" href="#ep=${esc(e.id)}">전체보기</a>
           </div>
           <div class="rec-chips"></div>
