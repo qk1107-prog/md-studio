@@ -891,8 +891,8 @@
   #app-root #tab-bf.is-locked { position: relative; }
   #app-root #tab-bf.is-locked .bf-zone { filter: blur(3.5px); pointer-events: none; user-select: none; -webkit-user-select: none; }
   #app-root #tab-bf.is-locked details { pointer-events: none; }
-  #app-root .bf-lock { position: absolute; inset: 0; z-index: 5; display: flex; justify-content: center; align-items: flex-start; padding: 56px 18px 0; background: rgba(255,255,255,0.08); }
-  #app-root .bf-lock-card { position: sticky; top: 96px; width: 100%; max-width: 340px; text-align: center; background: rgba(17,17,17,0.92); color: #fff; border-radius: 20px; padding: 22px 20px 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
+  #app-root .bf-lock { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 56px 18px 160px; background: rgba(255,255,255,0.08); }
+  #app-root .bf-lock-card { position: relative; width: 100%; max-width: 340px; text-align: center; background: rgba(17,17,17,0.92); color: #fff; border-radius: 20px; padding: 22px 20px 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
   #app-root .bf-lock-ic { font-size: 26px; }
   #app-root .bf-lock-k { font-size: 13px; font-weight: 600; opacity: 0.8; margin-top: 6px; }
   #app-root .bf-lock-t { font-size: 21px; font-weight: 800; margin-top: 6px; letter-spacing: -0.3px; }
@@ -1572,7 +1572,7 @@ async function renderPublicSite(root) {
 
     <div class="wrap" id="tab-viewport">
       <div class="tab-slider" id="tab-slider">
-      ${BF_ON ? `<section id="tab-bf" class="section${BF_LOCKED ? " is-locked" : ""}"><div class="bf-zone" id="bf-zone"></div>${BF_LOCKED ? `<div class="bf-lock" id="bf-lock"><div class="bf-lock-card"><div class="bf-lock-ic">🔒</div><div class="bf-lock-k">무진장 블프 쿠폰·특가·꿀템 총정리</div><div class="bf-lock-t">11월 20일(금) 오후 7시 공개</div><div class="bf-lock-cd" id="bf-lock-cd"></div><div class="bf-lock-s">공개되면 이 탭에서 가장 빠르게 볼 수 있어요</div></div></div>` : ""}</section>` : ""}
+      ${BF_ON ? `<section id="tab-bf" class="section${BF_LOCKED ? " is-locked" : ""}"><div class="bf-zone" id="bf-zone"></div>${BF_LOCKED ? `<div class="bf-lock" id="bf-lock"><div class="bf-lock-card"><div class="bf-lock-ic">🔒</div><div class="bf-lock-k">무진장 블프 쿠폰·특가·꿀템 총정리</div><div class="bf-lock-t">11월 20일(금) 오후 7시 공개</div><div class="bf-lock-cd"></div><div class="bf-lock-s">공개되면 이 탭에서 가장 빠르게 볼 수 있어요</div></div><div class="bf-lock-card"><div class="bf-lock-ic">🔒</div><div class="bf-lock-k">무진장 블프 쿠폰·특가·꿀템 총정리</div><div class="bf-lock-t">11월 20일(금) 오후 7시 공개</div><div class="bf-lock-cd"></div><div class="bf-lock-s">공개되면 이 탭에서 가장 빠르게 볼 수 있어요</div></div><div class="bf-lock-card"><div class="bf-lock-ic">🔒</div><div class="bf-lock-k">무진장 블프 쿠폰·특가·꿀템 총정리</div><div class="bf-lock-t">11월 20일(금) 오후 7시 공개</div><div class="bf-lock-cd"></div><div class="bf-lock-s">공개되면 이 탭에서 가장 빠르게 볼 수 있어요</div></div><div class="bf-lock-card"><div class="bf-lock-ic">🔒</div><div class="bf-lock-k">무진장 블프 쿠폰·특가·꿀템 총정리</div><div class="bf-lock-t">11월 20일(금) 오후 7시 공개</div><div class="bf-lock-cd"></div><div class="bf-lock-s">공개되면 이 탭에서 가장 빠르게 볼 수 있어요</div></div></div>` : ""}</section>` : ""}
       <section id="tab-outfits" class="section">
         <div class="look-head">
           <p class="section-title">LOOK</p>
@@ -1907,12 +1907,12 @@ async function renderPublicSite(root) {
     render();
     setInterval(tick, 1000);
     if (BF_LOCKED) {
-      const sec = root.querySelector("#tab-bf"), cd = root.querySelector("#bf-lock-cd");
+      const sec = root.querySelector("#tab-bf"), cds = [...root.querySelectorAll(".bf-lock-cd")];
       const lt = () => {
         const r = BF_UNLOCK_AT - Date.now();
         if (r <= 0) { sec.classList.remove("is-locked"); const l = root.querySelector("#bf-lock"); if (l) l.remove(); return false; }
         const d = Math.floor(r / 864e5), h = Math.floor(r / 36e5) % 24, m = Math.floor(r / 6e4) % 60, x = Math.floor(r / 1e3) % 60, z = (n) => String(n).padStart(2, "0");
-        if (cd) cd.textContent = (d ? "D-" + d + " " : "") + z(h) + ":" + z(m) + ":" + z(x);
+        const tx = (d ? "D-" + d + " " : "") + z(h) + ":" + z(m) + ":" + z(x); cds.forEach((c) => { c.textContent = tx; });
         return true;
       };
       if (lt()) { const iv = setInterval(() => { if (!lt()) clearInterval(iv); }, 1000); }
