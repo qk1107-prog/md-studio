@@ -407,6 +407,7 @@
     font-weight: 700;
     font-size: 12px;
   }
+  #app-root .collab-card img.ph.cc-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
   #app-root .collab-card .cc-sticker {
     position: absolute;
     top: 10px;
@@ -887,9 +888,10 @@
   #app-root .bf-mini .r { font-size: 12px; font-weight: 900; color: #E4FF1A; font-variant-numeric: tabular-nums; white-space: nowrap; }
   #app-root .bf-mini .r small { color: #ff8a8b; margin-right: 3px; }
   #app-root #tab-bf .bf-zone { padding: 0 0 8px; }
-  #app-root #tab-bf.is-locked { position: relative; max-height: 1500px; overflow: hidden; }
-  #app-root #tab-bf.is-locked .bf-zone { filter: blur(7px) saturate(1.1); pointer-events: none; user-select: none; -webkit-user-select: none; }
-  #app-root .bf-lock { position: absolute; inset: 0; z-index: 5; display: flex; justify-content: center; align-items: flex-start; padding: 56px 18px 0; background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.55) 70%, rgba(255,255,255,0.95)); }
+  #app-root #tab-bf.is-locked { position: relative; }
+  #app-root #tab-bf.is-locked .bf-zone { filter: blur(3.5px); pointer-events: none; user-select: none; -webkit-user-select: none; }
+  #app-root #tab-bf.is-locked details { pointer-events: none; }
+  #app-root .bf-lock { position: absolute; inset: 0; z-index: 5; display: flex; justify-content: center; align-items: flex-start; padding: 56px 18px 0; background: rgba(255,255,255,0.08); }
   #app-root .bf-lock-card { position: sticky; top: 96px; width: 100%; max-width: 340px; text-align: center; background: rgba(17,17,17,0.92); color: #fff; border-radius: 20px; padding: 22px 20px 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
   #app-root .bf-lock-ic { font-size: 26px; }
   #app-root .bf-lock-k { font-size: 13px; font-weight: 600; opacity: 0.8; margin-top: 6px; }
@@ -1051,7 +1053,7 @@ async function renderPublicSite(root) {
   if (siteRes.status === "fulfilled") ADMIN = siteRes.value;
   if (epRes.status === "fulfilled") EPISODES = epRes.value;
 
-  const STICKER_POPS = { "NEW DROP": "#ff5a2e", "COLLAB": "#c6ff3d", "LIMITED": "#2ee6d6", "SOLD OUT": "#ff3d9a" };
+  const STICKER_POPS = { "NEW": "#ff3d3f", "HOT": "#ff5a2e", "NEW DROP": "#ff5a2e", "COLLAB": "#c6ff3d", "LIMITED": "#2ee6d6", "SOLD OUT": "#ff3d9a" };
 
   function photoTag(url, cls, extraAttrs) {
     extraAttrs = extraAttrs || "";
