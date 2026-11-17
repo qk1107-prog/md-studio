@@ -724,7 +724,9 @@ async function renderAdminApp(root) {
     (bf.sigPreview || []).forEach((g) => add("시그니처특가 " + (g.label || ""), g.items));
     (bf.sigBrands || []).forEach((g) => add("브랜드특가 " + (g.brand || ""), g.items));
     Object.entries(bf.days || {}).forEach(([d, day]) => { add(d + " 하루특가", [...(day.hotA || []), ...(day.hotB || []), ...(day.hot || [])]); (day.brands || []).forEach((b) => add(d + " 브랜드", b.items)); add(d + " 시그니처", day.sig); });
-    (bf.bestTabs || []).forEach((t) => add("작년 BEST " + (t.label || t.title || ""), t.items));
+    const bt = bf.bestTabs || {};
+    if (Array.isArray(bt)) bt.forEach((t) => add("작년BEST " + (t.label || t.title || ""), t.items));
+    else Object.entries(bt).forEach(([k, arr]) => add("작년BEST " + k, arr));
     let picks = (Array.isArray(bf.picks) ? bf.picks : []).map(String);
     const secs = ["전체", ...new Set(items.map((i) => i._sec.split(" ")[0]))];
     main.querySelector("#pk-sec").innerHTML = secs.map((x) => `<option>${esc(x)}</option>`).join("");
