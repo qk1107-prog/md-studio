@@ -1526,23 +1526,27 @@ async function renderPublicSite(root) {
       return `<span class="bf-stamp"><i></i>${p.m}.${pad(p.d)}(${p.w}) ${pad(p.h)}:${pad(p.mi)} 업데이트</span>`;
     }
 
-    // 작년 무진장 BEST 20 — 카테고리별
-    const CAT_MAP = (c) => /코트|패딩|아우터|무스탕|퍼|재킷|점퍼/.test(c) ? "아우터" : /니트|스웨터|티셔츠|셔츠|후드|맨투맨|스웻/.test(c) ? "상의" : /바지|팬츠|데님|슬랙스/.test(c) ? "팬츠" : "잡화";
-    const BEST = (BFD.best || []).map((p, i) => Object.assign({}, p, { rank: i + 1, group: CAT_MAP(p.cat || "") }));
-    const BEST_TABS = ["전체", ...["아우터", "상의", "팬츠", "잡화"].filter((g) => BEST.some((p) => p.group === g))];
-    let bestTab = "전체", bestAll = false;
-    function bestGrid() {
-      let list = bestTab === "전체" ? BEST : BEST.filter((p) => p.group === bestTab);
-      const cut = bestTab === "전체" && !bestAll && list.length > 8;
-      if (cut) list = list.slice(0, 8);
-      return list.map((p) => itemCard(p, p.rank)).join("") + (cut ? `<button type="button" class="bf-more-btn" id="bf-best-more" style="grid-column:1/-1">BEST 20 전체 보기 ↓</button>` : "");
+    // 펼쳐보기 그리드 (8개 먼저, 나머지는 전체 보기)
+    const GRIDS = {};
+    function gridBlock(gid, arr, rank, open) {
+      GRIDS[gid] = { arr, rank };
+      if (!arr.length) return `<p class="bf-empty">오늘 꿀템 정리 중이에요 · 곧 올라와요</p>`;
+      const cut = !open && arr.length > 8;
+      const list = cut ? arr.slice(0, 8) : arr;
+      return `<div class="bf-grid" data-grid="${gid}">${list.map((p, i) => itemCard(p, rank ? i + 1 : (p.rank || 0))).join("")}${cut ? `<button type="button" class="bf-more-btn" data-expand="${gid}" style="grid-column:1/-1">전체 ${arr.length}개 보기 ↓</button>` : ""}</div>`;
     }
+
+    // 작년 무진장 BEST 20 — 카테고리별
+    const BEST_ALL = (BFD.best || []).map((p, i) => Object.assign({}, p, { rank: i + 1 }));
+    const BC = BFD.bestCats || {};
+    const BEST_TABS = [["TOP 20", BEST_ALL], ["아우터", BC["아우터"] || []], ["상의", BC["상의"] || []], ["팬츠", BC["팬츠"] || []], ["악세사리", BC["ACC"] || []]].filter(([, a]) => a.length);
+    let bestTab = 0;
     function bestSec() {
-      if (!BEST.length) return "";
+      if (!BEST_TABS.length) return "";
       return `<div class="bf-sec" id="bf-best">
-        <div class="bf-sec-head"><p class="bf-h">🏆 작년 무진장 BEST 20 <small>광만두 구독자 PICK</small></p><span class="bf-sec-note">작년에 제일 많이 산 순</span></div>
-        <div class="bf-chips" id="bf-best-tabs">${BEST_TABS.map((t) => `<button type="button" data-t="${esc(t)}" class="${t === bestTab ? "active" : ""}">${esc(t)}${t !== "전체" ? `<i>${BEST.filter((p) => p.group === t).length}</i>` : ""}</button>`).join("")}</div>
-        <div class="bf-grid" id="bf-best-grid">${bestGrid()}</div>
+        <div class="bf-sec-head"><p class="bf-h">🏆 작년 무진장 BEST</p><span class="bf-sec-note">작년에 제일 많이 팔린 순</span></div>
+        <div class="bf-chips" id="bf-best-tabs">${BEST_TABS.map(([t, a], i) => `<button type="button" data-t="${i}" class="${i === bestTab ? "active" : ""}">${esc(t)}<i>${a.length}</i></button>`).join("")}</div>
+        <div id="bf-best-grid">${gridBlock("best", BEST_TABS[bestTab][1], true)}</div>
       </div>`;
     }
 
@@ -1566,15 +1570,15 @@ async function renderPublicSite(root) {
       if (md === "11-30" || md === "12-01") return 3;
       return -1;
     }
-    function brandDaySec(md) {
+    function brandDaySec(md, sampleItems) {
       const ri = roundIdx(md); const r = (BFD.rounds || [])[ri];
       if (!r) return "";
-      const picks = [...(r.sigRec || []), ...(r.catRec || [])];
-      const all = [...new Set([...(r.sig || []), ...(r.cat || [])])];
-      return `<div class="bf-sec">
-        <div class="bf-sec-head"><p class="bf-h">🛍️ ${ri + 1}회차 브랜드데이</p><span class="bf-sec-note">★ 광만두 추천</span></div>
-        <div class="bf-chipset">${picks.map((b) => `<span class="pick">${esc(b)}</span>`).join("")}</div>
-        ${all.length ? `<details class="bf-more"><summary>브랜드데이 전체 ${all.length}개 보기</summary><div class="bf-chipset">${all.map((b) => `<span>${esc(b)}</span>`).join("")}</div></details>` : ""}
+      const bi = (r.items && r.items.length) ? r.items : (sampleItems || []);
+      const all = [...new Set([...(r.sigRec || []), ...(r.catRec || []), ...(r.sig || []), ...(r.cat || [])])];
+      return `<div class="bf-sec" id="bf-bday">
+        <div class="bf-sec-head"><p class="bf-h">🛍️ ${ri + 1}회차 브랜드데이 꿀템</p><span class="bf-sec-note">브랜드 누르면 꿀템만</span></div>
+        ${bi.length ? `<div class="bf-chips" id="bf-bday-chips">${bi.map((b, i) => `<button type="button" data-i="${i}" class="${i === 0 ? "active" : ""}">${esc(b.brand)}${b.rate ? `<i>~${esc(b.rate)}%</i>` : ""}</button>`).join("")}</div><div id="bf-bday-grid">${gridBlock("bday", bi[0].items || [], false)}</div>` : `<p class="bf-empty">브랜드데이 꿀템 정리 중이에요 · 곧 올라와요</p>`}
+        ${all.length ? `<details class="bf-more"><summary>이번 회차 브랜드데이 브랜드 ${all.length}개 보기</summary><div class="bf-chipset">${all.map((x) => `<span>${esc(x)}</span>`).join("")}</div></details>` : ""}
       </div>`;
     }
 
@@ -1635,17 +1639,17 @@ async function renderPublicSite(root) {
               ${tile("bf-brand", "🏷️", "브랜드특가", "회차별 브랜드데이", cd(mid, "종료까지"), false, brands.length)}
             </div>
           </div>
-          <div class="bf-sec" id="bf-hot"><div class="bf-sec-head"><p class="bf-h">🔥 오늘의 하루특가</p><span class="bf-sec-note">자정에 끝나요</span></div>${rail(hot, true)}</div>
-          <div class="bf-sec" id="bf-sig"><div class="bf-sec-head"><p class="bf-h">✨ 시그니처특가 꿀템</p><span class="bf-sec-note">블프 기간 최저가</span></div>${rail(sig, false)}</div>
+          <div class="bf-sec" id="bf-hot"><div class="bf-sec-head"><p class="bf-h">🔥 오늘의 하루특가</p><span class="bf-sec-note">오늘 자정에 끝나요</span></div>${gridBlock("hot", hot, true)}</div>
+          <div class="bf-sec" id="bf-sig"><div class="bf-sec-head"><p class="bf-h">✨ 시그니처특가 꿀템</p><span class="bf-sec-note">블프 기간 내내 이 가격</span></div>${gridBlock("sig", sig, false)}</div>
           <div class="bf-sec" id="bf-brand"><div class="bf-sec-head"><p class="bf-h">🏷️ 오늘의 브랜드특가</p><span class="bf-sec-note">브랜드 누르면 꿀템만</span></div>
-            ${brands.length ? `<div class="bf-chips" id="bf-brands">${brands.map((b, i) => `<button type="button" data-i="${i}" class="${i === 0 ? "active" : ""}">${esc(b.brand)}${b.rate ? `<i>~${esc(b.rate)}%</i>` : ""}</button>`).join("")}</div><div class="bf-rail" id="bf-brand-items">${(brands[0].items || []).map((p) => itemCard(p)).join("")}</div>` : `<p class="bf-empty">오늘 브랜드특가 정리 중이에요 · 곧 올라와요</p>`}
+            ${brands.length ? `<div class="bf-chips" id="bf-brands">${brands.map((b, i) => `<button type="button" data-i="${i}" class="${i === 0 ? "active" : ""}">${esc(b.brand)}${b.rate ? `<i>~${esc(b.rate)}%</i>` : ""}</button>`).join("")}</div><div id="bf-brand-items">${gridBlock("brand", brands[0].items || [], false)}</div>` : `<p class="bf-empty">오늘 브랜드특가 정리 중이에요 · 곧 올라와요</p>`}
           </div>
-          ${liveSec(`${c.m}/${c.d}`, true)}${brandDaySec(key.slice(5))}${bestSec()}<div class="bf-divider"></div>`;
+          ${brandDaySec(key.slice(5), preview ? (BFD.sample && BFD.sample.brandDay) : null)}${bestSec()}${liveSec(`${c.m}/${c.d}`, true)}<div class="bf-divider"></div>`;
         const bb = zone.querySelector("#bf-brands");
         if (bb) bb.addEventListener("click", (e) => {
           const b = e.target.closest("button"); if (!b) return;
           bb.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
-          zone.querySelector("#bf-brand-items").innerHTML = (brands[+b.dataset.i].items || []).map((p) => itemCard(p)).join("");
+          zone.querySelector("#bf-brand-items").innerHTML = gridBlock("brand", brands[+b.dataset.i].items || [], false);
         });
       }
       const nowDay = zone.querySelector(".bf-day.now");
@@ -1653,14 +1657,17 @@ async function renderPublicSite(root) {
       const bt = zone.querySelector("#bf-best-tabs");
       if (bt) bt.addEventListener("click", (e) => {
         const b = e.target.closest("button"); if (!b) return;
-        bestTab = b.dataset.t;
+        bestTab = +b.dataset.t;
         bt.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
-        zone.querySelector("#bf-best-grid").innerHTML = bestGrid();
+        zone.querySelector("#bf-best-grid").innerHTML = gridBlock("best", BEST_TABS[bestTab][1], true);
       });
-      const bg = zone.querySelector("#bf-best-grid");
-      if (bg) bg.addEventListener("click", (e) => {
-        if (!e.target.closest("#bf-best-more")) return;
-        bestAll = true; bg.innerHTML = bestGrid();
+      const bdc = zone.querySelector("#bf-bday-chips");
+      if (bdc) bdc.addEventListener("click", (e) => {
+        const b = e.target.closest("button"); if (!b) return;
+        bdc.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+        const ri = roundIdx(key.slice(5)); const r = (BFD.rounds || [])[ri] || {};
+        const bi = (r.items && r.items.length) ? r.items : ((preview && BFD.sample && BFD.sample.brandDay) || []);
+        zone.querySelector("#bf-bday-grid").innerHTML = gridBlock("bday", (bi[+b.dataset.i] || {}).items || [], false);
       });
       zone.querySelectorAll(".bf-tile").forEach((t) => t.addEventListener("click", () => {
         const el = zone.querySelector("#" + t.dataset.go); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1673,6 +1680,12 @@ async function renderPublicSite(root) {
       const want = now >= T_END ? "end" : now < T_OPEN ? "pre" : "live";
       if (want !== phase) render();
     }
+    zone.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-expand]"); if (!btn) return;
+      const gid = btn.dataset.expand; const g = GRIDS[gid]; if (!g) return;
+      const wrap = btn.closest("[data-grid]");
+      wrap.outerHTML = gridBlock(gid, g.arr, g.rank, true);
+    });
     render();
     setInterval(tick, 1000);
   })();
