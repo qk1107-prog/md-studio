@@ -887,6 +887,35 @@
   #app-root .bf-mini .r { font-size: 12px; font-weight: 900; color: #E4FF1A; font-variant-numeric: tabular-nums; white-space: nowrap; }
   #app-root .bf-mini .r small { color: #ff8a8b; margin-right: 3px; }
   #app-root #tab-bf .bf-zone { padding: 0 0 8px; }
+  #app-root .bf-period2 { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 0 0; }
+  #app-root .bf-pd { border-radius: 10px; border: 1px solid rgba(255,255,255,.14); padding: 8px 9px 7px; }
+  #app-root .bf-pd.on { border-color: #E4FF1A; background: rgba(228,255,26,.1); }
+  #app-root .bf-pd .t { display: inline-block; font-size: 9.5px; font-weight: 900; color: #141312; background: #E4FF1A; border-radius: 4px; padding: 2px 5px 1px; }
+  #app-root .bf-pd:first-child .t { background: #b9a8ff; }
+  #app-root .bf-pd b { display: block; margin-top: 5px; font-size: 12px; font-weight: 900; letter-spacing: -0.3px; color: #fff; }
+  #app-root .bf-pd em { display: block; margin-top: 2px; font-style: normal; font-size: 9.5px; color: #a8a29a; }
+  #app-root .bf-rounds { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 6px 0 0; }
+  #app-root .bf-rd { border-radius: 8px; background: rgba(255,255,255,.06); padding: 6px 4px 5px; text-align: center; }
+  #app-root .bf-rd.on { background: #ff3d3f; }
+  #app-root .bf-rd b { display: block; font-size: 10px; font-weight: 900; color: #fff; }
+  #app-root .bf-rd span { display: block; font-size: 9px; color: #d9d4cc; margin-top: 1px; }
+  #app-root .bf-rd em { display: block; font-style: normal; font-size: 8.5px; color: #a8a29a; margin-top: 2px; line-height: 1.25; }
+  #app-root .bf-rd.on span, #app-root .bf-rd.on em { color: #fff; }
+  #app-root .bf-cps { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+  #app-root .bf-cp { display: flex; align-items: center; gap: 10px; padding: 11px 2px; border-bottom: 1px solid var(--line); }
+  #app-root .bf-cp.off { opacity: .4; }
+  #app-root .bf-cp-tag { flex: none; width: 74px; text-align: center; font-size: 10.5px; font-weight: 900; border-radius: 6px; padding: 6px 2px 5px; line-height: 1.2; }
+  #app-root .bf-cp-tag.c-violet { background: #e9e4ff; color: #4b3bd1; }
+  #app-root .bf-cp-tag.c-black { background: #141312; color: #fff; }
+  #app-root .bf-cp-tag.c-lime { background: #E4FF1A; color: #141312; }
+  #app-root .bf-cp-tag.c-red { background: #ff3d3f; color: #fff; }
+  #app-root .bf-cp-tag.c-blue { background: #e3edff; color: #1d4ed8; }
+  #app-root .bf-cp-tag.c-gray { background: #ecebe8; color: #141312; }
+  #app-root .bf-cp-body { flex: 1; min-width: 0; }
+  #app-root .bf-cp-when { margin: 0; font-size: 12.5px; font-weight: 900; letter-spacing: -0.4px; color: #141312; }
+  #app-root .bf-cp-desc { margin: 2px 0 0; font-size: 11px; line-height: 1.45; color: #6b665f; }
+  #app-root .bf-cp-st { flex: none; font-size: 9.5px; font-weight: 800; color: #a9a196; }
+  #app-root .bf-cp.on .bf-cp-st { color: #ff3d3f; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1615,6 +1644,22 @@ async function renderPublicSite(root) {
         return `<div class="bf-day ${st}"><b>${k.replace("-", ".")}</b><span>${esc(label)}</span></div>`;
       }).join("")}</div>`;
     }
+    function periodGrid(now) {
+      const c = kp(now); const md = `${pad(c.m)}-${pad(c.d)}`;
+      const P = [
+        ["티징", "11.20(금) 19시 ~ 11.21(토)", "티징 쿠폰 · SPA·뷰티 특가", now >= T_TEASE && now < T_OPEN],
+        ["본편", "11.22(일) 19시 ~ 12.2(수)", "시그니처특가 · 브랜드데이 · 하루특가", now >= T_OPEN && now < T_END],
+      ];
+      const R = [
+        ["1회차", "11.22~24", "아우터·킥스", md >= "11-22" && md <= "11-24"],
+        ["2회차", "11.25~27", "상의·하의", md >= "11-25" && md <= "11-27"],
+        ["3회차", "11.28~29", "뷰티·잡화", md >= "11-28" && md <= "11-29"],
+        ["4회차", "11.30~12.1", "무료배송·무탠다드", md === "11-30" || md === "12-01"],
+        ["파이널", "12.2", "앙코르 아우터·킥스", md === "12-02"],
+      ];
+      return `<div class="bf-period2">${P.map(([t, d, x, on]) => `<div class="bf-pd${on ? " on" : ""}"><span class="t">${t}</span><b>${d}</b><em>${x}</em></div>`).join("")}</div>
+        <div class="bf-rounds">${R.map(([t, d, x, on]) => `<div class="bf-rd${on ? " on" : ""}"><b>${t}</b><span>${d}</span><em>${x}</em></div>`).join("")}</div>`;
+    }
     function stamp() {
       const u = BFD.updatedAt ? Date.parse(BFD.updatedAt) : 0;
       const t = preview ? nowFn() - 35 * 6e4 : u;
@@ -1636,8 +1681,12 @@ async function renderPublicSite(root) {
         { tag: "라이브 한정 할인", c: "blue", when: "11.23 ~ 12.2 중 8일 · 19~21시", desc: "라이브 방송 중에만 받는 할인·쿠폰이에요. 일부 방송은 5~10% 장바구니 쿠폰까지.", s: st(at(2026, 11, 23, 0), T_END) },
         { tag: "무료배송·무탠다드", c: "gray", when: "11.30(월) ~ 12.1(화)", desc: "4회차는 무료배송 데이 + 무신사 스탠다드 집중 할인이에요.", s: st(at(2026, 11, 30, 0), at(2026, 12, 2, 0)) },
       ];
-      return `<div class="bf-sec" id="bf-benefit">${secHead("💳", "혜택·쿠폰 총정리", "이것만 알면 끝")}
-        <div class="bf-bens">${B.map((b) => `<div class="bf-ben ${b.s[0]}"><div class="bf-ben-top"><span class="bf-ben-tag c-${b.c}">${esc(b.tag)}</span><span class="bf-ben-st">${esc(b.s[1])}</span></div><p class="bf-ben-when">${esc(b.when)}</p><p class="bf-ben-desc">${esc(b.desc)}</p></div>`).join("")}</div>
+      return `<div class="bf-sec" id="bf-benefit">${secHead("🎟️", "쿠폰·혜택 정리", "날짜만 보면 끝")}
+        <div class="bf-cps">${B.map((b) => `<div class="bf-cp ${b.s[0]}">
+          <span class="bf-cp-tag c-${b.c}">${esc(b.tag)}</span>
+          <div class="bf-cp-body"><p class="bf-cp-when">${esc(b.when)}</p><p class="bf-cp-desc">${esc(b.desc)}</p></div>
+          <span class="bf-cp-st">${esc(b.s[1])}</span>
+        </div>`).join("")}</div>
       </div>`;
     }
 
@@ -1667,7 +1716,7 @@ async function renderPublicSite(root) {
       const items = (r.items && r.items.length) ? r.items : (ri === 0 ? (BFD.sigBrands || []) : []);
       const groups = items.map((b) => ({ label: b.brand, sub: b.rate ? `~${b.rate}%` : "", items: b.items || [] }));
       const allR = (BFD.rounds || []).map((x, i) => ({ i, list: [...new Set([...(x.sig || []), ...(x.cat || [])])] })).filter((x) => x.list.length);
-      return `<div class="bf-sec" id="bf-bday">${secHead("🛍️", "브랜드데이", "브랜드 누르면 꿀템만", ROUND_NAME[ri])}
+      return `<div class="bf-sec" id="bf-bday">${secHead("🏷️", "브랜드특가", "브랜드 누르면 꿀템만", ROUND_NAME[ri])}
         ${groups.length ? chipsGrid("bday", groups, false) : `<p class="bf-empty">이번 회차 꿀템 정리 중이에요 · 곧 올라와요</p>`}
         ${allR.length ? `<details class="bf-more"><summary>회차별 참여 브랜드 전체 보기</summary>${allR.map((x) => `<p class="bf-sub2">${esc(ROUND_NAME[x.i])} · ${x.list.length}개</p><div class="bf-chipset">${x.list.map((b) => `<span>${esc(b)}</span>`).join("")}</div>`).join("")}</details>` : ""}
       </div>`;
@@ -1722,8 +1771,8 @@ async function renderPublicSite(root) {
       return `<button type="button" class="bf-tile${lock ? " lock" : ""}" data-go="${id}">${count ? `<span class="n">${count}</span>` : ""}<div class="e">${e}</div><p class="t">${t}</p><p class="s">${sub}</p><p class="c">${cdHtml}</p></button>`;
     }
     function navSec(live) {
-      const L = live ? [["bf-hot", "하루특가"], ["bf-sig", "시그니처"], ["bf-brand", "브랜드특가"], ["bf-bday", "브랜드데이"], ["bf-benefit", "쿠폰"], ["bf-live", "라이브"], ["bf-best", "작년 BEST"]]
-        : [["bf-benefit", "쿠폰·혜택"], ["bf-sig", "시그니처특가"], ["bf-bday", "브랜드데이"], ["bf-live", "라이브"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"]];
+      const L = live ? [["bf-hot", "하루특가"], ["bf-sig", "시그니처특가"], ["bf-brand", "브랜드특가"], ["bf-bday", "브랜드데이"], ["bf-benefit", "쿠폰 정리"], ["bf-live", "라이브"], ["bf-best", "작년 BEST"]]
+        : [["bf-sig", "시그니처특가"], ["bf-bday", "브랜드특가"], ["bf-benefit", "쿠폰 정리"], ["bf-live", "라이브"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"]];
       return `<div class="bf-jump">${L.map(([id, t]) => `<button type="button" data-go="${id}">${t}</button>`).join("")}</div>`;
     }
 
@@ -1743,20 +1792,19 @@ async function renderPublicSite(root) {
         const target = now < T_TEASE ? T_TEASE : T_OPEN;
         zone.innerHTML = `${flag}<div class="bf-card">
             <div class="bf-top"><span class="bf-tag">BLACK FRIDAY · 26 겨울 무진장</span><span class="bf-dday">D-${dday}</span></div>
-            <p class="bf-title">무진장 블프, <em>광만두가 매일</em> 골라드려요</p>
-            <p class="bf-period">티징 11.20(금) 19:00 ~ 11.21(토) · 본편 11.22(일) 19:00 ~ 12.2(수)</p>
+            <p class="bf-title">무진장 블프, <em>가장 빠르게</em> 전해드려요</p>
+            ${periodGrid(now)}
             <div class="bf-cdrow"><p><b>${now < T_TEASE ? "티징 오픈까지" : "본편 오픈까지"}</b>${now < T_TEASE ? "11.20(금) 19:00" : "11.22(일) 19:00"}</p><span class="bf-clock">${cd(target)}</span></div>
-            ${daysStrip(now)}
           </div>
           <div class="bf-hub">
             <div class="bf-hub-head"><p class="bf-h">⚡ 매일 꿀템 정리 <small>11.22 OPEN</small></p>${stamp()}</div>
             <div class="bf-tiles">
               ${tile("bf-sig", "🔥", "하루특가", "가성비·가심비 50개씩", cd(T_OPEN), true)}
               ${tile("bf-sig", "✨", "시그니처특가", "미리보기 OPEN", cd(T_OPEN), false, (BFD.sigPreview || []).reduce((a, g) => a + g.items.length, 0))}
-              ${tile("bf-bday", "🏷️", "브랜드데이", "브랜드별 꿀템", cd(T_OPEN), false, (BFD.sigBrands || []).length)}
+              ${tile("bf-bday", "🏷️", "브랜드특가", "브랜드별 꿀템", cd(T_OPEN), false, (BFD.sigBrands || []).length)}
             </div>
           </div>
-          ${navSec(false)}${benefitSec(now)}${sigSec(false, {})}${brandDaySec(at(2026, 11, 22, 20))}${liveSec("")}${bestSec()}${tipsSec()}`;
+          ${navSec(false)}${sigSec(false, {})}${brandDaySec(at(2026, 11, 22, 20))}${benefitSec(now)}${liveSec("")}${bestSec()}${tipsSec()}`;
       } else {
         phase = "live";
         const day = (BFD.days && BFD.days[key]) || (preview ? (BFD.sample || {}) : {});
@@ -1770,7 +1818,7 @@ async function renderPublicSite(root) {
             <div class="bf-top"><span class="bf-tag"><span class="bf-dot"></span>BLACK FRIDAY LIVE</span><span class="bf-dday" style="font-size:15px">종료 D-${endLeft}</span></div>
             <p class="bf-title">무진장 <em>DAY ${dayNo}</em> · ${c.m}.${pad(c.d)}(${c.w})${sched ? ` <span class="bf-title-sub">${esc(sched[1])}</span>` : ""}</p>
             <div class="bf-cdrow"><p><b>오늘 특가 종료까지</b>매일 새로 업데이트</p><span class="bf-clock">${cd(mid)}</span></div>
-            ${daysStrip(now)}
+            ${periodGrid(now)}
           </div>
           <div class="bf-hub">
             <div class="bf-hub-head"><p class="bf-h">⚡ 오늘의 꿀템 정리 <small>${c.m}.${pad(c.d)}</small></p>${stamp()}</div>
@@ -1784,7 +1832,7 @@ async function renderPublicSite(root) {
           <div class="bf-sec" id="bf-hot">${secHead("🔥", "오늘의 하루특가", "오늘 자정에 끝나요")}${chipsGrid("hot", hotGroups, true)}</div>
           ${sigSec(true, day)}
           <div class="bf-sec" id="bf-brand">${secHead("🏷️", "오늘의 브랜드특가", "브랜드 누르면 꿀템만")}${chipsGrid("brand", brands.map((b) => ({ label: b.brand, sub: b.rate ? `~${b.rate}%` : "", items: b.items || [] })), false)}</div>
-          ${brandDaySec(now)}${benefitSec(now)}${bestSec()}${liveSec(todayKey)}`;
+          ${brandDaySec(now)}${benefitSec(now)}${liveSec(todayKey)}${bestSec()}${tipsSec()}`;
       }
       const nowDay = zone.querySelector(".bf-day.now");
       if (nowDay) nowDay.parentNode.scrollLeft = Math.max(0, nowDay.offsetLeft - 50);
