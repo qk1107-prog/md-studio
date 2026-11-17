@@ -1470,11 +1470,11 @@ async function renderPublicSite(root) {
             <h1 class="ep-hero-title">${esc(st.title)}</h1>
             ${reel ? `<a class="ep-replay" href="${esc(reel)}" target="_blank" rel="noopener">▶ 영상 다시 보기</a>` : ""}
           </div>
-          <div id="ep-sections">${items.length ? groupByBrand(items).map((g) => `
+          <div id="ep-sections">${items.length ? `
             <div class="ep-brand-row">
-              <p class="ep-brand-name">${esc(g.brand)}</p>
-              <div class="ep-prod-grid">${g.items.map(productCardHtml).join("")}</div>
-            </div>`).join("") : `<p class="ep-loading">아직 등록된 제품이 없어요.</p>`}</div>
+              <p class="ep-brand-name">영상에 나온 제품 ${items.length}개</p>
+              <div class="ep-prod-grid">${items.map(productCardHtml).join("")}</div>
+            </div>` : `<p class="ep-loading">아직 등록된 제품이 없어요.</p>`}</div>
           <p class="ep-note">가격은 세일에 따라 바뀌어서 무신사에서 확인해 주세요.<br>이 페이지의 링크로 구매하시면 광만두가 일정 수수료를 받을 수 있어요.</p>
         </div>
       </div>`;
