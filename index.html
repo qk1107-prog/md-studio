@@ -797,6 +797,28 @@
   #app-root .bf-brands button i { font-style: normal; color: #ff3d3f; margin-left: 4px; }
   #app-root .bf-brands button.active { background: #141312; border-color: #141312; color: #fff; }
   #app-root .bf-empty { margin: 0; padding: 22px 0; text-align: center; font-size: 12px; color: #a9a196; border: 1px dashed var(--line); border-radius: 12px; }
+  #app-root .bf-item .lv { position: absolute; right: 8px; bottom: 8px; font-size: 9.5px; font-weight: 800; color: #fff; background: #ff3d3f; border-radius: 6px; padding: 3px 6px 2px; }
+  #app-root .bf-lives { display: flex; flex-direction: column; gap: 8px; }
+  #app-root .bf-lvday { display: flex; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
+  #app-root .bf-lvday.today { border-color: #141312; }
+  #app-root .bf-lvday > b { flex: none; width: 38px; font-size: 12px; font-weight: 900; letter-spacing: -0.3px; padding-top: 1px; }
+  #app-root .bf-lvday > b small { display: block; font-size: 9.5px; color: #a9a196; font-weight: 700; }
+  #app-root .bf-lvrows { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  #app-root .bf-lvrow { display: flex; gap: 8px; align-items: baseline; font-size: 12px; }
+  #app-root .bf-lvrow i { flex: none; font-style: normal; font-size: 10px; font-weight: 800; color: #ff3d3f; width: 26px; }
+  #app-root .bf-lvrow span { min-width: 0; }
+  #app-root .bf-lvrow span b { font-weight: 800; margin-right: 4px; }
+  #app-root .bf-lvrow span em { font-style: normal; color: #8a8378; font-size: 10.5px; }
+  #app-root .bf-chipset { display: flex; flex-wrap: wrap; gap: 6px; }
+  #app-root .bf-chipset span { font-size: 11.5px; font-weight: 700; border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px 4px; color: #141312; background: #fff; }
+  #app-root .bf-chipset span.pick { background: #141312; border-color: #141312; color: #fff; }
+  #app-root .bf-chipset span.pick::before { content: "★ "; color: #E4FF1A; }
+  #app-root .bf-sub2 { margin: 12px 2px 8px; font-size: 11px; font-weight: 800; color: #6b665f; }
+  #app-root .bf-more { margin-top: 10px; }
+  #app-root .bf-more summary { list-style: none; cursor: pointer; font-size: 11.5px; color: #6b665f; text-align: center; padding: 9px 0; border: 1px solid var(--line); border-radius: 10px; }
+  #app-root .bf-more summary::-webkit-details-marker { display: none; }
+  #app-root .bf-more[open] summary { margin-bottom: 10px; }
+  #app-root .bf-more .bf-chipset span { font-weight: 500; font-size: 11px; }
   #app-root .bf-preview-flag { display: inline-block; margin: 0 0 8px; font-size: 10px; font-weight: 800; color: #ff3d3f; }
 </style>
 
@@ -1468,12 +1490,57 @@ async function renderPublicSite(root) {
       const link = safeUrl(p.link) || "#";
       const img = safeImg(p.img);
       return `<a class="bf-item" href="${esc(link)}" target="_blank" rel="noopener">
-        <div class="im">${img ? `<img src="${esc(img)}" loading="lazy" alt="">` : ""}${rank ? `<span class="rk">${rank}</span>` : ""}</div>
+        <div class="im">${img ? `<img src="${esc(img)}" loading="lazy" alt="">` : ""}${rank ? `<span class="rk">${rank}</span>` : ""}${p.live ? `<span class="lv">${esc(p.live)} 라이브</span>` : ""}</div>
         <p class="br">${esc(p.brand)}</p>
         <p class="nm">${esc(p.name)}</p>
         <p class="pr">${p.rate ? `<i>${esc(p.rate)}%</i>` : ""}${p.sale ? esc(won(p.sale)) : ""}</p>
         ${p.comment ? `<p class="cm">${esc(p.comment)}</p>` : ""}
       </a>`;
+    }
+
+    function bestSec() {
+      const best = BFD.best || [];
+      if (!best.length) return "";
+      return `<div class="bf-sec">
+        <div class="bf-sec-head"><p class="bf-sec-title">🏆 작년 무진장 BEST <small>광만두 PICK</small></p><span class="bf-sec-note">작년 블프 때 제일 많이 팔린 순서</span></div>
+        <div class="bf-rail">${best.map((p, i) => itemCard(p, i + 1)).join("")}</div>
+      </div>`;
+    }
+    const LIVE = BFD.live || [];
+    function liveRows(list) {
+      return list.map((l) => `<div class="bf-lvrow"><i>${esc(l.t)}</i><span><b>${esc(l.b)}</b><em>${esc(l.x)}</em></span></div>`).join("");
+    }
+    function liveSec(todayKey, onlyToday) {
+      if (!LIVE.length) return "";
+      const days = [...new Set(LIVE.map((l) => l.d))];
+      const W = { "11/23": "월", "11/24": "화", "11/25": "수", "11/26": "목", "11/27": "금", "11/30": "월", "12/1": "화", "12/2": "수" };
+      const show = onlyToday ? days.filter((d) => d === todayKey) : days;
+      if (!show.length) return "";
+      const list = `<div class="bf-lives">${show.map((d) => `<div class="bf-lvday${d === todayKey ? " today" : ""}"><b>${esc(d)}<small>${esc(W[d] || "")}</small></b><div class="bf-lvrows">${liveRows(LIVE.filter((l) => l.d === d))}</div></div>`).join("")}</div>`;
+      return `<div class="bf-sec">
+        <div class="bf-sec-head"><p class="bf-sec-title">📺 ${onlyToday ? "오늘의 무진장 라이브" : "무진장 라이브 일정"}</p><span class="bf-sec-note">라이브 한정 할인 · 쿠폰</span></div>
+        ${onlyToday ? list : `<details class="bf-more" style="margin-top:0"><summary>${show.length}일 · ${LIVE.length}개 방송 일정 펼쳐보기</summary>${list}</details>`}
+      </div>`;
+    }
+    function roundIdx(md) {
+      if (md >= "11-22" && md <= "11-24") return 0;
+      if (md >= "11-25" && md <= "11-27") return 1;
+      if (md >= "11-28" && md <= "11-29") return 2;
+      if (md >= "11-30" || md === "12-01") return md === "12-02" ? 4 : 3;
+      return -1;
+    }
+    function brandDaySec(md) {
+      const ri = roundIdx(md);
+      const r = (BFD.rounds || [])[ri];
+      if (!r) return "";
+      const picks = [...(r.sigRec || []), ...(r.catRec || [])];
+      const all = [...new Set([...(r.sig || []), ...(r.cat || [])])];
+      return `<div class="bf-sec">
+        <div class="bf-sec-head"><p class="bf-sec-title">🛍️ ${ri + 1}회차 브랜드데이</p><span class="bf-sec-note">이번 회차 크게 할인하는 브랜드</span></div>
+        <p class="bf-sub2">★ 광만두 추천 브랜드</p>
+        <div class="bf-chipset">${picks.map((b) => `<span class="pick">${esc(b)}</span>`).join("")}</div>
+        ${all.length ? `<details class="bf-more"><summary>브랜드데이 전체 ${all.length}개 보기</summary><div class="bf-chipset">${all.map((b) => `<span>${esc(b)}</span>`).join("")}</div></details>` : ""}
+      </div>`;
     }
 
     function daysStrip(now) {
@@ -1512,7 +1579,7 @@ async function renderPublicSite(root) {
             <div class="bf-lock"><p class="t">🔥 오늘의 하루특가</p><p class="s">11.22 19:00 OPEN</p></div>
             <div class="bf-lock"><p class="t">🏷️ 오늘의 브랜드특가</p><p class="s">매일 자정 업데이트</p></div>
           </div>
-        </div>`;
+        </div>${bestSec()}${liveSec("", false)}`;
         if (!timer) timer = setInterval(() => { if (preview) return; render(); }, 1000);
         return;
       }
@@ -1541,7 +1608,7 @@ async function renderPublicSite(root) {
           <div class="bf-sec-head"><p class="bf-sec-title">🏷️ 오늘의 브랜드특가</p><span class="bf-sec-note">브랜드 누르면 꿀템만 모아봐요</span></div>
           ${brands.length ? `<div class="bf-brands" id="bf-brands">${brands.map((b, i) => `<button type="button" data-i="${i}" class="${i === 0 ? "active" : ""}">${esc(b.brand)}${b.rate ? `<i>~${esc(b.rate)}%</i>` : ""}</button>`).join("")}</div>
           <div class="bf-rail" id="bf-brand-items">${(brands[0].items || []).map((p) => itemCard(p)).join("")}</div>` : `<p class="bf-empty">오늘 브랜드특가 정리 중이에요 · 곧 올라와요</p>`}
-        </div>`;
+        </div>${liveSec(`${cur.m}/${cur.d}`, true)}${brandDaySec(key.slice(5))}${bestSec()}`;
 
       const nowDay = zone.querySelector(".bf-day.now");
       if (nowDay) nowDay.parentNode.scrollLeft = Math.max(0, nowDay.offsetLeft - 60);
