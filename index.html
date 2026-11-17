@@ -2146,11 +2146,10 @@ async function renderPublicSite(root) {
       const box = img.parentElement.getBoundingClientRect();
       if (!img.naturalWidth || !box.height) return;
       const c = Number(img.dataset.crop), z0 = Number(img.dataset.zoom) || 1.3;
-      const s2 = Math.max(box.width / img.naturalWidth, box.height / img.naturalHeight);
-      const hiRatio = (img.naturalHeight * s2) / box.height; // 사진 높이 / 카드 높이
+      const hiRatio = (box.width * img.naturalHeight / img.naturalWidth) / box.height; // 사진 높이 / 카드 높이 (가로 맞춤)
       const z = Math.max(z0, 1 / (hiRatio * (1 - c)) + 0.02);
-      img.style.transformOrigin = "50% 0";
-      img.style.transform = `translateY(${(-z * c * hiRatio * 100).toFixed(2)}%) scale(${z.toFixed(3)})`;
+      img.style.cssText += ";top:0;left:0;right:0;bottom:auto;width:100%;height:auto;object-fit:fill;transform-origin:50% 0;";
+      img.style.transform = `translateY(${(-z * c * 100).toFixed(2)}%) scale(${z.toFixed(3)})`;
     };
     if (img.complete) apply(); else img.addEventListener("load", apply, { once: true });
   });
