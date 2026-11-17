@@ -1446,9 +1446,53 @@ async function renderPublicSite(root) {
     if (backdrop) animateOverlayOut(backdrop);
   }
 
+  // 릴스 꿀템 전체보기 (추천템 편 전체보기와 같은 화면)
+  function openStory(id) {
+    const st = ((ADMIN && ADMIN.stories) || []).find((x) => String(x.id) === String(id));
+    if (!st) { history.replaceState(null, "", location.pathname + location.search); return; }
+    const existing = root.querySelector("#ep-backdrop");
+    if (existing && existing.dataset.ep === "st-" + st.id) return;
+    if (existing) existing.remove();
+    const reel = safeUrl(st.reel);
+    const items = (st.items || []).map((it) => ({ brand: it.brand, product_name: it.name, curator_url: it.link, image_url: it.img }));
+    const holder = document.createElement("div");
+    holder.innerHTML = `
+      <div class="feed-backdrop ep-detail" id="ep-backdrop" data-ep="st-${esc(st.id)}">
+        <div class="ep-sticky">
+          <div class="feed-header">
+            <button class="back-link" id="ep-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
+            <p class="feed-title">릴스 꿀템</p>
+          </div>
+        </div>
+        <div class="ep-wrap">
+          <div class="ep-hero">
+            <span class="ep-series s-heart">▶ 릴스</span>
+            <h1 class="ep-hero-title">${esc(st.title)}</h1>
+            ${reel ? `<a class="ep-replay" href="${esc(reel)}" target="_blank" rel="noopener">▶ 영상 다시 보기</a>` : ""}
+          </div>
+          <div id="ep-sections">${items.length ? groupByBrand(items).map((g) => `
+            <div class="ep-brand-row">
+              <p class="ep-brand-name">${esc(g.brand)}</p>
+              <div class="ep-prod-grid">${g.items.map(productCardHtml).join("")}</div>
+            </div>`).join("") : `<p class="ep-loading">아직 등록된 제품이 없어요.</p>`}</div>
+          <p class="ep-note">가격은 세일에 따라 바뀌어서 무신사에서 확인해 주세요.<br>이 페이지의 링크로 구매하시면 광만두가 일정 수수료를 받을 수 있어요.</p>
+        </div>
+      </div>`;
+    const backdrop = holder.firstElementChild;
+    root.appendChild(backdrop);
+    animateOverlayIn(backdrop);
+    document.body.style.overflow = "hidden";
+    backdrop.querySelector("#ep-close").addEventListener("click", () => {
+      if (openedFromList) history.back();
+      else { history.replaceState(null, "", location.pathname + location.search); closeEpisode(); }
+    });
+  }
+
   function routeFromHash() {
     const m = location.hash.match(/^#ep=([\w-]+)/);
+    const sm = location.hash.match(/^#st=([\w-]+)/);
     if (m) openEpisode(m[1]);
+    else if (sm) openStory(sm[1]);
     else closeEpisode();
     const l = location.hash.match(/^#look=([\w-]+)/);
     const o = l && outfits.find((x) => String(x.id) === l[1]);
@@ -2058,7 +2102,7 @@ async function renderPublicSite(root) {
   }));
   renderRecList();
   root.querySelector("#ep-list").addEventListener("click", (e) => {
-    if (e.target.closest('a[href^="#ep="]')) openedFromList = true;
+    if (e.target.closest('a[href^="#ep="], a[href^="#st="]')) openedFromList = true;
   });
 
   // ---------- 실착: 분류(타이트 컷 → 전체 컷)마다 9개 + 더보기 ----------
@@ -2104,7 +2148,10 @@ async function renderPublicSite(root) {
           <span class="rec-play">▶</span>
         </a>
         <div class="rec-body">
-          <p class="story-title">${esc(st.title)}<small>꿀템 ${(st.items || []).length}개</small></p>
+          <div class="rec-head">
+            <p class="story-title" style="margin:0">${esc(st.title)}<small>꿀템 ${(st.items || []).length}개</small></p>
+            <a class="rec-more" href="#st=${esc(st.id)}">전체보기</a>
+          </div>
           <div class="rec-scroll">${(st.items || []).map(prod).join("")}</div>
         </div>
       </div>`;
@@ -2191,6 +2238,7 @@ async function renderPublicSite(root) {
 
   // 처음 열 때: 추천템 링크(#ep=…)로 들어오면 추천템 탭, 아니면 보던 탭
   const startTab = location.hash.startsWith("#ep=") ? TAB_ORDER.indexOf("picks")
+    : location.hash.startsWith("#st=") ? TAB_ORDER.indexOf("stories")
     : (BF_ON && !savedUI.tabKey) ? 0
     : (savedUI.tabKey && TAB_ORDER.includes(savedUI.tabKey)) ? TAB_ORDER.indexOf(savedUI.tabKey) : 0;
   setActive(startTab, { instant: true });
