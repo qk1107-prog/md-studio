@@ -1530,6 +1530,11 @@ async function renderPublicSite(root) {
       await loadCatRank();
       const k = String(idx); const a = CATRANK && CATRANK[k];
       if (a) { const [sx, ag, ct] = k.split("|"); c = { cat: `${sx === "F" ? "시스터" : "브로"} ${ag} ${ct}`, items: a.map(crItem) }; }
+    } else if (/^[mx]\d+$/.test(String(idx))) {
+      const key = String(idx)[0] === "m" ? "moodPicks" : "accPicks";
+      const list = ((ADMIN && ADMIN[key]) || []).filter((c) => (c.items || []).length);
+      const p = list[Number(String(idx).slice(1))];
+      if (p) c = { cat: p.cat + (key === "moodPicks" ? " 무드" : ""), items: p.items };
     } else {
       const cats = ((ADMIN && ADMIN.catPicks) || []).filter((c) => (c.items || []).length);
       c = cats[Number(idx)];
@@ -1574,7 +1579,7 @@ async function renderPublicSite(root) {
   function routeFromHash() {
     const m = location.hash.match(/^#ep=([\w-]+)/);
     const sm = location.hash.match(/^#st=([\w-]+)/);
-    const cm = location.hash.match(/^#ct=(\d+)/) || location.hash.match(/^#ca=([^&]+)/);
+    const cm = location.hash.match(/^#ct=([mx]?\d+)/) || location.hash.match(/^#ca=([^&]+)/);
     if (m) openEpisode(m[1]);
     else if (sm) openStory(sm[1]);
     else if (cm) openCat(cm[0].startsWith("#ca=") ? decodeURIComponent(cm[1]) : cm[1]);
@@ -1763,7 +1768,7 @@ async function renderPublicSite(root) {
       </section>
 
       <section id="tab-cats" class="section">
-        <div class="sp-chips" id="cat-sex"><button type="button" data-s="" class="active">전체 인기</button><button type="button" data-s="M">브로</button><button type="button" data-s="F">시스터</button></div>
+        <div class="sp-chips" id="cat-sex"><button type="button" data-s="" class="active">전체 인기</button><button type="button" data-s="M">브로</button><button type="button" data-s="F">시스터</button><button type="button" data-s="mood">분위기별</button><button type="button" data-s="acc">액세서리</button></div>
         <div class="sp-chips" id="cat-age" hidden><button type="button" data-a="10대">10대</button><button type="button" data-a="20대" class="active">20대</button><button type="button" data-a="30대">30대</button></div>
         <div id="cat-list"></div>
       </section>
@@ -2292,11 +2297,17 @@ async function renderPublicSite(root) {
       cBox.innerHTML = list.length ? list.map((c) => catRow(c, `#ca=${encodeURIComponent(c.key)}`)).join("") : `<p class="ep-empty">곧 올라와요</p>`;
     };
     const sexBox = root.querySelector("#cat-sex"), ageBox = root.querySelector("#cat-age");
+    const drawPickList = (key, pre, suffix) => {
+      const list = ((ADMIN && Array.isArray(ADMIN[key])) ? ADMIN[key] : []).filter((c) => (c.items || []).length);
+      if (cBox) cBox.innerHTML = list.length ? list.map((c, i) => catRow({ cat: c.cat + suffix, items: c.items }, `#ct=${pre}${i}`)).join("") : `<p class="ep-empty">곧 올라와요</p>`;
+    };
     if (sexBox) sexBox.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
       catSex = b.dataset.s;
       sexBox.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
-      ageBox.hidden = !catSex;
-      if (catSex) drawAgeCats(); else drawDefaultCats();
+      ageBox.hidden = !(catSex === "M" || catSex === "F");
+      if (catSex === "mood") drawPickList("moodPicks", "m", " 무드");
+      else if (catSex === "acc") drawPickList("accPicks", "x", "");
+      else if (catSex) drawAgeCats(); else drawDefaultCats();
     }));
     if (ageBox) ageBox.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
       catAge = b.dataset.a;
