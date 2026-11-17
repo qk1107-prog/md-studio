@@ -63,6 +63,7 @@
     line-height: 1.5;
     margin: 0 0 8px;
   }
+  #app-root .footer-ad { margin: 6px 0 0; font-size: 9px; line-height: 1.4; color: #b5aea3; letter-spacing: -0.2px; font-family: "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif; }
   #app-root .footer-brand {
     font-size: 10.5px;
     color: var(--fg-muted);
@@ -1460,6 +1461,7 @@ async function renderPublicSite(root) {
       </form>
       <div class="site-footer">
         <p class="footer-brand">${esc(site.footer)}</p>
+        <p class="footer-ad">이 포스팅은 무신사 큐레이터 활동의 일환으로, 구매 발생 시 수수료를 제공받습니다.</p>
       </div>
     </div>
   `;
