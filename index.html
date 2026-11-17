@@ -1516,7 +1516,10 @@ async function renderPublicSite(root) {
   function catRankList(sex, age) {
     if (!CATRANK) return [];
     const pre = sex + "|" + age + "|";
+    const SEQ = ["숏패딩", "롱패딩", "코트", "무스탕·퍼", "레더 자켓", "후드집업", "카디건", "니트", "후드티", "맨투맨", "롱슬리브", "셔츠", "데님 팬츠", "슬랙스", "트레이닝 팬츠", "스커트", "신발", "가방", "액세서리"];
+    const rank = (k) => { const i = SEQ.indexOf(k.slice(pre.length)); return i < 0 ? 99 : i; };
     return Object.keys(CATRANK).filter((k) => k.startsWith(pre) && (CATRANK[k] || []).length)
+      .sort((a, b) => rank(a) - rank(b))
       .map((k) => ({ key: k, cat: k.slice(pre.length), items: CATRANK[k].map(crItem) }));
   }
 
