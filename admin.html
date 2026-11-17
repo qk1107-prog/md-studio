@@ -646,6 +646,7 @@ async function renderAdminApp(root) {
     { key: "outfits", label: "실착 (LOOK)" },
     { key: "episodes", label: "추천템 (편)" },
     { key: "wishes", label: "원하는 옷 요청" },
+    { key: "bfpick", label: "👑 블프 광만두 PICK" },
     { key: "stats", label: "📊 방문·클릭 기록" },
   ];
 
@@ -697,6 +698,69 @@ async function renderAdminApp(root) {
     if (currentPage === "episodes") return renderEpisodesPage(main);
     if (currentPage === "wishes") return renderWishesPage(main);
     if (currentPage === "stats") return renderStatsPage(main);
+    if (currentPage === "bfpick") return renderBfPickPage(main);
+  }
+
+  // ============================================================
+  // 블프 광만두 PICK 고르기
+  // ============================================================
+  async function renderBfPickPage(main) {
+    main.innerHTML = `<p class="page-title">👑 블프 광만두 PICK</p>
+      <p class="page-sub">블프 탭에 있는 상품 중에서 괜찮은 것만 눌러서 고르세요. 고른 순서대로 블프 탭 맨 위 "광만두 PICK"에 올라가요. 다시 누르면 빠져요.</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center;">
+        <input id="pk-q" placeholder="브랜드·상품 검색" style="flex:1;min-width:160px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px;">
+        <select id="pk-sec" style="padding:9px;border:1px solid var(--line);border-radius:10px;font-size:13px;"></select>
+        <button class="btn ghost" id="pk-only">고른 것만 보기</button>
+        <button class="btn" id="pk-save">저장</button>
+      </div>
+      <p id="pk-count" style="font-size:12.5px;font-weight:700;margin:0 0 10px;"></p>
+      <div id="pk-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;"></div>`;
+    const { data, error } = await supabaseClient.from("site_data").select("value").eq("id", "main").single();
+    if (error) { main.querySelector("#pk-grid").innerHTML = `<p class="msg-err">⛔ ${esc(error.message)}</p>`; return; }
+    const bf = data.value.bf || {};
+    const gid = (o) => { const m = String(o.img || "").match(/\/(\d{5,9})\/(?:detail_)?\d{5,9}_/); return m ? m[1] : ""; };
+    const items = [], seen = {};
+    const add = (sec, arr) => (arr || []).forEach((o) => { const id = gid(o); if (!id || seen[id]) return; seen[id] = 1; items.push(Object.assign({ _id: id, _sec: sec }, o)); });
+    (bf.sigPreview || []).forEach((g) => add("시그니처특가 " + (g.label || ""), g.items));
+    (bf.sigBrands || []).forEach((g) => add("브랜드특가 " + (g.brand || ""), g.items));
+    Object.entries(bf.days || {}).forEach(([d, day]) => { add(d + " 하루특가", [...(day.hotA || []), ...(day.hotB || []), ...(day.hot || [])]); (day.brands || []).forEach((b) => add(d + " 브랜드", b.items)); add(d + " 시그니처", day.sig); });
+    (bf.bestTabs || []).forEach((t) => add("작년 BEST " + (t.label || t.title || ""), t.items));
+    let picks = (Array.isArray(bf.picks) ? bf.picks : []).map(String);
+    const secs = ["전체", ...new Set(items.map((i) => i._sec.split(" ")[0]))];
+    main.querySelector("#pk-sec").innerHTML = secs.map((x) => `<option>${esc(x)}</option>`).join("");
+    let onlyPicked = false;
+    const draw = () => {
+      const q = main.querySelector("#pk-q").value.trim().toLowerCase(), sec = main.querySelector("#pk-sec").value;
+      let list = items.filter((i) => (sec === "전체" || i._sec.startsWith(sec)) && (!q || ((i.brand || "") + " " + (i.name || "")).toLowerCase().includes(q)));
+      if (onlyPicked) list = picks.map((id) => items.find((i) => i._id === id)).filter(Boolean);
+      main.querySelector("#pk-count").textContent = `고른 상품 ${picks.length}개 · 보이는 상품 ${list.length}개`;
+      main.querySelector("#pk-grid").innerHTML = list.slice(0, 400).map((i) => {
+        const n = picks.indexOf(i._id);
+        return `<button type="button" data-id="${esc(i._id)}" style="text-align:left;padding:0;border:2px solid ${n >= 0 ? "#ff3d3f" : "transparent"};border-radius:10px;background:#fff;cursor:pointer;position:relative;overflow:hidden;">
+          <img src="${esc(i.img)}" referrerpolicy="no-referrer" style="width:100%;aspect-ratio:5/6;object-fit:cover;display:block;background:#f3f1ee">
+          ${n >= 0 ? `<span style="position:absolute;left:5px;top:5px;background:#ff3d3f;color:#fff;font-size:11px;font-weight:900;border-radius:6px;padding:1px 6px;">${n + 1}</span>` : ""}
+          <div style="padding:5px 6px 7px;font-size:10.5px;line-height:1.3;"><b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(i.brand || "")}</b><span style="display:block;color:#6b665f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(i.name || "")}</span><b>${i.rate ? `<span style="color:#ff3d3f">${esc(i.rate)}% </span>` : ""}${Number(i.sale || 0).toLocaleString("ko-KR")}원</b></div></button>`;
+      }).join("");
+    };
+    main.querySelector("#pk-grid").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-id]"); if (!b) return;
+      const id = b.dataset.id, n = picks.indexOf(id);
+      if (n >= 0) picks.splice(n, 1); else picks.push(id);
+      draw();
+    });
+    main.querySelector("#pk-q").addEventListener("input", draw);
+    main.querySelector("#pk-sec").addEventListener("change", draw);
+    main.querySelector("#pk-only").addEventListener("click", (e) => { onlyPicked = !onlyPicked; e.target.classList.toggle("ghost", !onlyPicked); draw(); });
+    main.querySelector("#pk-save").addEventListener("click", async (e) => {
+      e.target.disabled = true; e.target.textContent = "저장 중…";
+      const { data: fr, error: e1 } = await supabaseClient.from("site_data").select("value").eq("id", "main").single();
+      if (e1) { toast("불러오기 실패"); e.target.disabled = false; e.target.textContent = "저장"; return; }
+      fr.value.bf = fr.value.bf || {}; fr.value.bf.picks = picks.slice();
+      const ok = await saveSiteDataToSupabase(fr.value);
+      e.target.disabled = false; e.target.textContent = "저장";
+      toast(ok ? `광만두 PICK ${picks.length}개 저장했어요` : "저장 실패");
+    });
+    draw();
   }
 
   // ============================================================
