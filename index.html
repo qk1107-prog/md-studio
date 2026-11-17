@@ -1009,6 +1009,7 @@ function safeImg(u) {
 }
 
 const EP_LABELS = [
+  { key: "콜라보", emoji: "🤝", optional: true },
   { key: "국밥", emoji: "🍚" },
   { key: "힙함", emoji: "🔥" },
   { key: "남친룩", emoji: "🤍" },
@@ -1286,6 +1287,10 @@ async function renderPublicSite(root) {
       return `
         <section class="ep-sec${isPick ? " is-pick" : ""}" data-label="${esc(key)}">
           <div class="ep-sec-head"><span class="ep-sec-emoji">${emoji}</span><h2>${esc(key)}</h2></div>
+          ${key === "콜라보" ? `
+            <div class="ep-onepick">
+              <span class="ep-onepick-badge">광만두가 직접 참여한 콜라보</span>
+            </div>` : ""}
           ${key === "루키" ? `
             <div class="ep-onepick">
               <span class="ep-onepick-badge">광만두가 발굴한 신생 브랜드</span>
@@ -1325,7 +1330,7 @@ async function renderPublicSite(root) {
             <p class="feed-title">${esc(ep.title)}</p>
           </div>
           <div class="ep-labelbar">
-            ${EP_LABELS.map((l) => `<button type="button" data-jump="${esc(l.key)}">${l.emoji} ${esc(l.key)}</button>`).join("")}
+            ${EP_LABELS.filter((l) => !l.optional).map((l) => `<button type="button" data-jump="${esc(l.key)}">${l.emoji} ${esc(l.key)}</button>`).join("")}
           </div>
         </div>
         <div class="ep-wrap">
