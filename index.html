@@ -73,6 +73,8 @@
   }
   #app-root .tab-slider {
     display: flex;
+    align-items: flex-start;
+    overflow: clip;
     width: 400%;
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -2045,8 +2047,15 @@ async function renderPublicSite(root) {
     slider.style.transform = `translateX(-${activeIndex * step}%)`;
     buttons.forEach((b, i) => b.classList.toggle("active", i === activeIndex));
     writeUI({ tab: activeIndex, tabKey: TAB_ORDER[activeIndex] });
+    fitSliderHeight();
     if (opts.instant) slider.getBoundingClientRect(); // 강제 리플로우
   }
+  // 지금 보이는 탭 높이에 맞춰 슬라이더 높이 조절 (다른 탭 길이 때문에 빈 공간 생기지 않게)
+  function fitSliderHeight() {
+    const sec = slider.children[activeIndex];
+    if (sec) slider.style.height = sec.offsetHeight + "px";
+  }
+  try { const ro = new ResizeObserver(() => fitSliderHeight()); [...slider.children].forEach((c) => ro.observe(c)); } catch (e) {}
 
   buttons.forEach((btn, i) => {
     btn.addEventListener("click", () => setActive(i));
