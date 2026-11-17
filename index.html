@@ -149,6 +149,8 @@
     margin: 0;
     line-height: 1.55;
   }
+  #app-root .bio-hot { display: block; margin: 0 0 4px; color: #141312; font-size: 12.5px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.45; }
+  #app-root .bio-hot b { color: #ff3d3f; font-weight: 800; }
 
   #app-root .head-divider {
     border: none;
@@ -427,19 +429,21 @@
   }
   #app-root .collab-card .cc-eyebrow {
     font-size: 9.5px;
-    font-weight: 700;
+    font-weight: 500;
+    font-family: "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
     letter-spacing: 0.3px;
     opacity: 0.85;
     margin: 0 0 4px;
     text-transform: uppercase;
   }
   #app-root .collab-card .cc-headline {
-    font-size: 16px;
-    font-weight: 900;
-    line-height: 1.18;
-    margin: 0 0 8px;
-    letter-spacing: -0.4px;
-    text-transform: uppercase;
+    font-family: "Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.32;
+    margin: 0 0 9px;
+    letter-spacing: -0.3px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.25);
   }
   #app-root .collab-card .cc-foot {
     display: inline-block;
@@ -1392,7 +1396,7 @@ async function renderPublicSite(root) {
         </div>
         <div class="profile-text">
           <p class="profile-name" id="brand-home-text" style="cursor:pointer;">${esc(site.name)}</p>
-          <p class="bio">${esc(site.bio)}</p>
+          <p class="bio">${(() => { const ls = String(site.bio || "").split("\n").filter((x) => x.trim()); if (ls.length < 2) return esc(site.bio); return `<span class="bio-hot">${esc(ls[0]).replace(/무진장/, "<b>무진장</b>")}</span>${ls.slice(1).map(esc).join("<br>")}`; })()}</p>
         </div>
       </div>
       <hr class="head-divider">
