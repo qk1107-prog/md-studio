@@ -1129,6 +1129,7 @@ async function renderPublicSite(root) {
         caption: c.sticker || "",
         ratio: c.ratio || "4/5",
         link: c.link,
+        look: /^[\w-]+$/.test(String(c.look || "")) ? String(c.look) : "",
       }))
     : collabsFallback;
 
@@ -1766,7 +1767,7 @@ async function renderPublicSite(root) {
       <p class="collab-label">LINE UP</p>
       <div class="collab-scroll" id="collab-scroll">
         ${collabs.map((c) => `
-          <a class="collab-card" style="--collab-pop:${esc(c.pop)}; aspect-ratio:${esc(c.ratio || "4/5")};" href="${esc(safeUrl(c.link) || "#")}" target="_blank" rel="noopener">
+          <a class="collab-card" style="--collab-pop:${esc(c.pop)}; aspect-ratio:${esc(c.ratio || "4/5")};" ${c.look ? `href="#look=${esc(c.look)}"` : `href="${esc(safeUrl(c.link) || "#")}" target="_blank" rel="noopener"`}>
             ${c.crop != null
               ? photoTag(c.photo, "cc-photo", `style="object-position:50% 0;" data-crop="${c.crop}" data-zoom="${c.zoom}"`)
               : photoTag(c.photo, "cc-photo", `style="${c.photoBg ? `background:${esc(c.photoBg)};` : ""}${c.pos != null ? `object-position:50% ${c.pos}%;` : ""}${c.zoom > 1 ? `transform:scale(${c.zoom});transform-origin:50% 0;` : ""}"`)}
