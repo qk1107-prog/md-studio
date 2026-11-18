@@ -1810,7 +1810,12 @@ async function renderPublicSite(root) {
     let pv = false; try { pv = new URLSearchParams(location.search).get("awards") === "1"; } catch (e) {}
     return (a.on || pv) ? a : null;
   })();
-  const AW_TEASER = !!(AWARDS && AWARDS.teaser);
+  // 미리보기(?awards=1)에서는 블러 없이 그대로, 방문자 화면에서는 teaser면 블러
+  const AW_TEASER = (() => {
+    if (!AWARDS || !AWARDS.teaser) return false;
+    try { if (new URLSearchParams(location.search).get("awards") === "1") return false; } catch (e) {}
+    return true;
+  })();
   const BF_ON = (() => {
     const B = (ADMIN && ADMIN.bf) || {};
     const end = Date.UTC(2026, 11, 2, 15, 0);
