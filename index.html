@@ -1828,7 +1828,7 @@ async function renderPublicSite(root) {
         ${AWARDS.sub ? `<p class="aw-sub">${esc(AWARDS.sub)}</p>` : ""}
       </div>
       <div class="aw-scroll">${AWARDS.items.map((it) => `<a class="aw-card" href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener">
-        <div class="aw-top"><span class="aw-no">${esc(AWARDS.badge || "WINNER")}</span><span class="aw-dept">${esc(it.cat)} 부문</span></div>
+        <div class="aw-top"><span class="aw-no">${esc(AWARDS.badge || "WINNER")}</span><span class="aw-dept">${esc(it.cat)}${AWARDS.deptSuffix ? esc(AWARDS.deptSuffix) : ""}</span></div>
         <div class="aw-img">${safeImg(it.img) ? `<img src="${esc(safeImg(it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}</div>
         <div class="aw-line"></div>
         <p class="aw-brand">${esc(it.brand)}</p>
