@@ -168,10 +168,10 @@
     background: var(--bg);
     z-index: 10;
     display: flex;
-    gap: 22px;
-    padding: 0 20px;
+    gap: 6px;
+    padding: 10px 20px;
     border-bottom: 1px solid var(--line);
-    margin: 0 auto 24px;
+    margin: 4px auto 18px;
     max-width: 720px;
     overflow-x: auto;
     scrollbar-width: none;
@@ -179,25 +179,24 @@
   #app-root nav.tabs::-webkit-scrollbar { display: none; }
   #app-root nav.tabs button {
     flex: 0 0 auto;
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
+    background: #fff;
+    border: 1px solid #d6d0c6;
     font: inherit;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: -0.4px;
-    color: #5f5a52;
-    padding: 15px 0 12px;
-    border-radius: 0;
+    color: #3d3934;
+    padding: 9px 14px;
+    border-radius: 8px;
     cursor: pointer;
     white-space: nowrap;
-    transition: color .15s, border-color .15s;
+    transition: background .15s, color .15s, border-color .15s;
   }
   #app-root nav.tabs button.active {
-    color: #141312;
+    background: #141312;
+    border-color: #141312;
+    color: #fff;
     font-weight: 800;
-    border-bottom-color: #141312;
   }
 
   #app-root .section { padding: 0 20px; }
@@ -1878,6 +1877,18 @@ async function renderPublicSite(root) {
       </div>
     </div>
 
+
+    <nav class="tabs">
+      ${BF_ON ? `<button data-tab="bf">무진장 블프</button>` : ""}
+      <button data-tab="outfits" class="active">실착</button>
+      <button data-tab="stories">릴스 꿀템</button>
+      <button data-tab="picks">추천 브랜드+꿀템</button>
+      <button data-tab="cats">카테고리 꿀템</button>
+      <button data-tab="mood">분위기별</button>
+      <button data-tab="starter">스타터팩</button>
+      <button data-tab="levelup">레벨업 팩</button>
+    </nav>
+
     ${AWARDS ? `<section class="aw${AW_TEASER ? " is-teaser" : ""}" aria-label="${esc(AWARDS.title || "주인장 베스트 픽")}">
       <div class="aw-head">
         <div>
@@ -1896,17 +1907,6 @@ async function renderPublicSite(root) {
       ${AW_TEASER ? `<div class="aw-veil"><div class="aw-veil-card"><div class="aw-veil-ic">🔒</div><div class="aw-veil-k">COMING SOON</div><div class="aw-veil-t">${esc(AWARDS.teaserTitle || AWARDS.title || "주인장 BEST PICK")}</div><div class="aw-veil-s">${esc(AWARDS.teaserText || "카테고리별 주인장 픽, 곧 공개돼요")}</div></div></div>` : ""}
       </div>
     </section>` : ""}
-
-    <nav class="tabs">
-      ${BF_ON ? `<button data-tab="bf">무진장 블프</button>` : ""}
-      <button data-tab="outfits" class="active">실착</button>
-      <button data-tab="stories">릴스 꿀템</button>
-      <button data-tab="picks">추천 브랜드+꿀템</button>
-      <button data-tab="cats">카테고리 꿀템</button>
-      <button data-tab="mood">분위기별</button>
-      <button data-tab="starter">스타터팩</button>
-      <button data-tab="levelup">레벨업 팩</button>
-    </nav>
 
     <div class="wrap" id="tab-viewport">
       <div class="tab-slider" id="tab-slider">
@@ -2579,7 +2579,14 @@ async function renderPublicSite(root) {
   try { const ro = new ResizeObserver(() => fitSliderHeight()); [...slider.children].forEach((c) => ro.observe(c)); } catch (e) {}
 
   buttons.forEach((btn, i) => {
-    btn.addEventListener("click", () => setActive(i));
+    btn.addEventListener("click", () => {
+      setActive(i);
+      // 메뉴가 라인업 바로 아래에 있어서, 누르면 내용 시작 지점으로 내려가요
+      const nav = root.querySelector("nav.tabs");
+      const navH = nav ? nav.offsetHeight : 0;
+      const y = viewport.getBoundingClientRect().top + window.scrollY - navH - 6;
+      if (Math.abs(window.scrollY - y) > 8) window.scrollTo({ top: y, behavior: "smooth" });
+    });
   });
 
   // 스와이프 제스처 (가로로 넘기는 사진 줄 위에서는 탭이 안 넘어가게)
