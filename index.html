@@ -176,19 +176,21 @@
     overflow-x: auto;
   }
   #app-root nav.tabs button {
-    background: var(--tag-bg);
-    border: none;
+    background: #fff;
+    border: 1.5px solid #141312;
     font: inherit;
     font-size: 13px;
-    font-weight: 600;
-    color: var(--fg-muted);
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: #141312;
     padding: 9px 16px;
-    border-radius: 100px;
+    border-radius: 6px;
     cursor: pointer;
     white-space: nowrap;
   }
   #app-root nav.tabs button.active {
-    background: var(--fg);
+    background: #141312;
+    border-color: #141312;
     color: #fff;
   }
 
@@ -611,7 +613,7 @@
   #app-root .feed-list .polaroid .ph { aspect-ratio: 2/3; }
 
   /* 탭 2개는 반반 */
-  #app-root nav.tabs button { flex: 1 1 auto; font-size: 12px; padding: 9px 10px; }
+  #app-root nav.tabs button { flex: 1 1 auto; font-size: 14px; padding: 10px 13px; }
   #app-root .story-title { margin: 0 0 8px; font-size: 13px; font-weight: 800; letter-spacing: -0.4px; line-height: 1.35; }
   #app-root .story-title small { display: block; font-size: 10px; color: #a9a196; font-weight: 600; margin-top: 2px; }
   #app-root .cat-thumb { background: #f3f1ee !important; }
