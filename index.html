@@ -1527,28 +1527,33 @@ async function renderPublicSite(root) {
   }
 
   // 스타터팩 전체보기: 코디 이미지 크게 + 제품
-  function openPack(key) {
-    const all = [...(((ADMIN && ADMIN.starterPacks) || []).filter((c) => (c.sets || []).length)), ...(((ADMIN && ADMIN.starterMoodPacks) || []).filter((c) => (c.sets || []).length)), ...(((ADMIN && ADMIN.levelUpPacks) || []).filter((c) => (c.sets || []).length))];
+  const packGroups = (lv) => {
+    const g = (k) => ((ADMIN && Array.isArray(ADMIN[k])) ? ADMIN[k] : []).filter((c) => c && (c.sets || []).length);
+    return lv ? [g("levelUpPacks"), g("levelUpMoodPacks")] : [g("starterPacks"), g("starterMoodPacks")];
+  };
+  const packLabel = (lv) => (lv ? "레벨업 팩" : "스타터팩");
+  function openPack(key, lv) {
+    const all = packGroups(lv).flat();
     const [ci, si] = String(key).split("_").map(Number);
     const c = all[ci]; const st = c && c.sets[si];
     if (!st) { history.replaceState(null, "", location.pathname + location.search); return; }
     const existing = root.querySelector("#ep-backdrop");
-    if (existing && existing.dataset.ep === "sp-" + key) return;
+    if (existing && existing.dataset.ep === (lv ? "lp-" : "sp-") + key) return;
     if (existing) existing.remove();
     const items = (st.items || []).map((it) => ({ brand: it.brand, product_name: (it.role ? `[${it.role}] ` : "") + it.name, curator_url: it.link, image_url: it.img }));
     const board = safeImg(st.board);
     const holder = document.createElement("div");
     holder.innerHTML = `
-      <div class="feed-backdrop ep-detail" id="ep-backdrop" data-ep="sp-${esc(String(key))}">
+      <div class="feed-backdrop ep-detail" id="ep-backdrop" data-ep="${lv ? "lp-" : "sp-"}${esc(String(key))}">
         <div class="ep-sticky">
           <div class="feed-header">
             <button class="back-link" id="ep-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
-            <p class="feed-title">${esc(c.title ? "레벨업 팩" : "스타터팩")}</p>
+            <p class="feed-title">${esc(packLabel(lv))}</p>
           </div>
         </div>
         <div class="ep-wrap">
           <div class="ep-hero">
-            <h1 class="ep-hero-title">${esc(c.title || (c.cat + " 스타터팩"))} ${String(si + 1).padStart(2, "0")}</h1>
+            <h1 class="ep-hero-title">${esc(c.cat + " " + packLabel(lv))} ${String(si + 1).padStart(2, "0")}</h1>
           </div>
           ${board ? `<img src="${esc(board)}" alt="" style="display:block;width:100%;max-width:520px;margin:0 auto 18px;border-radius:14px">` : ""}
           <div id="ep-sections">
@@ -1634,6 +1639,7 @@ async function renderPublicSite(root) {
     if (m) openEpisode(m[1]);
     else if (sm) openStory(sm[1]);
     else if (/^#sp=\d+_\d+/.test(location.hash)) openPack(location.hash.slice(4));
+    else if (/^#lp=\d+_\d+/.test(location.hash)) openPack(location.hash.slice(4), true);
     else if (cm) openCat(cm[0].startsWith("#ca=") ? decodeURIComponent(cm[1]) : cm[1]);
     else closeEpisode();
     const l = location.hash.match(/^#look=([\w-]+)/);
@@ -1793,6 +1799,7 @@ async function renderPublicSite(root) {
       <button data-tab="cats">카테고리 꿀템</button>
       <button data-tab="mood">분위기별</button>
       <button data-tab="starter">스타터팩</button>
+      <button data-tab="levelup">레벨업 팩</button>
     </nav>
 
     <div class="wrap" id="tab-viewport">
@@ -1835,6 +1842,12 @@ async function renderPublicSite(root) {
         <p class="tab-intro">실패 없는 기본 세트 — 아우터·상의·하의·신발 한 번에</p>
         <div class="sp-chips" id="sp-chips"></div>
         <div id="sp-list"></div>
+      </section>
+
+      <section id="tab-levelup" class="section">
+        <p class="tab-intro">스타터팩 다음 단계 — 무신사 스냅 인기 코디 그대로, 단가 조금 올린 퀄리티 세트</p>
+        <div class="sp-chips" id="lp-chips"></div>
+        <div id="lp-list"></div>
       </section>
       </div>
       <form class="wish-box" id="wish-form" autocomplete="off">
@@ -2269,7 +2282,7 @@ async function renderPublicSite(root) {
   }));
   renderRecList();
   root.querySelector("#ep-list").addEventListener("click", (e) => {
-    if (e.target.closest('a[href^="#ep="], a[href^="#st="], a[href^="#ct="], a[href^="#ca="], a[href^="#sp="]')) openedFromList = true;
+    if (e.target.closest('a[href^="#ep="], a[href^="#st="], a[href^="#ct="], a[href^="#ca="], a[href^="#sp="], a[href^="#lp="]')) openedFromList = true;
   });
 
   // ---------- 실착: 분류(타이트 컷 → 전체 컷)마다 9개 + 더보기 ----------
@@ -2391,25 +2404,26 @@ async function renderPublicSite(root) {
       } else if (mList) mList.innerHTML = `<p class="ep-empty">분위기별 꿀템이 곧 올라와요</p>`;
     }
 
-    // ---------- 스타터팩 ----------
-    const outerPacks = (ADMIN && Array.isArray(ADMIN.starterPacks)) ? ADMIN.starterPacks.filter((c) => (c.sets || []).length) : [];
-    const moodPacks = (ADMIN && Array.isArray(ADMIN.starterMoodPacks)) ? ADMIN.starterMoodPacks.filter((c) => (c.sets || []).length) : [];
-    const lvPacks = (ADMIN && Array.isArray(ADMIN.levelUpPacks)) ? ADMIN.levelUpPacks.filter((c) => (c.sets || []).length) : [];
-    const packs = [...outerPacks, ...moodPacks, ...lvPacks];
-    const packTitle = (c) => c.title || `${c.cat} 스타터팩`;
-    const spChips = root.querySelector("#sp-chips"), spList = root.querySelector("#sp-list");
+    // ---------- 스타터팩 · 레벨업 팩 (같은 모양) ----------
     const tile = (it, cls) => { const im = safeImg(it && it.img); return `<a class="sp-t ${cls}" href="${esc(safeUrl(it && it.link) || "#")}" target="_blank" rel="noopener">${im ? `<img src="${esc(im)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}</a>`; };
-    const drawPack = (ci) => {
-      const c = packs[ci]; if (!c || !spList) return;
-      spChips.querySelectorAll("button").forEach((b, i) => b.classList.toggle("active", i === ci));
-      spList.innerHTML = c.sets.map((st, n) => {
-        const [o, i, p, sh] = st.items;
-        return `<div class="rec-row">
+    const renderPacks = (lv) => {
+      const [outerPacks, moodPacks] = packGroups(lv);
+      const packs = [...outerPacks, ...moodPacks];
+      const label = packLabel(lv), hp = lv ? "lp" : "sp";
+      const packTitle = (c) => `${c.cat} ${label}`;
+      const chips = root.querySelector(`#${hp}-chips`), list = root.querySelector(`#${hp}-list`);
+      if (!chips || !list) return;
+      const draw = (ci) => {
+        const c = packs[ci]; if (!c) return;
+        chips.querySelectorAll("button").forEach((b, i) => b.classList.toggle("active", i === ci));
+        list.innerHTML = c.sets.map((st, n) => {
+          const [o, i, p, sh] = st.items;
+          return `<div class="rec-row">
           ${safeImg(st.board) ? `<a class="sp-one" href="${esc(safeImg(st.board))}" target="_blank" rel="noopener" aria-label="${esc(packTitle(c))} ${n + 1} 코디 크게 보기"><img src="${esc(safeImg(st.board))}" alt="" loading="lazy" decoding="async"></a>` : `<div class="sp-board">${tile(o, "o")}${tile(i, "i")}${tile(p, "p")}${tile(sh, "s")}</div>`}
           <div class="rec-body">
             <div class="rec-head">
               <p class="story-title" style="margin:0">${esc(packTitle(c))} ${String(n + 1).padStart(2, "0")}</p>
-              <a class="rec-more" href="#sp=${ci}_${n}">전체보기</a>
+              <a class="rec-more" href="#${hp}=${ci}_${n}">전체보기</a>
             </div>
             <div class="rec-scroll">${st.items.map((it) => `<a class="rec-prod" href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener">
               <div class="rec-prod-img">${safeImg(it.img) ? `<img src="${esc(safeImg(it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : "사진"}<span class="sp-role">${esc(it.role || "")}</span></div>
@@ -2418,19 +2432,20 @@ async function renderPublicSite(root) {
             </a>`).join("")}</div>
           </div>
         </div>`;
-      }).join("");
-    };
-    if (spChips) {
+        }).join("");
+      };
       if (packs.length) {
-        spChips.innerHTML = packs.map((c, i) => `${(i === outerPacks.length || i === outerPacks.length + moodPacks.length) && i ? `<span class="sp-sep"></span>` : ""}<button type="button"${c.title ? ` class="sp-lv"` : ""}>${esc(c.cat)}</button>`).join("");
-        spChips.querySelectorAll("button").forEach((b, i) => b.addEventListener("click", () => drawPack(i)));
-        drawPack(0);
-      } else spList.innerHTML = `<p class="ep-empty">스타터팩이 곧 올라와요</p>`;
-    }
+        chips.innerHTML = packs.map((c, i) => `${i === outerPacks.length && i ? `<span class="sp-sep"></span>` : ""}<button type="button">${esc(c.cat)}</button>`).join("");
+        chips.querySelectorAll("button").forEach((b, i) => b.addEventListener("click", () => draw(i)));
+        draw(0);
+      } else list.innerHTML = `<p class="ep-empty">${label}이 곧 올라와요</p>`;
+    };
+    renderPacks(false);
+    renderPacks(true);
   })();
 
   // ---------- 탭 ----------
-  const TAB_ORDER = BF_ON ? ["bf", "outfits", "stories", "picks", "cats", "mood", "starter"] : ["outfits", "stories", "picks", "cats", "mood", "starter"];
+  const TAB_ORDER = BF_ON ? ["bf", "outfits", "stories", "picks", "cats", "mood", "starter", "levelup"] : ["outfits", "stories", "picks", "cats", "mood", "starter", "levelup"];
   const buttons = root.querySelectorAll("nav.tabs button");
   const slider = root.querySelector("#tab-slider");
   const viewport = root.querySelector("#tab-viewport");
@@ -2496,6 +2511,7 @@ async function renderPublicSite(root) {
     : location.hash.startsWith("#st=") ? TAB_ORDER.indexOf("stories")
     : location.hash.startsWith("#ct=v") ? TAB_ORDER.indexOf("mood")
     : location.hash.startsWith("#sp=") ? TAB_ORDER.indexOf("starter")
+    : location.hash.startsWith("#lp=") ? TAB_ORDER.indexOf("levelup")
     : (location.hash.startsWith("#ct=") || location.hash.startsWith("#ca=")) ? TAB_ORDER.indexOf("cats")
     : (BF_ON && !savedUI.tabKey) ? 0
     : (savedUI.tabKey && TAB_ORDER.includes(savedUI.tabKey)) ? TAB_ORDER.indexOf(savedUI.tabKey) : 0;
@@ -2512,7 +2528,7 @@ async function renderPublicSite(root) {
     }
   } catch (e) {}
   window.addEventListener("hashchange", routeFromHash);
-  if (/^#(ep|st|ct|ca|sp|look|looks)=/.test(location.hash)) routeFromHash();
+  if (/^#(ep|st|ct|ca|sp|lp|look|looks)=/.test(location.hash)) routeFromHash();
   finishIntro();
 
 
@@ -2559,8 +2575,14 @@ async function renderPublicSite(root) {
 
     const cardStep = () => collabScroll.firstElementChild.getBoundingClientRect().width + 14;
 
+    // 끝까지 가면 더 갈 곳이 없으니, 실제로 움직일 수 있는 칸 수만큼만 점·자동넘김
+    const stops = () => Math.max(1, Math.min(collabs.length, Math.ceil((collabScroll.scrollWidth - collabScroll.clientWidth - 2) / cardStep()) + 1));
+    const syncDots = () => { const n = stops(); dots.forEach((d, i) => { d.style.display = i < n ? "" : "none"; }); };
+    syncDots();
+    window.addEventListener("resize", syncDots);
     const goTo = (idx) => {
-      currentIndex = (idx + collabs.length) % collabs.length;
+      const n = stops();
+      currentIndex = (idx + n) % n;
       collabScroll.scrollTo({ left: currentIndex * cardStep(), behavior: "smooth" });
       dots.forEach((d, i) => d.classList.toggle("active", i === currentIndex));
     };
@@ -2572,7 +2594,8 @@ async function renderPublicSite(root) {
     const stopAutoplay = () => { if (autoplayTimer) clearInterval(autoplayTimer); };
 
     collabScroll.addEventListener("scroll", () => {
-      const idx = Math.round(collabScroll.scrollLeft / cardStep());
+      const max = collabScroll.scrollWidth - collabScroll.clientWidth;
+      const idx = collabScroll.scrollLeft >= max - 2 ? stops() - 1 : Math.round(collabScroll.scrollLeft / cardStep());
       currentIndex = idx;
       dots.forEach((d, i) => d.classList.toggle("active", i === idx));
     });
