@@ -375,6 +375,15 @@
   #app-root .aw-meta { display: flex; gap: 6px; align-items: baseline; margin: 8px 0 2px; font-size: 10px; font-weight: 800; letter-spacing: -0.2px; }
   #app-root .aw-idx { color: #8f877b; font-variant-numeric: tabular-nums; }
   #app-root .aw-dept { color: #e9e2d6; }
+  #app-root .aw-soon { display: inline-block; margin-left: 7px; vertical-align: 3px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px; color: #141312; background: #e9e2d6; border-radius: 999px; padding: 2px 7px; }
+  #app-root .aw-body { position: relative; }
+  #app-root .aw.is-teaser .aw-scroll { filter: blur(6px); pointer-events: none; user-select: none; -webkit-user-select: none; }
+  #app-root .aw-veil { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  #app-root .aw-veil-card { text-align: center; background: rgba(20,19,18,0.82); border: 1px solid rgba(233,226,214,0.18); border-radius: 16px; padding: 16px 22px 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+  #app-root .aw-veil-ic { font-size: 20px; }
+  #app-root .aw-veil-k { margin-top: 5px; font-size: 10px; letter-spacing: 2px; color: #8f877b; font-weight: 700; }
+  #app-root .aw-veil-t { margin-top: 4px; font-size: 16px; font-weight: 600; color: #fff; letter-spacing: -0.2px; }
+  #app-root .aw-veil-s { margin-top: 6px; font-size: 11px; color: #a9a196; }
   #app-root .aw-brand { margin: 0; font-size: 11px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #app-root .aw-name { margin: 1px 0 0; font-size: 10.5px; line-height: 1.32; color: #a9a196; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   #app-root .collab-label {
@@ -1547,7 +1556,7 @@ async function renderPublicSite(root) {
   // 스타터팩 전체보기: 코디 이미지 크게 + 제품
   // 주인장 BEST PICK 전체보기
   function openPicks() {
-    if (!AWARDS) { history.replaceState(null, "", location.pathname + location.search); return; }
+    if (!AWARDS || AW_TEASER) { history.replaceState(null, "", location.pathname + location.search); return; }
     const existing = root.querySelector("#ep-backdrop");
     if (existing && existing.dataset.ep === "bp") return;
     if (existing) existing.remove();
@@ -1801,6 +1810,7 @@ async function renderPublicSite(root) {
     let pv = false; try { pv = new URLSearchParams(location.search).get("awards") === "1"; } catch (e) {}
     return (a.on || pv) ? a : null;
   })();
+  const AW_TEASER = !!(AWARDS && AWARDS.teaser);
   const BF_ON = (() => {
     const B = (ADMIN && ADMIN.bf) || {};
     const end = Date.UTC(2026, 11, 2, 15, 0);
@@ -1855,20 +1865,23 @@ async function renderPublicSite(root) {
       </div>
     </div>
 
-    ${AWARDS ? `<section class="aw" aria-label="${esc(AWARDS.title || "주인장 베스트 픽")}">
+    ${AWARDS ? `<section class="aw${AW_TEASER ? " is-teaser" : ""}" aria-label="${esc(AWARDS.title || "주인장 베스트 픽")}">
       <div class="aw-head">
         <div>
           ${AWARDS.kicker ? `<p class="aw-kicker">${esc(AWARDS.kicker)}</p>` : ""}
-          <p class="aw-title">${esc(AWARDS.title || "주인장 베스트 픽")}</p>
+          <p class="aw-title">${esc(AWARDS.title || "주인장 베스트 픽")}${AW_TEASER ? `<span class="aw-soon">공개 예정</span>` : ""}</p>
         </div>
-        <a class="aw-more" href="#bp">전체보기</a>
+        ${AW_TEASER ? "" : `<a class="aw-more" href="#bp">전체보기</a>`}
       </div>
-      <div class="aw-scroll" id="aw-scroll">${AWARDS.items.map((it, i) => `<a class="aw-card" href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener">
+      <div class="aw-body">
+      <div class="aw-scroll" id="aw-scroll"${AW_TEASER ? ' aria-hidden="true"' : ""}>${AWARDS.items.map((it, i) => `<${AW_TEASER ? "div" : "a"} class="aw-card"${AW_TEASER ? "" : ` href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener"`}>
         <div class="aw-img">${safeImg(it.img) ? `<img${/goods_img/.test(it.img) || it.product ? ' class="pr"' : ""} src="${esc(safeImg(it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}</div>
         <p class="aw-meta"><span class="aw-dept">${esc(it.cat)}</span></p>
         <p class="aw-brand">${esc(it.brand)}</p>
         <p class="aw-name">${esc(it.name)}</p>
-      </a>`).join("")}</div>
+      </${AW_TEASER ? "div" : "a"}>`).join("")}</div>
+      ${AW_TEASER ? `<div class="aw-veil"><div class="aw-veil-card"><div class="aw-veil-ic">🔒</div><div class="aw-veil-k">COMING SOON</div><div class="aw-veil-t">광만두 갠취 BEST PICK</div><div class="aw-veil-s">${esc(AWARDS.teaserText || "카테고리별 주인장 픽, 곧 공개돼요")}</div></div></div>` : ""}
+      </div>
     </section>` : ""}
 
     <nav class="tabs">
