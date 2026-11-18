@@ -359,21 +359,28 @@
 
   /* ===== 콜라보 라인업 (대형 히어로 캐러셀) ===== */
   #app-root .collab-section { padding: 18px 0 8px; max-width: 720px; margin: 0 auto; }
-  /* ===== 광보드 어워즈 (카테고리별 1위) — 사이트 톤에 맞춘 버전 ===== */
-  #app-root .aw { max-width: 720px; margin: 4px auto 18px; padding: 0; }
-  #app-root .aw-head { display: flex; align-items: baseline; gap: 8px; margin: 0 20px 10px; flex-wrap: wrap; }
-  #app-root .aw-title { margin: 0; font-size: 15px; font-weight: 900; letter-spacing: -0.4px; color: var(--fg); }
-  #app-root .aw-title b { display: inline-block; margin-right: 6px; padding: 2px 7px 2px; border-radius: 999px; background: #141312; color: #e2c27e; font-size: 10px; font-weight: 900; letter-spacing: 0.3px; vertical-align: 2px; }
-  #app-root .aw-sub { margin: 0; font-size: 11px; color: var(--fg-muted); letter-spacing: -0.2px; }
-  #app-root .aw-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 0 20px 4px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  /* ===== 광보드 어워즈 (카테고리별 1위 명예의 전당) ===== */
+  #app-root .aw { max-width: 700px; margin: 6px auto 22px; background: #11100e; border-radius: 18px; padding: 22px 0 18px; color: #f4ede0; position: relative; overflow: hidden; }
+  #app-root .aw::before { content: ""; position: absolute; inset: 8px; border: 1px solid rgba(201,164,92,.35); border-radius: 12px; pointer-events: none; }
+  #app-root .aw-head { text-align: center; padding: 0 22px 14px; position: relative; }
+  #app-root .aw-kicker { margin: 0; font-size: 10px; letter-spacing: 3px; color: #c9a45c; font-weight: 700; }
+  #app-root .aw-title { margin: 6px 0 4px; font-family: "Nanum Myeongjo", "Noto Serif KR", "Times New Roman", serif; font-size: 23px; font-weight: 800; letter-spacing: -0.6px; color: #f7f1e6; word-break: keep-all; }
+  #app-root .aw-orn { display: flex; align-items: center; justify-content: center; gap: 8px; color: #c9a45c; font-size: 9px; margin: 2px 0 6px; }
+  #app-root .aw-orn i { display: block; width: 46px; height: 1px; background: linear-gradient(90deg, transparent, #c9a45c); }
+  #app-root .aw-orn i:last-child { background: linear-gradient(90deg, #c9a45c, transparent); }
+  #app-root .aw-sub { margin: 0; font-size: 11.5px; color: #b9ae9c; letter-spacing: -0.2px; }
+  #app-root .aw-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 4px 22px 6px; scroll-snap-type: x mandatory; scrollbar-width: none; position: relative; }
   #app-root .aw-scroll::-webkit-scrollbar { display: none; }
-  #app-root .aw-card { flex: 0 0 108px; width: 108px; scroll-snap-align: start; text-decoration: none; color: var(--fg); }
-  #app-root .aw-img { position: relative; width: 108px; aspect-ratio: 5/6; border-radius: 10px; background: #f2f0eb; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  #app-root .aw-img img { width: 88%; height: 88%; object-fit: contain; mix-blend-mode: multiply; }
-  #app-root .aw-no { position: absolute; left: 5px; top: 5px; padding: 2px 6px; border-radius: 999px; background: #141312; color: #e2c27e; font-size: 9px; font-weight: 900; letter-spacing: 0.2px; }
-  #app-root .aw-dept { margin: 6px 0 1px; font-size: 10.5px; font-weight: 900; color: var(--fg); letter-spacing: -0.3px; }
-  #app-root .aw-brand { margin: 0; font-size: 10px; font-weight: 800; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #app-root .aw-name { margin: 1px 0 0; font-size: 10.5px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  #app-root .aw-card { flex: 0 0 132px; scroll-snap-align: start; background: #f6f1e7; border-radius: 6px; padding: 10px 10px 12px; text-decoration: none; color: #1a1714; position: relative; box-shadow: inset 0 0 0 1px #c9a45c, inset 0 0 0 4px #f6f1e7, inset 0 0 0 5px rgba(201,164,92,.55); }
+  #app-root .aw-top { display: flex; align-items: baseline; justify-content: space-between; margin: 2px 2px 6px; }
+  #app-root .aw-no { font-family: "Nanum Myeongjo", "Noto Serif KR", "Times New Roman", serif; font-size: 13px; font-weight: 800; color: #9a7a3c; letter-spacing: 1px; line-height: 1; }
+  #app-root .aw-dept { font-size: 10px; font-weight: 800; color: #5d5245; letter-spacing: -0.2px; }
+  #app-root .aw-img { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; margin: 0 0 8px; }
+  #app-root .aw-img img { max-width: 100%; max-height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+  #app-root .aw-line { height: 1px; background: linear-gradient(90deg, transparent, rgba(154,122,60,.6), transparent); margin: 0 0 7px; }
+  #app-root .aw-brand { margin: 0; font-size: 10px; font-weight: 800; color: #9a7a3c; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #app-root .aw-name { margin: 2px 0 0; font-size: 11px; font-weight: 600; color: #2a2520; text-align: center; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 28px; }
+  #app-root .aw-foot { text-align: center; margin: 10px 0 0; font-size: 10px; color: #8d8270; position: relative; }
   #app-root .collab-label {
     font-size: 11px;
     font-weight: 800;
@@ -1815,15 +1822,19 @@ async function renderPublicSite(root) {
 
     ${AWARDS ? `<section class="aw" aria-label="${esc(AWARDS.title || "광보드 어워즈")}">
       <div class="aw-head">
-        <p class="aw-title"><b>No.1</b>${esc(AWARDS.title || "광보드 어워즈")}</p>
-        <p class="aw-sub">${esc(AWARDS.sub || "")}${AWARDS.date ? ` · ${esc(AWARDS.date)}` : ""}</p>
+        ${AWARDS.kicker ? `<p class="aw-kicker">${esc(AWARDS.kicker)}</p>` : ""}
+        <h2 class="aw-title">${esc(AWARDS.title || "광보드 어워즈")}</h2>
+        <div class="aw-orn"><i></i>✦<i></i></div>
+        ${AWARDS.sub ? `<p class="aw-sub">${esc(AWARDS.sub)}</p>` : ""}
       </div>
       <div class="aw-scroll">${AWARDS.items.map((it) => `<a class="aw-card" href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener">
-        <div class="aw-img">${safeImg(it.img) ? `<img src="${esc(safeImg(it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="aw-no">1위</span></div>
-        <p class="aw-dept">${esc(it.cat)} 부문</p>
+        <div class="aw-top"><span class="aw-no">${esc(AWARDS.badge || "WINNER")}</span><span class="aw-dept">${esc(it.cat)} 부문</span></div>
+        <div class="aw-img">${safeImg(it.img) ? `<img src="${esc(safeImg(it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}</div>
+        <div class="aw-line"></div>
         <p class="aw-brand">${esc(it.brand)}</p>
         <p class="aw-name">${esc(it.name)}</p>
       </a>`).join("")}</div>
+      ${AWARDS.foot ? `<p class="aw-foot">${esc(AWARDS.foot)}</p>` : ""}
     </section>` : ""}
 
     <nav class="tabs">
