@@ -1865,7 +1865,7 @@ async function renderPublicSite(root) {
       </div>
       <div class="aw-scroll" id="aw-scroll">${AWARDS.items.map((it, i) => `<a class="aw-card" href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener">
         <div class="aw-img">${safeImg(it.img) ? `<img${/goods_img/.test(it.img) || it.product ? ' class="pr"' : ""} src="${esc(safeImg(it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}</div>
-        <p class="aw-meta"><span class="aw-idx">${String(i + 1).padStart(2, "0")}</span><span class="aw-dept">${esc(it.cat)}</span></p>
+        <p class="aw-meta"><span class="aw-dept">${esc(it.cat)}</span></p>
         <p class="aw-brand">${esc(it.brand)}</p>
         <p class="aw-name">${esc(it.name)}</p>
       </a>`).join("")}</div>
