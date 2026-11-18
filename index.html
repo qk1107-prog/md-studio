@@ -2567,6 +2567,9 @@ async function renderPublicSite(root) {
     slider.style.transition = opts.instant ? "none" : "";
     slider.style.transform = `translateX(-${activeIndex * step}%)`;
     buttons.forEach((b, i) => b.classList.toggle("active", i === activeIndex));
+    // 블프 주인장 BEST PICK은 무진장 블프 탭에서만 보여요
+    const awSec = root.querySelector("section.aw");
+    if (awSec) awSec.style.display = (!TAB_ORDER.includes("bf") || TAB_ORDER[activeIndex] === "bf") ? "" : "none";
     writeUI({ tab: activeIndex, tabKey: TAB_ORDER[activeIndex] });
     fitSliderHeight();
     if (opts.instant) slider.getBoundingClientRect(); // 강제 리플로우
