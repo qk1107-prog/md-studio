@@ -595,6 +595,7 @@
   #app-root .sp-chips button { border: 1px solid var(--line); background: #fff; border-radius: 20px; padding: 7px 14px; font-size: 12.5px; font-weight: 800; color: #141312; cursor: pointer; }
   #app-root .sp-chips button.active { background: #141312; color: #fff; border-color: #141312; }
   #app-root .sp-chips[hidden] { display: none; }
+  #app-root .sp-chips button.sp-lv { border-color: #141312; }
   #app-root .sp-sep { width: 1px; align-self: stretch; background: var(--line); margin: 4px 4px; }
   #app-root #cat-age { margin-top: 0; }
   #app-root .sp-board { flex: 0 0 104px; width: 104px; aspect-ratio: 9/16; align-self: flex-start; border-radius: 12px; overflow: hidden; background: #efebe5; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 40% 36% 24%; gap: 3px; padding: 3px; box-sizing: border-box; }
@@ -1526,7 +1527,7 @@ async function renderPublicSite(root) {
 
   // 스타터팩 전체보기: 코디 이미지 크게 + 제품
   function openPack(key) {
-    const all = [...(((ADMIN && ADMIN.starterPacks) || []).filter((c) => (c.sets || []).length)), ...(((ADMIN && ADMIN.starterMoodPacks) || []).filter((c) => (c.sets || []).length))];
+    const all = [...(((ADMIN && ADMIN.starterPacks) || []).filter((c) => (c.sets || []).length)), ...(((ADMIN && ADMIN.starterMoodPacks) || []).filter((c) => (c.sets || []).length)), ...(((ADMIN && ADMIN.levelUpPacks) || []).filter((c) => (c.sets || []).length))];
     const [ci, si] = String(key).split("_").map(Number);
     const c = all[ci]; const st = c && c.sets[si];
     if (!st) { history.replaceState(null, "", location.pathname + location.search); return; }
@@ -1541,12 +1542,12 @@ async function renderPublicSite(root) {
         <div class="ep-sticky">
           <div class="feed-header">
             <button class="back-link" id="ep-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
-            <p class="feed-title">스타터팩</p>
+            <p class="feed-title">${esc(c.title ? "레벨업 팩" : "스타터팩")}</p>
           </div>
         </div>
         <div class="ep-wrap">
           <div class="ep-hero">
-            <h1 class="ep-hero-title">${esc(c.cat)} 스타터팩 ${String(si + 1).padStart(2, "0")}</h1>
+            <h1 class="ep-hero-title">${esc(c.title || (c.cat + " 스타터팩"))} ${String(si + 1).padStart(2, "0")}</h1>
           </div>
           ${board ? `<img src="${esc(board)}" alt="" style="display:block;width:100%;max-width:520px;margin:0 auto 18px;border-radius:14px">` : ""}
           <div id="ep-sections">
@@ -2392,7 +2393,9 @@ async function renderPublicSite(root) {
     // ---------- 스타터팩 ----------
     const outerPacks = (ADMIN && Array.isArray(ADMIN.starterPacks)) ? ADMIN.starterPacks.filter((c) => (c.sets || []).length) : [];
     const moodPacks = (ADMIN && Array.isArray(ADMIN.starterMoodPacks)) ? ADMIN.starterMoodPacks.filter((c) => (c.sets || []).length) : [];
-    const packs = [...outerPacks, ...moodPacks];
+    const lvPacks = (ADMIN && Array.isArray(ADMIN.levelUpPacks)) ? ADMIN.levelUpPacks.filter((c) => (c.sets || []).length) : [];
+    const packs = [...outerPacks, ...moodPacks, ...lvPacks];
+    const packTitle = (c) => c.title || `${c.cat} 스타터팩`;
     const spChips = root.querySelector("#sp-chips"), spList = root.querySelector("#sp-list");
     const tile = (it, cls) => { const im = safeImg(it && it.img); return `<a class="sp-t ${cls}" href="${esc(safeUrl(it && it.link) || "#")}" target="_blank" rel="noopener">${im ? `<img src="${esc(im)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}</a>`; };
     const drawPack = (ci) => {
@@ -2401,10 +2404,10 @@ async function renderPublicSite(root) {
       spList.innerHTML = c.sets.map((st, n) => {
         const [o, i, p, sh] = st.items;
         return `<div class="rec-row">
-          ${safeImg(st.board) ? `<a class="sp-one" href="${esc(safeImg(st.board))}" target="_blank" rel="noopener" aria-label="${esc(c.cat)} 스타터팩 ${n + 1} 코디 크게 보기"><img src="${esc(safeImg(st.board))}" alt="" loading="lazy" decoding="async"></a>` : `<div class="sp-board">${tile(o, "o")}${tile(i, "i")}${tile(p, "p")}${tile(sh, "s")}</div>`}
+          ${safeImg(st.board) ? `<a class="sp-one" href="${esc(safeImg(st.board))}" target="_blank" rel="noopener" aria-label="${esc(packTitle(c))} ${n + 1} 코디 크게 보기"><img src="${esc(safeImg(st.board))}" alt="" loading="lazy" decoding="async"></a>` : `<div class="sp-board">${tile(o, "o")}${tile(i, "i")}${tile(p, "p")}${tile(sh, "s")}</div>`}
           <div class="rec-body">
             <div class="rec-head">
-              <p class="story-title" style="margin:0">${esc(c.cat)} 스타터팩 ${String(n + 1).padStart(2, "0")}</p>
+              <p class="story-title" style="margin:0">${esc(packTitle(c))} ${String(n + 1).padStart(2, "0")}</p>
               <a class="rec-more" href="#sp=${ci}_${n}">전체보기</a>
             </div>
             <div class="rec-scroll">${st.items.map((it) => `<a class="rec-prod" href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener">
@@ -2418,7 +2421,7 @@ async function renderPublicSite(root) {
     };
     if (spChips) {
       if (packs.length) {
-        spChips.innerHTML = packs.map((c, i) => `${i === outerPacks.length && i ? `<span class="sp-sep"></span>` : ""}<button type="button">${esc(c.cat)}</button>`).join("");
+        spChips.innerHTML = packs.map((c, i) => `${(i === outerPacks.length || i === outerPacks.length + moodPacks.length) && i ? `<span class="sp-sep"></span>` : ""}<button type="button"${c.title ? ` class="sp-lv"` : ""}>${esc(c.cat)}</button>`).join("");
         spChips.querySelectorAll("button").forEach((b, i) => b.addEventListener("click", () => drawPack(i)));
         drawPack(0);
       } else spList.innerHTML = `<p class="ep-empty">스타터팩이 곧 올라와요</p>`;
