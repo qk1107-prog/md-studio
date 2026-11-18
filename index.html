@@ -1885,7 +1885,7 @@ async function renderPublicSite(root) {
         <p class="aw-brand">${esc(it.brand)}</p>
         <p class="aw-name">${esc(it.name)}</p>
       </${AW_TEASER ? "div" : "a"}>`).join("")}</div>
-      ${AW_TEASER ? `<div class="aw-veil"><div class="aw-veil-card"><div class="aw-veil-ic">🔒</div><div class="aw-veil-k">COMING SOON</div><div class="aw-veil-t">광만두 갠취 BEST PICK</div><div class="aw-veil-s">${esc(AWARDS.teaserText || "카테고리별 주인장 픽, 곧 공개돼요")}</div></div></div>` : ""}
+      ${AW_TEASER ? `<div class="aw-veil"><div class="aw-veil-card"><div class="aw-veil-ic">🔒</div><div class="aw-veil-k">COMING SOON</div><div class="aw-veil-t">${esc(AWARDS.teaserTitle || AWARDS.title || "주인장 BEST PICK")}</div><div class="aw-veil-s">${esc(AWARDS.teaserText || "카테고리별 주인장 픽, 곧 공개돼요")}</div></div></div>` : ""}
       </div>
     </section>` : ""}
 
