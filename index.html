@@ -1505,11 +1505,11 @@ async function renderPublicSite(root) {
   }
 
   // 나이대·성별 카테고리 랭킹 (site_data id=catrank, 처음 고를 때만 불러옴)
-  let CATRANK = null, catRankP = null;
+  let CATRANK = null, catRankP = null, CATTHUMB = null;
   function loadCatRank() {
     if (CATRANK) return Promise.resolve(CATRANK);
     if (!catRankP) catRankP = supabaseClient.from("site_data").select("value").eq("id", "catrank").single()
-      .then(({ data }) => (CATRANK = (data && data.value && data.value.data) || null))
+      .then(({ data }) => { CATTHUMB = (data && data.value && data.value.thumbs) || null; return (CATRANK = (data && data.value && data.value.data) || null); })
       .catch(() => null).finally(() => { if (!CATRANK) catRankP = null; });
     return catRankP;
   }
@@ -1521,7 +1521,7 @@ async function renderPublicSite(root) {
     const rank = (k) => { const i = SEQ.indexOf(k.slice(pre.length)); return i < 0 ? 99 : i; };
     return Object.keys(CATRANK).filter((k) => k.startsWith(pre) && (CATRANK[k] || []).length)
       .sort((a, b) => rank(a) - rank(b))
-      .map((k) => ({ key: k, cat: k.slice(pre.length), items: CATRANK[k].map(crItem) }));
+      .map((k) => ({ key: k, cat: k.slice(pre.length), items: CATRANK[k].map(crItem), thumb: CATTHUMB && CATTHUMB[k] }));
   }
 
   // 스타터팩 전체보기: 코디 이미지 크게 + 제품
@@ -1579,8 +1579,8 @@ async function renderPublicSite(root) {
       const m = ((ADMIN && ADMIN.moodCats) || []).filter((m) => (m.groups || []).some((g) => (g.items || []).length))[mi];
       const g = m && m.groups[gi];
       if (g) c = { cat: `${m.mood} ${g.cat}`, items: g.items };
-    } else if (/^[mx]\d+$/.test(String(idx))) {
-      const key = String(idx)[0] === "m" ? "moodPicks" : "accPicks";
+    } else if (/^[mxs]\d+$/.test(String(idx))) {
+      const key = { m: "moodPicks", x: "accPicks", s: "shoePicks" }[String(idx)[0]];
       const list = ((ADMIN && ADMIN[key]) || []).filter((c) => (c.items || []).length);
       const p = list[Number(String(idx).slice(1))];
       if (p) c = { cat: p.cat + (key === "moodPicks" ? " 무드" : ""), items: p.items };
@@ -1628,7 +1628,7 @@ async function renderPublicSite(root) {
   function routeFromHash() {
     const m = location.hash.match(/^#ep=([\w-]+)/);
     const sm = location.hash.match(/^#st=([\w-]+)/);
-    const cm = location.hash.match(/^#ct=([mx]?\d+|v\d+_\d+)/) || location.hash.match(/^#ca=([^&]+)/);
+    const cm = location.hash.match(/^#ct=([mxs]?\d+|v\d+_\d+)/) || location.hash.match(/^#ca=([^&]+)/);
     if (m) openEpisode(m[1]);
     else if (sm) openStory(sm[1]);
     else if (/^#sp=\d+_\d+/.test(location.hash)) openPack(location.hash.slice(4));
@@ -1819,7 +1819,7 @@ async function renderPublicSite(root) {
       </section>
 
       <section id="tab-cats" class="section">
-        <div class="sp-chips" id="cat-sex"><button type="button" data-s="" class="active">전체 인기</button><button type="button" data-s="M">브로</button><button type="button" data-s="F">시스터</button><button type="button" data-s="acc">액세서리</button></div>
+        <div class="sp-chips" id="cat-sex"><button type="button" data-s="" class="active">전체 인기</button><button type="button" data-s="M">브로</button><button type="button" data-s="F">시스터</button><button type="button" data-s="acc">액세서리</button><button type="button" data-s="shoe">신발</button></div>
         <div class="sp-chips" id="cat-age" hidden><button type="button" data-a="10대">10대</button><button type="button" data-a="20대" class="active">20대</button><button type="button" data-a="30대">30대</button></div>
         <div id="cat-list"></div>
       </section>
@@ -2325,7 +2325,7 @@ async function renderPublicSite(root) {
     const cats = (ADMIN && Array.isArray(ADMIN.catPicks)) ? ADMIN.catPicks : [];
     const cBox = root.querySelector("#cat-list");
     const catRow = (c, href) => {
-      const first = c.items[0]; const th = safeImg(first.img);
+      const first = c.items[0]; const th = safeImg(c.thumb || first.img);
       return `<div class="rec-row">
         <a class="rec-thumb cat-thumb" href="${esc(safeUrl(first.link) || "#")}" target="_blank" rel="noopener" aria-label="${esc(c.cat)} 1위">
           ${th ? `<img src="${esc(th)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}
@@ -2355,7 +2355,7 @@ async function renderPublicSite(root) {
     const sexBox = root.querySelector("#cat-sex"), ageBox = root.querySelector("#cat-age");
     const drawPickList = (key, pre, suffix) => {
       const list = ((ADMIN && Array.isArray(ADMIN[key])) ? ADMIN[key] : []).filter((c) => (c.items || []).length);
-      if (cBox) cBox.innerHTML = list.length ? list.map((c, i) => catRow({ cat: c.cat + suffix, items: c.items }, `#ct=${pre}${i}`)).join("") : `<p class="ep-empty">곧 올라와요</p>`;
+      if (cBox) cBox.innerHTML = list.length ? list.map((c, i) => catRow({ cat: c.cat + suffix, items: c.items, thumb: c.thumb }, `#ct=${pre}${i}`)).join("") : `<p class="ep-empty">곧 올라와요</p>`;
     };
     if (sexBox) sexBox.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
       catSex = b.dataset.s;
@@ -2363,6 +2363,7 @@ async function renderPublicSite(root) {
       ageBox.hidden = !(catSex === "M" || catSex === "F");
       if (catSex === "mood") drawPickList("moodPicks", "m", " 무드");
       else if (catSex === "acc") drawPickList("accPicks", "x", "");
+      else if (catSex === "shoe") drawPickList("shoePicks", "s", "");
       else if (catSex) drawAgeCats(); else drawDefaultCats();
     }));
     if (ageBox) ageBox.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
@@ -2378,7 +2379,7 @@ async function renderPublicSite(root) {
     const drawMood = (mi) => {
       const m = moods[mi]; if (!m || !mList) return;
       mChips.querySelectorAll("button").forEach((b, i) => b.classList.toggle("active", i === mi));
-      mList.innerHTML = m.groups.map((g, gi) => (g.items || []).length ? catRow({ cat: `${m.mood} ${g.cat}`, items: g.items }, `#ct=v${mi}_${gi}`) : "").join("");
+      mList.innerHTML = m.groups.map((g, gi) => (g.items || []).length ? catRow({ cat: `${m.mood} ${g.cat}`, items: g.items, thumb: g.thumb }, `#ct=v${mi}_${gi}`) : "").join("");
     };
     if (mChips) {
       if (moods.length) {
