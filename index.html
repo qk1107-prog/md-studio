@@ -168,8 +168,8 @@
     background: var(--bg);
     z-index: 10;
     display: flex;
-    gap: 8px;
-    padding: 12px 20px;
+    gap: 22px;
+    padding: 0 20px;
     border-bottom: 1px solid var(--line);
     margin: 0 auto 24px;
     max-width: 720px;
@@ -178,22 +178,26 @@
   }
   #app-root nav.tabs::-webkit-scrollbar { display: none; }
   #app-root nav.tabs button {
-    background: #fff;
-    border: 1.5px solid #141312;
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
     font: inherit;
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    color: #141312;
-    padding: 9px 16px;
-    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    color: #8a847b;
+    padding: 15px 0 12px;
+    border-radius: 0;
     cursor: pointer;
     white-space: nowrap;
+    transition: color .15s, border-color .15s;
   }
   #app-root nav.tabs button.active {
-    background: #141312;
-    border-color: #141312;
-    color: #fff;
+    color: #141312;
+    font-weight: 800;
+    border-bottom-color: #141312;
   }
 
   #app-root .section { padding: 0 20px; }
@@ -615,7 +619,7 @@
   #app-root .feed-list .polaroid .ph { aspect-ratio: 2/3; }
 
   /* 탭 2개는 반반 */
-  #app-root nav.tabs button { flex: 1 1 auto; font-size: 14px; padding: 10px 13px; }
+
   #app-root .story-title { margin: 0 0 8px; font-size: 13px; font-weight: 800; letter-spacing: -0.4px; line-height: 1.35; }
   #app-root .story-title small { display: block; font-size: 10px; color: #a9a196; font-weight: 600; margin-top: 2px; }
   #app-root .cat-thumb { background: #f3f1ee !important; }
@@ -1894,9 +1898,9 @@ async function renderPublicSite(root) {
     </section>` : ""}
 
     <nav class="tabs">
-      ${BF_ON ? `<button data-tab="bf">🔥 무진장 블프</button>` : ""}
+      ${BF_ON ? `<button data-tab="bf">무진장 블프</button>` : ""}
       <button data-tab="outfits" class="active">실착</button>
-      <button data-tab="stories"><span class="tab-play">▶</span>릴스 꿀템</button>
+      <button data-tab="stories">릴스 꿀템</button>
       <button data-tab="picks">추천 브랜드+꿀템</button>
       <button data-tab="cats">카테고리 꿀템</button>
       <button data-tab="mood">분위기별</button>
