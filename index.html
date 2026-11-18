@@ -359,28 +359,23 @@
 
   /* ===== 콜라보 라인업 (대형 히어로 캐러셀) ===== */
   #app-root .collab-section { padding: 18px 0 8px; max-width: 720px; margin: 0 auto; }
-  /* ===== 광보드 어워즈 (카테고리별 1위 명예의 전당) ===== */
-  #app-root .aw { max-width: 700px; margin: 6px auto 22px; background: #11100e; border-radius: 18px; padding: 22px 0 18px; color: #f4ede0; position: relative; overflow: hidden; }
-  #app-root .aw::before { content: ""; position: absolute; inset: 8px; border: 1px solid rgba(201,164,92,.35); border-radius: 12px; pointer-events: none; }
-  #app-root .aw-head { text-align: center; padding: 0 22px 14px; position: relative; }
-  #app-root .aw-kicker { margin: 0; font-size: 10px; letter-spacing: 3px; color: #c9a45c; font-weight: 700; }
-  #app-root .aw-title { margin: 6px 0 4px; font-family: "Nanum Myeongjo", "Noto Serif KR", "Times New Roman", serif; font-size: 23px; font-weight: 800; letter-spacing: -0.6px; color: #f7f1e6; word-break: keep-all; }
-  #app-root .aw-orn { display: flex; align-items: center; justify-content: center; gap: 8px; color: #c9a45c; font-size: 9px; margin: 2px 0 6px; }
-  #app-root .aw-orn i { display: block; width: 46px; height: 1px; background: linear-gradient(90deg, transparent, #c9a45c); }
-  #app-root .aw-orn i:last-child { background: linear-gradient(90deg, #c9a45c, transparent); }
-  #app-root .aw-sub { margin: 0; font-size: 11.5px; color: #b9ae9c; letter-spacing: -0.2px; }
-  #app-root .aw-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 4px 22px 6px; scroll-snap-type: x mandatory; scrollbar-width: none; position: relative; }
+  /* ===== 주인장 베스트 픽 (상단 큐레이션) ===== */
+  #app-root .aw { max-width: 700px; margin: 6px auto 22px; background: #141312; border-radius: 16px; padding: 20px 0 18px; color: #f2ede4; }
+  #app-root .aw-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding: 0 20px 14px; }
+  #app-root .aw-kicker { margin: 0 0 4px; font-size: 10px; letter-spacing: 2.4px; color: #8f877b; font-weight: 700; }
+  #app-root .aw-title { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -0.6px; color: #fff; word-break: keep-all; }
+  #app-root .aw-count { margin: 0 0 3px; font-size: 10.5px; color: #8f877b; font-weight: 700; white-space: nowrap; }
+  #app-root .aw-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 20px 2px; scrollbar-width: none; }
   #app-root .aw-scroll::-webkit-scrollbar { display: none; }
-  #app-root .aw-card { flex: 0 0 132px; scroll-snap-align: start; background: #f6f1e7; border-radius: 6px; padding: 10px 10px 12px; text-decoration: none; color: #1a1714; position: relative; box-shadow: inset 0 0 0 1px #c9a45c, inset 0 0 0 4px #f6f1e7, inset 0 0 0 5px rgba(201,164,92,.55); }
-  #app-root .aw-top { display: flex; align-items: baseline; justify-content: space-between; margin: 2px 2px 6px; }
-  #app-root .aw-no { font-family: "Nanum Myeongjo", "Noto Serif KR", "Times New Roman", serif; font-size: 13px; font-weight: 800; color: #9a7a3c; letter-spacing: 1px; line-height: 1; }
-  #app-root .aw-dept { font-size: 9.5px; font-weight: 800; color: #5d5245; letter-spacing: -0.3px; white-space: nowrap; }
-  #app-root .aw-img { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; margin: 0 0 8px; }
-  #app-root .aw-img img { max-width: 100%; max-height: 100%; object-fit: contain; mix-blend-mode: multiply; }
-  #app-root .aw-line { height: 1px; background: linear-gradient(90deg, transparent, rgba(154,122,60,.6), transparent); margin: 0 0 7px; }
-  #app-root .aw-brand { margin: 0; font-size: 10px; font-weight: 800; color: #9a7a3c; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #app-root .aw-name { margin: 2px 0 0; font-size: 11px; font-weight: 600; color: #2a2520; text-align: center; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 28px; }
-  #app-root .aw-foot { text-align: center; margin: 10px 0 0; font-size: 10px; color: #8d8270; position: relative; }
+  #app-root .aw-card { flex: 0 0 124px; width: 124px; text-decoration: none; color: inherit; }
+  #app-root .aw-img { width: 124px; aspect-ratio: 5/6; border-radius: 10px; background: #efebe4; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #app-root .aw-img img { width: 100%; height: 100%; object-fit: cover; }
+  #app-root .aw-img img.pr { width: 86%; height: 86%; object-fit: contain; mix-blend-mode: multiply; }
+  #app-root .aw-meta { display: flex; gap: 6px; align-items: baseline; margin: 8px 0 2px; font-size: 10px; font-weight: 800; letter-spacing: -0.2px; }
+  #app-root .aw-idx { color: #8f877b; font-variant-numeric: tabular-nums; }
+  #app-root .aw-dept { color: #e9e2d6; }
+  #app-root .aw-brand { margin: 0; font-size: 11px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #app-root .aw-name { margin: 1px 0 0; font-size: 10.5px; line-height: 1.32; color: #a9a196; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   #app-root .collab-label {
     font-size: 11px;
     font-weight: 800;
@@ -1820,21 +1815,20 @@ async function renderPublicSite(root) {
       </div>
     </div>
 
-    ${AWARDS ? `<section class="aw" aria-label="${esc(AWARDS.title || "광보드 어워즈")}">
+    ${AWARDS ? `<section class="aw" aria-label="${esc(AWARDS.title || "주인장 베스트 픽")}">
       <div class="aw-head">
-        ${AWARDS.kicker ? `<p class="aw-kicker">${esc(AWARDS.kicker)}</p>` : ""}
-        <h2 class="aw-title">${esc(AWARDS.title || "광보드 어워즈")}</h2>
-        <div class="aw-orn"><i></i>✦<i></i></div>
-        ${AWARDS.sub ? `<p class="aw-sub">${esc(AWARDS.sub)}</p>` : ""}
+        <div>
+          ${AWARDS.kicker ? `<p class="aw-kicker">${esc(AWARDS.kicker)}</p>` : ""}
+          <p class="aw-title">${esc(AWARDS.title || "주인장 베스트 픽")}</p>
+        </div>
+        <p class="aw-count">${AWARDS.items.length} PICKS</p>
       </div>
-      <div class="aw-scroll">${AWARDS.items.map((it) => `<a class="aw-card" href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener">
-        <div class="aw-top"><span class="aw-no">${esc(AWARDS.badge || "WINNER")}</span><span class="aw-dept">${esc(it.cat)}${AWARDS.deptSuffix ? esc(AWARDS.deptSuffix) : ""}</span></div>
-        <div class="aw-img">${safeImg(it.img) ? `<img src="${esc(safeImg(it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}</div>
-        <div class="aw-line"></div>
+      <div class="aw-scroll" id="aw-scroll">${AWARDS.items.map((it, i) => `<a class="aw-card" href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener">
+        <div class="aw-img">${safeImg(it.img) ? `<img${/goods_img/.test(it.img) || it.product ? ' class="pr"' : ""} src="${esc(safeImg(it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}</div>
+        <p class="aw-meta"><span class="aw-idx">${String(i + 1).padStart(2, "0")}</span><span class="aw-dept">${esc(it.cat)}</span></p>
         <p class="aw-brand">${esc(it.brand)}</p>
         <p class="aw-name">${esc(it.name)}</p>
       </a>`).join("")}</div>
-      ${AWARDS.foot ? `<p class="aw-foot">${esc(AWARDS.foot)}</p>` : ""}
     </section>` : ""}
 
     <nav class="tabs">
@@ -2614,6 +2608,33 @@ async function renderPublicSite(root) {
     };
     if (img.complete) apply(); else img.addEventListener("load", apply, { once: true });
   });
+  // 주인장 베스트 픽: 천천히 오른쪽으로 흘러가다 끝에 닿으면 처음으로 쓱 돌아와요 (손대면 잠깐 멈춤)
+  (() => {
+    const sc = root.querySelector("#aw-scroll");
+    if (!sc) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let pos = 0, holdUntil = performance.now() + 1500, returning = false, last = performance.now();
+    const hold = (ms) => { holdUntil = performance.now() + ms; };
+    ["touchstart", "pointerdown", "wheel"].forEach((ev) => sc.addEventListener(ev, () => { hold(3500); returning = false; }, { passive: true }));
+    sc.addEventListener("mouseenter", () => hold(1e9));
+    sc.addEventListener("mouseleave", () => hold(800));
+    const tick = (now) => {
+      const dt = Math.min(64, now - last); last = now;
+      const max = sc.scrollWidth - sc.clientWidth;
+      if (max > 4 && now > holdUntil && !document.hidden) {
+        if (returning) {
+          if (sc.scrollLeft <= 2) { returning = false; pos = 0; hold(1800); }
+        } else {
+          if (Math.abs(sc.scrollLeft - pos) > 3) pos = sc.scrollLeft;
+          pos = Math.min(max, pos + dt * 0.035);
+          sc.scrollLeft = pos;
+          if (pos >= max - 1) { returning = true; holdUntil = now + 1200; setTimeout(() => sc.scrollTo({ left: 0, behavior: "smooth" }), 1200); }
+        }
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  })();
   const dots = root.querySelectorAll("#collab-dots .dot");
   if (collabScroll && dots.length) {
     let currentIndex = 0;
