@@ -1524,6 +1524,49 @@ async function renderPublicSite(root) {
       .map((k) => ({ key: k, cat: k.slice(pre.length), items: CATRANK[k].map(crItem) }));
   }
 
+  // 스타터팩 전체보기: 코디 이미지 크게 + 제품
+  function openPack(key) {
+    const all = [...(((ADMIN && ADMIN.starterPacks) || []).filter((c) => (c.sets || []).length)), ...(((ADMIN && ADMIN.starterMoodPacks) || []).filter((c) => (c.sets || []).length))];
+    const [ci, si] = String(key).split("_").map(Number);
+    const c = all[ci]; const st = c && c.sets[si];
+    if (!st) { history.replaceState(null, "", location.pathname + location.search); return; }
+    const existing = root.querySelector("#ep-backdrop");
+    if (existing && existing.dataset.ep === "sp-" + key) return;
+    if (existing) existing.remove();
+    const items = (st.items || []).map((it) => ({ brand: it.brand, product_name: (it.role ? `[${it.role}] ` : "") + it.name, curator_url: it.link, image_url: it.img }));
+    const board = safeImg(st.board);
+    const holder = document.createElement("div");
+    holder.innerHTML = `
+      <div class="feed-backdrop ep-detail" id="ep-backdrop" data-ep="sp-${esc(String(key))}">
+        <div class="ep-sticky">
+          <div class="feed-header">
+            <button class="back-link" id="ep-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
+            <p class="feed-title">스타터팩</p>
+          </div>
+        </div>
+        <div class="ep-wrap">
+          <div class="ep-hero">
+            <h1 class="ep-hero-title">${esc(c.cat)} 스타터팩 ${String(si + 1).padStart(2, "0")}</h1>
+          </div>
+          ${board ? `<img src="${esc(board)}" alt="" style="display:block;width:100%;max-width:520px;margin:0 auto 18px;border-radius:14px">` : ""}
+          <div id="ep-sections">
+            <div class="ep-brand-row">
+              <div class="ep-prod-grid">${items.map(productCardHtml).join("")}</div>
+            </div>
+          </div>
+          <p class="ep-note">가격은 세일에 따라 바뀌어서 무신사에서 확인해 주세요.<br>이 페이지의 링크로 구매하시면 광만두가 일정 수수료를 받을 수 있어요.</p>
+        </div>
+      </div>`;
+    const backdrop = holder.firstElementChild;
+    root.appendChild(backdrop);
+    animateOverlayIn(backdrop);
+    document.body.style.overflow = "hidden";
+    backdrop.querySelector("#ep-close").addEventListener("click", () => {
+      if (openedFromList) history.back();
+      else { history.replaceState(null, "", location.pathname + location.search); closeEpisode(); }
+    });
+  }
+
   // 카테고리 꿀템 전체보기 (릴스 꿀템 전체보기와 같은 화면)
   async function openCat(idx) {
     let c;
@@ -1588,6 +1631,7 @@ async function renderPublicSite(root) {
     const cm = location.hash.match(/^#ct=([mx]?\d+|v\d+_\d+)/) || location.hash.match(/^#ca=([^&]+)/);
     if (m) openEpisode(m[1]);
     else if (sm) openStory(sm[1]);
+    else if (/^#sp=\d+_\d+/.test(location.hash)) openPack(location.hash.slice(4));
     else if (cm) openCat(cm[0].startsWith("#ca=") ? decodeURIComponent(cm[1]) : cm[1]);
     else closeEpisode();
     const l = location.hash.match(/^#look=([\w-]+)/);
@@ -2223,7 +2267,7 @@ async function renderPublicSite(root) {
   }));
   renderRecList();
   root.querySelector("#ep-list").addEventListener("click", (e) => {
-    if (e.target.closest('a[href^="#ep="], a[href^="#st="], a[href^="#ct="], a[href^="#ca="]')) openedFromList = true;
+    if (e.target.closest('a[href^="#ep="], a[href^="#st="], a[href^="#ct="], a[href^="#ca="], a[href^="#sp="]')) openedFromList = true;
   });
 
   // ---------- 실착: 분류(타이트 컷 → 전체 컷)마다 9개 + 더보기 ----------
@@ -2358,7 +2402,10 @@ async function renderPublicSite(root) {
         return `<div class="rec-row">
           ${safeImg(st.board) ? `<a class="sp-one" href="${esc(safeImg(st.board))}" target="_blank" rel="noopener" aria-label="${esc(c.cat)} 스타터팩 ${n + 1} 코디 크게 보기"><img src="${esc(safeImg(st.board))}" alt="" loading="lazy" decoding="async"></a>` : `<div class="sp-board">${tile(o, "o")}${tile(i, "i")}${tile(p, "p")}${tile(sh, "s")}</div>`}
           <div class="rec-body">
-            <p class="story-title">${esc(c.cat)} 스타터팩 ${String(n + 1).padStart(2, "0")}<small>${esc(st.name || "아우터 · 상의 · 하의 · 신발 한 번에")}</small></p>
+            <div class="rec-head">
+              <p class="story-title" style="margin:0">${esc(c.cat)} 스타터팩 ${String(n + 1).padStart(2, "0")}</p>
+              <a class="rec-more" href="#sp=${ci}_${n}">전체보기</a>
+            </div>
             <div class="rec-scroll">${st.items.map((it) => `<a class="rec-prod" href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener">
               <div class="rec-prod-img">${safeImg(it.img) ? `<img src="${esc(safeImg(it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : "사진"}<span class="sp-role">${esc(it.role || "")}</span></div>
               <p class="rec-prod-brand">${esc(it.brand)}</p>
@@ -2443,6 +2490,7 @@ async function renderPublicSite(root) {
   const startTab = location.hash.startsWith("#ep=") ? TAB_ORDER.indexOf("picks")
     : location.hash.startsWith("#st=") ? TAB_ORDER.indexOf("stories")
     : location.hash.startsWith("#ct=v") ? TAB_ORDER.indexOf("mood")
+    : location.hash.startsWith("#sp=") ? TAB_ORDER.indexOf("starter")
     : (location.hash.startsWith("#ct=") || location.hash.startsWith("#ca=")) ? TAB_ORDER.indexOf("cats")
     : (BF_ON && !savedUI.tabKey) ? 0
     : (savedUI.tabKey && TAB_ORDER.includes(savedUI.tabKey)) ? TAB_ORDER.indexOf(savedUI.tabKey) : 0;
@@ -2459,7 +2507,7 @@ async function renderPublicSite(root) {
     }
   } catch (e) {}
   window.addEventListener("hashchange", routeFromHash);
-  if (/^#(ep|st|ct|ca|look|looks)=/.test(location.hash)) routeFromHash();
+  if (/^#(ep|st|ct|ca|sp|look|looks)=/.test(location.hash)) routeFromHash();
   finishIntro();
 
 
