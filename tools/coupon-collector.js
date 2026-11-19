@@ -89,7 +89,12 @@ window.__cpRun = async () => {
   // 빠른 모드: window.__cpLoop = 분(예: 5) 이면, 관리자 창에 바로 보내 저장하고 N분마다 다시 돌아요
   if (window.__cpLoop) {
     try {
-      if (!window.__cpAdmin || window.__cpAdmin.closed) { window.__cpAdmin = window.open("https://md-studio-lovat.vercel.app/admin.html#cpsink", "mdcpsink"); await new Promise((r) => setTimeout(r, 6000)); }
+      if (!window.__cpAdmin || window.__cpAdmin.closed) {
+        // 팝업은 클릭으로만 열 수 있어서, 버튼을 한 번 눌러야 시작돼요
+        btn.textContent = "▶ LIVE 시작 (클릭)";
+        btn.onclick = () => { window.__cpAdmin = window.open("https://md-studio-lovat.vercel.app/admin.html#cpsink", "mdcpsink"); btn.textContent = "LIVE 준비 중…"; setTimeout(() => window.__cpRun(), 7000); };
+        return list.length;
+      }
       window.__cpAdmin.postMessage({ type: "mdcp", data: window.__cpData }, "https://md-studio-lovat.vercel.app");
       window.__cpLast = new Date().toLocaleTimeString();
       btn.textContent = "LIVE " + list.length + " · " + window.__cpLast;
