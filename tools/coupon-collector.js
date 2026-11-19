@@ -74,11 +74,11 @@
     prev = pr && pr[0] && pr[0].value;
   } catch (e) {}
   const now = new Date().toISOString();
-  const seen = Object.assign({}, (prev && prev.seen) || {});
-  list.forEach((c) => { if (!seen[c.no]) seen[c.no] = now; c.nw = (Date.now() - new Date(seen[c.no]).getTime() < 864e5) && prev ? 1 : 0; });
+  const seenMap = Object.assign({}, (prev && prev.seen) || {});
+  list.forEach((c) => { if (!seenMap[c.no]) seenMap[c.no] = now; c.nw = (Date.now() - new Date(seenMap[c.no]).getTime() < 864e5) && prev ? 1 : 0; });
   const keep = new Set(list.map((c) => String(c.no)));
-  Object.keys(seen).forEach((k) => { if (!keep.has(k) && Date.now() - new Date(seen[k]).getTime() > 7 * 864e5) delete seen[k]; });
-  window.__cpData = JSON.stringify({ at: now, list, seen, on: !!(prev && prev.on) });
+  Object.keys(seenMap).forEach((k) => { if (!keep.has(k) && Date.now() - new Date(seenMap[k]).getTime() > 7 * 864e5) delete seenMap[k]; });
+  window.__cpData = JSON.stringify({ at: now, list, seen: seenMap, on: !!(prev && prev.on) });
   let btn = document.getElementById("__cpb");
   if (!btn) { btn = document.createElement("button"); btn.id = "__cpb"; btn.style.cssText = "position:fixed;top:10px;left:10px;z-index:999999;padding:20px;font-size:20px;background:#ff0"; document.body.appendChild(btn); }
   btn.textContent = "COPY " + list.length;
