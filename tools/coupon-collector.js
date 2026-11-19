@@ -67,7 +67,18 @@
       g: r.goods.filter((g) => cache[String(g.goodsNo)]).map((g) => ({ i: String(g.thumbnail).replace("https://image.msscdn.net", ""), l: cache[String(g.goodsNo)], n: g.goodsName, b: g.brandName, s: g.price, r: g.saleRate })),
     };
   }).filter((x) => x.g.length >= 3);
-  window.__cpData = JSON.stringify({ at: new Date().toISOString(), list });
+  // 이전 저장본과 비교해서 처음 본 쿠폰(24시간 안) = NEW
+  let prev = null;
+  try {
+    const pr = await (await fetch("https://cbuydjkvvzbluyohdkie.supabase.co/rest/v1/site_data?id=eq.coupons&select=value", { headers: { apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI", Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI" } })).json();
+    prev = pr && pr[0] && pr[0].value;
+  } catch (e) {}
+  const now = new Date().toISOString();
+  const seen = Object.assign({}, (prev && prev.seen) || {});
+  list.forEach((c) => { if (!seen[c.no]) seen[c.no] = now; c.nw = (Date.now() - new Date(seen[c.no]).getTime() < 864e5) && prev ? 1 : 0; });
+  const keep = new Set(list.map((c) => String(c.no)));
+  Object.keys(seen).forEach((k) => { if (!keep.has(k) && Date.now() - new Date(seen[k]).getTime() > 7 * 864e5) delete seen[k]; });
+  window.__cpData = JSON.stringify({ at: now, list, seen, on: !!(prev && prev.on) });
   let btn = document.getElementById("__cpb");
   if (!btn) { btn = document.createElement("button"); btn.id = "__cpb"; btn.style.cssText = "position:fixed;top:10px;left:10px;z-index:999999;padding:20px;font-size:20px;background:#ff0"; document.body.appendChild(btn); }
   btn.textContent = "COPY " + list.length;
