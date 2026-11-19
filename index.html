@@ -422,6 +422,12 @@
   #app-root .cpz-chip.is-hot::before { background: linear-gradient(180deg, #ff9a3d, #ff2d3f); }
   #app-root .cpz-chip.is-hot .cpz-v { margin-top: 8px; }
   #app-root .cpz-new { font-style: normal; color: #141312; background: #E4FF1A; border-radius: 3px; padding: 1px 4px 0; }
+  #app-root .cpz-sub { margin: 6px 0 6px; font-size: 12.5px; font-weight: 900; letter-spacing: -0.3px; color: #141312; }
+  #app-root .cpz-sub small { margin-left: 5px; font-size: 10px; font-weight: 700; color: #7a2ff0; }
+  #app-root .cpz-scroll.cpz-one { grid-template-rows: auto; margin-bottom: 4px; }
+  #app-root .cpz-scroll.cpz-one .cpz-chip::before { background: linear-gradient(180deg, #9b5cff, #6a2ff0); }
+  #app-root .cpz-scroll.cpz-one .cpz-chip { border-color: #d8c6ff; background: #faf7ff; }
+  #app-root .cpz-scroll.cpz-one .cpz-v { color: #6a2ff0; }
   #app-root .cpz-bf { font-style: normal; color: #fff; background: #ff3d3f; border-radius: 3px; padding: 1px 4px 0; }
   #app-root .cpz-all { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 7px; padding: 0 16px 24px; }
   #app-root .cpz-filter { display: flex; gap: 6px; padding: 4px 16px 12px; flex-wrap: wrap; }
@@ -1637,7 +1643,7 @@ async function renderPublicSite(root) {
   const cpKind = (c) => (c.k === "C" ? "장바구니" : "상품");
   const cpHotSet = () => { if (!COUPONS || !COUPONS.list) return new Set(); const L = COUPONS.list; const pct = (c) => (/%$/.test(c.v) ? parseFloat(c.v) : 0); const pool = L.slice(0, 60).filter((c) => pct(c) >= 10 || /만원|천원/.test(c.v)); const top = pool.slice().sort((a, b) => (b.bf || 0) - (a.bf || 0) || pct(b) - pct(a) || (b.cnt || 0) - (a.cnt || 0)).slice(0, 6); return new Set(top.map((c) => String(c.no))); };
   let CP_HOT = new Set();
-  const cpChip = (c) => `<a class="cpz-chip k-${esc(c.k)}${CP_HOT.has(String(c.no)) ? " is-hot" : ""}" href="#cp=${esc(c.no)}">${CP_HOT.has(String(c.no)) ? '<span class="cpz-hot">🔥 HOT</span>' : ""}<span class="cpz-k">${c.nw ? '<em class="cpz-new">NEW</em> ' : ""}${c.bf ? '<em class="cpz-bf">무진장</em>' : cpKind(c)}</span><span class="cpz-v">${esc(c.v)}</span><span class="cpz-n">${esc(c.n)}</span><span class="cpz-m">${esc([c.cond, c.exp ? "~" + c.exp : ""].filter(Boolean).join(" · "))}</span></a>`;
+  const cpChip = (c) => `<a class="cpz-chip k-${esc(c.k)}${CP_HOT.has(String(c.no)) ? " is-hot" : ""}" href="#cp=${esc(c.no)}">${CP_HOT.has(String(c.no)) ? '<span class="cpz-hot">🔥 HOT</span>' : ""}<span class="cpz-k">${c.nw ? '<em class="cpz-new">NEW</em> ' : ""}${c.tz ? '<em class="cpz-bf" style="background:#6a2ff0">티징</em>' : c.bf ? '<em class="cpz-bf">무진장</em>' : cpKind(c)}</span><span class="cpz-v">${esc(c.v)}</span><span class="cpz-n">${esc(c.n)}</span><span class="cpz-m">${esc([c.cond, c.exp ? "~" + c.exp : ""].filter(Boolean).join(" · "))}</span></a>`;
   const cpTime = (iso) => { try { const d = new Date(iso); const k = new Date(d.getTime() + 9 * 3600e3); return `${k.getUTCMonth() + 1}/${k.getUTCDate()} ${String(k.getUTCHours()).padStart(2, "0")}:${String(k.getUTCMinutes()).padStart(2, "0")}`; } catch (e) { return ""; } };
   function renderCouponStrip() {
     const box = root.querySelector("#cpz");
@@ -1648,10 +1654,12 @@ async function renderPublicSite(root) {
     const hot = L.filter((c) => CP_HOT.has(String(c.no)));
     const rest = L.filter((c) => !CP_HOT.has(String(c.no)));
     const nw = L.filter((c) => c.nw);
-    const tickItems = [...hot, ...nw.filter((c) => !CP_HOT.has(String(c.no))), ...rest].slice(0, 12);
+    const tz = L.filter((c) => c.tz);
+    const tickItems = [...tz, ...hot, ...nw.filter((c) => !CP_HOT.has(String(c.no))), ...rest].slice(0, 12);
     box.innerHTML = `<div class="cpz-head"><p class="cpz-title"><span class="cpz-fire">🔥</span> 지금 쓰기 좋은 쿠폰<span class="cpz-live"><i></i>LIVE</span><small>${L.length}개 · ${esc(cpTime(COUPONS.at))} 확인</small></p><a class="cpz-more" href="#cps">전체보기</a></div>
       <div class="cpz-tick"><div class="cpz-tick-in">${tickItems.map((c) => `<a href="#cp=${esc(c.no)}"><b>${c.nw ? "NEW" : "🔥"} ${esc(c.v)}</b>${esc(c.n)}</a>`).join("")}</div></div>
-      <div class="cpz-scroll">${[...hot, ...rest].slice(0, 40).map(cpChip).join("")}</div>`;
+      ${tz.length ? `<p class="cpz-sub">⚡ 티징 전용 쿠폰 <small>11/20 19시 ~ 11/21</small></p><div class="cpz-scroll cpz-one">${tz.map(cpChip).join("")}</div><p class="cpz-sub">🔥 지금 쓰기 좋은 쿠폰</p>` : ""}
+      <div class="cpz-scroll">${[...hot, ...rest].filter((c) => !c.tz).slice(0, 40).map(cpChip).join("")}</div>`;
     box.dataset.ready = "1";
     const t = root.querySelector("nav.tabs button.active");
     box.hidden = !!(t && t.dataset.tab && t.dataset.tab !== "bf" && root.querySelector('nav.tabs button[data-tab="bf"]'));
@@ -1685,12 +1693,12 @@ async function renderPublicSite(root) {
     if (!C || !Array.isArray(C.list)) { history.replaceState(null, "", location.pathname + location.search); return; }
     const bd = cpOverlay("cps", "지금 쓰기 좋은 쿠폰", `
       <div class="ep-hero"><h1 class="ep-hero-title"><span class="cpz-fire">🔥</span> 지금 쓰기 좋은 쿠폰</h1><p class="ep-note" style="margin:6px 0 0">무신사 쿠폰함 ${C.list.length}개 · ${esc(cpTime(C.at))} 확인 · 1시간마다 업데이트돼요</p></div>
-      <div class="cpz-filter"><button data-f="" class="on">전체</button><button data-f="C">장바구니 쿠폰</button><button data-f="P">상품 쿠폰</button><input type="search" placeholder="브랜드·쿠폰 검색 (예: 아디다스)" aria-label="쿠폰 검색"></div>
+      <div class="cpz-filter"><button data-f="" class="on">전체</button><button data-f="T">⚡ 티징 전용</button><button data-f="C">장바구니 쿠폰</button><button data-f="P">상품 쿠폰</button><input type="search" placeholder="브랜드·쿠폰 검색 (예: 아디다스)" aria-label="쿠폰 검색"></div>
       <div class="cpz-all" id="cpz-all"></div>`);
     if (!bd) return;
     let f = "", q = "";
     CP_HOT = cpHotSet();
-    const draw = () => { const L = [...C.list.filter((c) => CP_HOT.has(String(c.no))), ...C.list.filter((c) => !CP_HOT.has(String(c.no)))].filter((c) => (!f || c.k === f) && (!q || (c.n + " " + (c.g || []).map((g) => g.b).join(" ")).toLowerCase().includes(q))); bd.querySelector("#cpz-all").innerHTML = L.length ? L.map(cpChip).join("") : `<p class="ep-empty">찾는 쿠폰이 없어요</p>`; };
+    const draw = () => { const L = [...C.list.filter((c) => CP_HOT.has(String(c.no))), ...C.list.filter((c) => !CP_HOT.has(String(c.no)))].filter((c) => (!f || (f === "T" ? c.tz : c.k === f)) && (!q || (c.n + " " + (c.g || []).map((g) => g.b).join(" ")).toLowerCase().includes(q))); bd.querySelector("#cpz-all").innerHTML = L.length ? L.map(cpChip).join("") : `<p class="ep-empty">찾는 쿠폰이 없어요</p>`; };
     bd.querySelectorAll(".cpz-filter button").forEach((b) => b.addEventListener("click", () => { f = b.dataset.f; bd.querySelectorAll(".cpz-filter button").forEach((x) => x.classList.toggle("on", x === b)); draw(); }));
     bd.querySelector(".cpz-filter input").addEventListener("input", (e) => { q = e.target.value.trim().toLowerCase(); draw(); });
     bd.querySelector("#cpz-all").addEventListener("click", (e) => { if (e.target.closest('a[href^="#cp="]')) cpFromList = true; });
@@ -2109,7 +2117,6 @@ async function renderPublicSite(root) {
       </section>
       ${BR_ON ? `
       <section id="tab-brands" class="section">
-        <p class="tab-intro">무신사 주간 랭킹 기준 · 나이대·스타일별로 제일 많이 사는 브랜드 TOP 10</p>
         <div class="sp-chips" id="br-sex"><button type="button" data-v="M" class="active">브로</button><button type="button" data-v="F">시스터</button></div>
         <div class="sp-chips" id="br-age"><button type="button" data-v="10대">10대</button><button type="button" data-v="20대" class="active">20대</button><button type="button" data-v="30대">30대</button></div>
         <div class="sp-chips" id="br-sty"></div>
@@ -2679,7 +2686,7 @@ async function renderPublicSite(root) {
         styBox.innerHTML = styles.map((v) => `<button type="button" data-v="${v}" class="${v === "트렌드세터" ? "br-trend " : ""}${v === bst.sty ? "active" : ""}">${v === "트렌드세터" ? "🔥 요즘 트렌드세터" : v}</button>`).join("");
         ["#br-sex", "#br-age"].forEach((q, i) => root.querySelectorAll(q + " button").forEach((b) => b.classList.toggle("active", b.dataset.v === (i ? bst.age : bst.sex))));
         const g = BRD.groups.find((x) => x.key === `${bst.sex}|${bst.age}|${bst.sty}`);
-        const note = bst.sty === "트렌드세터" ? `<p class="br-note">요즘 제일 앞서가는 패션 계정들이 실제로 고른 브랜드예요</p>` : "";
+        const note = "";
         bBox.innerHTML = note + (g && g.brands.length ? g.brands.map((B, i) => {
           const items = B.items.map((x) => ({ brand: B.b, name: x.n, img: "https://image.msscdn.net" + x.i, link: "https://www.musinsa.com/curator/goods/" + x.l }));
           const first = items[0];

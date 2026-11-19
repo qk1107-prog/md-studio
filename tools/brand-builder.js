@@ -44,9 +44,15 @@
     });
   }
   const groups = [];
+  // 무신사 스탠다드(우먼)는 캐주얼·포멀에만, 5위 아래로 한 번만 (기본빵만 가득 차지 않게)
+  const isStd = (b) => /^무신사 스탠다드/.test(b);
   for (const [gk, brands] of Object.entries(G)) {
-    const [gf] = gk.split("|");
-    const top = Object.values(brands).sort((a, b) => b.score - a.score).slice(0, 10).map((B) => {
+    const [gf, , sty] = gk.split("|");
+    let ranked = Object.values(brands).sort((a, b) => b.score - a.score);
+    const std = ranked.filter((B) => isStd(B.b));
+    ranked = ranked.filter((B) => !isStd(B.b)).slice(0, 10);
+    if ((sty === "캐주얼" || sty === "포멀") && std.length) { ranked.splice(4, 0, std[0]); ranked = ranked.slice(0, 10); }
+    const top = ranked.map((B) => {
       const own = Object.values(B.items).sort((a, b) => a.r - b.r);
       const extra = Object.values(POOL[gf][B.b] || {}).filter((x) => !B.items[x.id]).sort((a, b) => a.r - b.r);
       return { b: B.b, items: [...own, ...extra].slice(0, 10) };
@@ -70,7 +76,7 @@
     await fetchInfo(trendIds);
     const tb = {};
     trendIds.forEach((id, idx) => { const g = info[id]; if (!g || g.isSoldOut || g.genderCode === "WOMEN") return; const B = (tb[g.brandName] = tb[g.brandName] || { b: g.brandName, score: 0, items: [] }); B.score += 100 - idx; B.items.push({ id, r: idx + 1, img: g.thumbnail, b: g.brandName, n: g.goodsName }); });
-    const top = Object.values(tb).sort((a, b) => b.items.length - a.items.length || b.score - a.score).slice(0, 10).map((B) => {
+    const top = Object.values(tb).filter((B) => !isStd(B.b)).sort((a, b) => b.items.length - a.items.length || b.score - a.score).slice(0, 10).map((B) => {
       const extra = Object.values(POOL.M[B.b] || {}).filter((x) => !B.items.some((y) => y.id === x.id)).sort((a, b) => a.r - b.r);
       return { b: B.b, items: [...B.items, ...extra].slice(0, 10) };
     });

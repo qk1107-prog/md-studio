@@ -39,7 +39,8 @@
         const raw = (j.data && (j.data.list || j.data.goods)) || [];
         const L = raw.filter((g) => !g.isSoldOut && g.genderCode !== "WOMEN");
         const tot = (j.data && j.data.pagination && j.data.pagination.totalCount) || L.length;
-        if (L.length >= 3) res.push({ c, tot, goods: L.slice(0, 5) });
+        const isTz = /티징|티저|TEAS/i.test(c.couponName) || bfNo.has(c.couponNo);
+        if (L.length >= 3 || (isTz && L.length >= 1)) res.push({ c, tot, goods: L.slice(0, 5) });
       } catch (e) {}
     }));
   }
@@ -63,10 +64,11 @@
     const cond = [c.minOrderQuantity ? c.minOrderQuantity + "개 이상" : "", c.minOrderAmount ? won(c.minOrderAmount) + " 이상" : "", c.maxDiscountAmount && c.discountType === "PERCENT" ? "최대 " + won(c.maxDiscountAmount) : ""].filter(Boolean).join(" · ");
     const e = new Date(c.expireDateTime);
     return {
-      no: c.couponNo, k: c.couponKind === "CART" ? "C" : "P", bf: bfNo.has(c.couponNo) ? 1 : 0, n: c.couponName.replace(/\s+/g, " ").trim(), v, cond, exp: e.getMonth() + 1 + "/" + e.getDate(), cnt: r.tot,
+      no: c.couponNo, k: c.couponKind === "CART" ? "C" : "P", bf: bfNo.has(c.couponNo) ? 1 : 0,
+      tz: /티징|티저|TEAS/i.test(c.couponName) || (bfNo.has(c.couponNo) && e.getTime() <= new Date("2026-11-21T23:59:59+09:00").getTime()) ? 1 : 0, n: c.couponName.replace(/\s+/g, " ").trim(), v, cond, exp: e.getMonth() + 1 + "/" + e.getDate(), cnt: r.tot,
       g: r.goods.filter((g) => cache[String(g.goodsNo)]).map((g) => ({ i: String(g.thumbnail).replace("https://image.msscdn.net", ""), l: cache[String(g.goodsNo)], n: g.goodsName, b: g.brandName, s: g.price, r: g.saleRate })),
     };
-  }).filter((x) => x.g.length >= 3);
+  }).filter((x) => x.g.length >= 3 || ((x.tz || x.bf) && x.g.length >= 1));
   // 이전 저장본과 비교해서 처음 본 쿠폰(24시간 안) = NEW
   let prev = null;
   try {
