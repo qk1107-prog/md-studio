@@ -1818,8 +1818,10 @@ async function renderPublicSite(root) {
     return (a.on || pv) ? a : null;
   })();
   // 미리보기(?awards=1)에서는 블러 없이 그대로, 방문자 화면에서는 teaser면 블러
-  const AW_TEASER = (() => {
+  // 블러(공개 예정): 방문자 화면에서만, 블프 오픈(11/20 19시) 되면 자동 해제
+  let AW_TEASER = (() => {
     if (!AWARDS || !AWARDS.teaser) return false;
+    if (Date.now() >= BF_UNLOCK_AT) return false;
     try { if (new URLSearchParams(location.search).get("awards") === "1") return false; } catch (e) {}
     return true;
   })();
@@ -1893,18 +1895,18 @@ async function renderPublicSite(root) {
       <div class="aw-head">
         <div>
           ${AWARDS.kicker ? `<p class="aw-kicker">${esc(AWARDS.kicker)}</p>` : ""}
-          <p class="aw-title">${esc(AWARDS.title || "주인장 베스트 픽")}${AW_TEASER ? `<span class="aw-soon">공개 예정</span>` : ""}</p>
+          <p class="aw-title">${esc(AWARDS.title || "주인장 베스트 픽")}${AW_TEASER ? `<span class="aw-soon" id="aw-soon">공개 예정</span>` : ""}</p>
         </div>
-        ${AW_TEASER ? "" : `<a class="aw-more" href="#bp">전체보기</a>`}
+        <a class="aw-more" href="#bp"${AW_TEASER ? " hidden" : ""}>전체보기</a>
       </div>
       <div class="aw-body">
-      <div class="aw-scroll" id="aw-scroll"${AW_TEASER ? ' aria-hidden="true"' : ""}>${AWARDS.items.map((it, i) => `<${AW_TEASER ? "div" : "a"} class="aw-card"${AW_TEASER ? "" : ` href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener"`}>
+      <div class="aw-scroll" id="aw-scroll"${AW_TEASER ? ' aria-hidden="true"' : ""}>${AWARDS.items.map((it, i) => `<a class="aw-card"${AW_TEASER ? ` data-href="${esc(safeUrl(it.link) || "#")}"` : ` href="${esc(safeUrl(it.link) || "#")}"`} target="_blank" rel="noopener">
         <div class="aw-img">${safeImg(it.img) ? `<img${/goods_img/.test(it.img) || it.product ? ' class="pr"' : ""} src="${esc(safeImg(it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}</div>
         <p class="aw-meta"><span class="aw-dept">${esc(it.cat)}</span></p>
         <p class="aw-brand">${esc(it.brand)}</p>
         <p class="aw-name">${esc(it.name)}</p>
-      </${AW_TEASER ? "div" : "a"}>`).join("")}</div>
-      ${AW_TEASER ? `<div class="aw-veil"><div class="aw-veil-card"><div class="aw-veil-ic">🔒</div><div class="aw-veil-k">COMING SOON</div><div class="aw-veil-t">${esc(AWARDS.teaserTitle || AWARDS.title || "주인장 BEST PICK")}</div><div class="aw-veil-s">${esc(AWARDS.teaserText || "카테고리별 주인장 픽, 곧 공개돼요")}</div></div></div>` : ""}
+      </a>`).join("")}</div>
+      ${AW_TEASER ? `<div class="aw-veil" id="aw-veil"><div class="aw-veil-card"><div class="aw-veil-ic">🔒</div><div class="aw-veil-k">COMING SOON</div><div class="aw-veil-t">${esc(AWARDS.teaserTitle || AWARDS.title || "주인장 BEST PICK")}</div><div class="aw-veil-s">${esc(AWARDS.teaserText || "카테고리별 주인장 픽, 곧 공개돼요")}</div></div></div>` : ""}
       </div>
     </section>` : ""}
 
@@ -2353,6 +2355,22 @@ async function renderPublicSite(root) {
       if (lt()) { const iv = setInterval(() => { if (!lt()) clearInterval(iv); }, 1000); }
     }
   })();
+
+  // 블프 오픈 시각이 되면 BEST PICK 블러를 그 자리에서 풀어요 (새로고침 없이)
+  if (AW_TEASER) {
+    const unveil = () => {
+      AW_TEASER = false;
+      const sec = root.querySelector("section.aw");
+      if (!sec) return;
+      sec.classList.remove("is-teaser");
+      ["#aw-veil", "#aw-soon"].forEach((q) => { const el = root.querySelector(q); if (el) el.remove(); });
+      const more = sec.querySelector(".aw-more"); if (more) more.hidden = false;
+      const sc = sec.querySelector("#aw-scroll"); if (sc) sc.removeAttribute("aria-hidden");
+      sec.querySelectorAll("a.aw-card[data-href]").forEach((a) => { a.href = a.dataset.href; a.removeAttribute("data-href"); });
+    };
+    const wait = BF_UNLOCK_AT - Date.now();
+    if (wait <= 0) unveil(); else if (wait < 864e5 * 3) setTimeout(unveil, wait + 500);
+  }
 
   // ---------- 원하는 옷 요청 ----------
   (() => {
