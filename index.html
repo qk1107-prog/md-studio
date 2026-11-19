@@ -1810,7 +1810,7 @@ async function renderPublicSite(root) {
       let D = window.__mdBRD;
       if (!D) { try { const r = await supabaseClient.from("site_data").select("value").eq("id", "brands").single(); D = window.__mdBRD = r.data && r.data.value; } catch (e) {} }
       const g = D && (D.groups || []).find((x) => x.key === gk); const B = g && g.brands[Number(bi)];
-      if (B) { const [sx, ag, st] = gk.split("|"); c = { title: `${Number(bi) + 1}. ${B.b}`, sub: `${sx === "F" ? "시스터" : "브로"} ${ag} ${st}`, cat: B.b, items: B.items.map((x) => ({ brand: B.b, name: x.n, img: "https://image.msscdn.net" + x.i, link: "https://www.musinsa.com/curator/goods/" + x.l })) }; }
+      if (B) { const [sx, ag, st] = gk.split("|"); c = { title: B.b, sub: `${sx === "F" ? "시스터" : "브로"} ${ag} ${st === "HOT" ? "🔥 HOT" : st}`, cat: B.b, items: B.items.map((x) => ({ brand: B.b, name: x.n, img: "https://image.msscdn.net" + x.i, link: "https://www.musinsa.com/curator/goods/" + x.l })) }; }
     } else if (String(idx).includes("|")) {
       await loadCatRank();
       const k = String(idx); const a = CATRANK && CATRANK[k];
@@ -2703,9 +2703,10 @@ async function renderPublicSite(root) {
       const STY = ["캐주얼", "스트릿", "포멀", "핀터"];
       const drawBr = () => {
         if (!BRD) return;
-        const styles = [...STY, ...(bst.sex === "M" && bst.age === "20대" && BRD.groups.some((g) => g.key === "M|20대|트렌드세터") ? ["트렌드세터"] : [])];
-        if (!styles.includes(bst.sty)) bst.sty = "캐주얼";
-        styBox.innerHTML = styles.map((v) => `<button type="button" data-v="${v}" class="${v === "트렌드세터" ? "br-trend " : ""}${v === bst.sty ? "active" : ""}">${v === "트렌드세터" ? "🔥 요즘 트렌드세터" : v}</button>`).join("");
+        const hasHot = BRD.groups.some((g) => g.key === `${bst.sex}|${bst.age}|HOT`);
+        const styles = [...(hasHot ? ["HOT"] : []), ...STY];
+        if (!styles.includes(bst.sty)) bst.sty = hasHot ? "HOT" : "캐주얼";
+        styBox.innerHTML = styles.map((v) => `<button type="button" data-v="${v}" class="${v === "HOT" ? "br-trend " : ""}${v === bst.sty ? "active" : ""}">${v === "HOT" ? "🔥 HOT" : v}</button>`).join("");
         ["#br-sex", "#br-age"].forEach((q, i) => root.querySelectorAll(q + " button").forEach((b) => b.classList.toggle("active", b.dataset.v === (i ? bst.age : bst.sex))));
         const g = BRD.groups.find((x) => x.key === `${bst.sex}|${bst.age}|${bst.sty}`);
         const note = "";
@@ -2715,11 +2716,10 @@ async function renderPublicSite(root) {
           return `<div class="rec-row">
             <a class="rec-thumb cat-thumb" href="${esc(first.link)}" target="_blank" rel="noopener" style="position:relative">
               <img src="${esc(first.img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-              <span class="br-rank${i < 3 ? " top" : ""}">${i + 1}</span>
               <span class="cat-thumb-name">${esc(B.b)}</span>
             </a>
             <div class="rec-body">
-              <div class="rec-head"><p class="story-title" style="margin:0">${i + 1}. ${esc(B.b)}<small>옆으로 넘겨보세요 →</small></p><a class="rec-more" href="#br=${encodeURIComponent(g.key + "~" + i)}">전체보기</a></div>
+              <div class="rec-head"><p class="story-title" style="margin:0">${esc(B.b)}<small>옆으로 넘겨보세요 →</small></p><a class="rec-more" href="#br=${encodeURIComponent(g.key + "~" + i)}">전체보기</a></div>
               <div class="rec-scroll">${items.map(prod).join("")}</div>
             </div>
           </div>`;

@@ -60,9 +60,6 @@
     groups.push({ key: gk, brands: top });
   }
 
-  // 트렌드세터 (20대 남자)
-  let trendIds = [];
-  try { trendIds = JSON.parse(localStorage.getItem("mdTrend") || "[]"); } catch (e) {}
   const info = {};
   const fetchInfo = async (ids) => {
     for (let i = 0; i < ids.length; i += 30) {
@@ -72,15 +69,38 @@
       } catch (e) {}
     }
   };
-  if (trendIds.length) {
-    await fetchInfo(trendIds);
-    const tb = {};
-    trendIds.forEach((id, idx) => { const g = info[id]; if (!g || g.isSoldOut || g.genderCode === "WOMEN") return; const B = (tb[g.brandName] = tb[g.brandName] || { b: g.brandName, score: 0, items: [] }); B.score += 100 - idx; B.items.push({ id, r: idx + 1, img: g.thumbnail, b: g.brandName, n: g.goodsName }); });
-    const top = Object.values(tb).filter((B) => !isStd(B.b)).sort((a, b) => b.items.length - a.items.length || b.score - a.score).slice(0, 10).map((B) => {
-      const extra = Object.values(POOL.M[B.b] || {}).filter((x) => !B.items.some((y) => y.id === x.id)).sort((a, b) => a.r - b.r);
-      return { b: B.b, items: [...B.items, ...extra].slice(0, 10) };
-    });
-    groups.push({ key: "M|20대|트렌드세터", brands: top });
+
+  // 🔥 HOT 브랜드 (주인장 선정 · 순위 없음) — 무신사 검색으로 브랜드별 후기 많은 상품
+  const HOT = {
+    "10대": ["9999아카이브", "노드", "다이브인", "이알티알", "밈더워드로브", "기철", "디스이즈네버댓", "마하그리드", "코드그라피", "굿라이프웍스", "999휴머니티", "엘엠씨", "크리틱", "스컬프터", "이미스", "커버낫", "에이이에이이", "매스노운", "우알롱", "슬로우애시드"],
+    "20대": ["르아브", "기철", "다이브인", "노드", "미세키서울 맨", "이알티알", "밈더워드로브", "9999아카이브", "로맨틱무브", "낫포너드", "아웃스탠딩", "해칭룸", "세터", "노이어", "인사일런스", "비슬로우", "우알롱", "유니폼브릿지", "위캔더스", "노매뉴얼", "디스이즈네버댓", "슬로우애시드", "파르티멘토", "999휴머니티", "프리즘웍스", "에스에스알엘", "엑스톤즈", "매스노운"],
+    "30대": ["쿠어", "포터리", "앤더슨벨", "브라운야드", "모이프", "어나더 오피스", "던스트", "에스피오나지", "폴로 랄프 로렌", "인사일런스", "해칭룸", "아웃스탠딩", "노이어", "비슬로우", "오디너리피플", "유스", "이스트로그", "브룩스 브라더스", "라코스테", "아크테릭스", "파타고니아", "살로몬", "프리즘웍스", "미세키서울 맨", "로맨틱무브"],
+  };
+  // 30대: 단가 있는 브랜드 위주 (블런드스톤·어그·텍스 제외, 스타일별 고단가 브랜드 앞에)
+  const EX30 = /^(블런드스톤|어그|텍스)$/;
+  const FILL30 = { "캐주얼": ["쿠어", "포터리", "모이프"], "스트릿": ["던스트", "아웃스탠딩", "해칭룸"], "포멀": ["앤더슨벨", "브라운야드", "어나더 오피스"], "핀터": ["폴로 랄프 로렌", "비슬로우", "노이어"] };
+  const SB = {};
+  const searchBrand = async (name) => {
+    try {
+      const h = await (await fetch("https://www.musinsa.com/search/goods?keyword=" + encodeURIComponent(name) + "&gf=M")).text();
+      const d = new DOMParser().parseFromString(h, "text/html");
+      const ids = [...new Set([...d.querySelectorAll("a[data-item-id]")].map((a) => a.getAttribute("data-item-id")))].slice(0, 60);
+      await fetchInfo(ids.filter((id) => !info[id]));
+      const g = ids.map((id) => info[id]).filter((x) => x && x.brandName === name && !x.isSoldOut && x.genderCode !== "WOMEN").sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0));
+      SB[name] = g.slice(0, 12).map((x) => ({ id: String(x.goodsNo), img: x.thumbnail, b: name, n: x.goodsName }));
+    } catch (e) { SB[name] = []; }
+  };
+  const allHot = [...new Set([].concat(...Object.values(HOT), ...Object.values(FILL30)))];
+  for (let i = 0; i < allHot.length; i += 6) await Promise.all(allHot.slice(i, i + 6).map(searchBrand));
+  groups.forEach((g) => {
+    const [, age, sty] = g.key.split("|");
+    if (age !== "30대") return;
+    const fill = (FILL30[sty] || []).filter((b) => (SB[b] || []).length >= 4 && !g.brands.some((B) => B.b === b)).map((b) => ({ b, items: SB[b] }));
+    g.brands = [...fill, ...g.brands.filter((B) => !EX30.test(B.b))].slice(0, 10);
+  });
+  for (const [age, list] of Object.entries(HOT)) {
+    const brands = list.filter((b) => (SB[b] || []).length >= 4).map((b) => ({ b, items: SB[b] }));
+    if (brands.length) groups.push({ key: `M|${age}|HOT`, brands });
   }
 
   // 후기 확인 (후기 점수 85점 미만 & 후기 5개 이상인 상품은 뒤로, 상품당 최대 12개)
