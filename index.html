@@ -390,6 +390,32 @@
   #app-root .aw-row { display: flex; align-items: center; gap: 5px; }
   #app-root .aw-bf { font-size: 8.5px; font-weight: 800; color: #141312; background: #E4FF1A; border-radius: 3px; padding: 1px 4px 0; }
   #app-root .aw-real { align-self: flex-start; margin-top: 3px; font-size: 9.5px; font-weight: 800; color: #E4FF1A; background: rgba(228,255,26,.12); border: 1px solid rgba(228,255,26,.45); border-radius: 4px; padding: 2px 5px 1px; letter-spacing: -0.2px; white-space: nowrap; }
+  /* 지금 쓰기 좋은 쿠폰 */
+  #app-root .cpz { max-width: 700px; margin: 2px auto 14px; padding: 0 20px; }
+  #app-root .cpz-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 8px; }
+  #app-root .cpz-title { margin: 0; font-size: 15px; font-weight: 900; letter-spacing: -0.4px; color: #141312; }
+  #app-root .cpz-title small { margin-left: 6px; font-size: 10.5px; font-weight: 700; color: #8a847b; letter-spacing: -0.2px; }
+  #app-root .cpz-more { font-size: 11.5px; font-weight: 700; color: #141312; text-decoration: none; border-bottom: 1px solid #141312; }
+  #app-root .cpz-scroll { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto); grid-auto-columns: 132px; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  #app-root .cpz-scroll::-webkit-scrollbar { display: none; }
+  #app-root .cpz-chip, #app-root .cpz-all .cpz-chip { display: block; text-decoration: none; color: #141312; background: #fff; border: 1px solid #e3ddd3; border-radius: 10px; padding: 8px 9px 7px; position: relative; overflow: hidden; }
+  #app-root .cpz-chip::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #ff3d3f; }
+  #app-root .cpz-chip.k-C::before { background: #141312; }
+  #app-root .cpz-v { display: block; font-size: 17px; font-weight: 900; letter-spacing: -0.5px; color: #ff3d3f; line-height: 1.1; }
+  #app-root .cpz-chip.k-C .cpz-v { color: #141312; }
+  #app-root .cpz-n { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 3px; font-size: 11px; font-weight: 700; line-height: 1.3; letter-spacing: -0.3px; min-height: 28px; }
+  #app-root .cpz-m { display: block; margin-top: 3px; font-size: 9.5px; color: #8a847b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #app-root .cpz-k { position: absolute; right: 7px; top: 7px; font-size: 8.5px; font-weight: 800; color: #8a847b; }
+  #app-root .cpz-all { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 7px; padding: 0 16px 24px; }
+  #app-root .cpz-filter { display: flex; gap: 6px; padding: 4px 16px 12px; flex-wrap: wrap; }
+  #app-root .cpz-filter button { border: 1px solid #d6d0c6; background: #fff; border-radius: 8px; padding: 6px 11px; font: inherit; font-size: 12px; font-weight: 700; color: #3d3934; cursor: pointer; }
+  #app-root .cpz-filter button.on { background: #141312; color: #fff; border-color: #141312; }
+  #app-root .cpz-filter input { flex: 1 1 140px; min-width: 120px; border: 1px solid #d6d0c6; border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 12px; }
+  #app-root .cpz-hero { margin: 4px 16px 14px; padding: 16px; border-radius: 14px; background: #141312; color: #fff; }
+  #app-root .cpz-hero b { display: block; font-size: 30px; font-weight: 900; color: #ff3d3f; letter-spacing: -1px; line-height: 1; }
+  #app-root .cpz-hero.k-C b { color: #E4FF1A; }
+  #app-root .cpz-hero p { margin: 7px 0 0; font-size: 14px; font-weight: 800; letter-spacing: -0.3px; }
+  #app-root .cpz-hero small { display: block; margin-top: 5px; font-size: 11px; color: #b9b2a7; }
   #app-root .aw-soon { display: inline-block; margin-left: 7px; vertical-align: 3px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px; color: #141312; background: #e9e2d6; border-radius: 999px; padding: 2px 7px; }
   #app-root .aw-body { position: relative; }
   #app-root .aw.is-teaser .aw-scroll { filter: blur(6px); pointer-events: none; user-select: none; -webkit-user-select: none; }
@@ -1577,6 +1603,78 @@ async function renderPublicSite(root) {
   }
 
   // 스타터팩 전체보기: 코디 이미지 크게 + 제품
+  // ---------- 지금 쓰기 좋은 쿠폰 (site_data id='coupons', 예약 작업이 1시간마다 갱신) ----------
+  let COUPONS = null, couponsP = null;
+  const CP_PV = (() => { try { return new URLSearchParams(location.search).get("awards") === "1"; } catch (e) { return false; } })();
+  function loadCoupons() {
+    if (COUPONS) return Promise.resolve(COUPONS);
+    if (!couponsP) couponsP = supabaseClient.from("site_data").select("value").eq("id", "coupons").single()
+      .then(({ data }) => (COUPONS = (data && data.value) || null)).catch(() => null).finally(() => { if (!COUPONS) couponsP = null; });
+    return couponsP;
+  }
+  const cpKind = (c) => (c.k === "C" ? "장바구니" : "상품");
+  const cpChip = (c) => `<a class="cpz-chip k-${esc(c.k)}" href="#cp=${esc(c.no)}"><span class="cpz-k">${cpKind(c)}</span><span class="cpz-v">${esc(c.v)}</span><span class="cpz-n">${esc(c.n)}</span><span class="cpz-m">${esc([c.cond, c.exp ? "~" + c.exp : ""].filter(Boolean).join(" · "))}</span></a>`;
+  const cpTime = (iso) => { try { const d = new Date(iso); const k = new Date(d.getTime() + 9 * 3600e3); return `${k.getUTCMonth() + 1}/${k.getUTCDate()} ${String(k.getUTCHours()).padStart(2, "0")}:${String(k.getUTCMinutes()).padStart(2, "0")}`; } catch (e) { return ""; } };
+  function renderCouponStrip() {
+    const box = root.querySelector("#cpz");
+    if (!box || !COUPONS || !Array.isArray(COUPONS.list) || !COUPONS.list.length) return;
+    if (!(COUPONS.on || CP_PV)) return;
+    box.innerHTML = `<div class="cpz-head"><p class="cpz-title">🎟️ 지금 쓰기 좋은 쿠폰<small>${COUPONS.list.length}개 · ${esc(cpTime(COUPONS.at))} 확인</small></p><a class="cpz-more" href="#cps">전체보기</a></div>
+      <div class="cpz-scroll">${COUPONS.list.slice(0, 40).map(cpChip).join("")}</div>`;
+    box.dataset.ready = "1";
+    const t = root.querySelector("nav.tabs button.active");
+    box.hidden = !!(t && t.dataset.tab && t.dataset.tab !== "bf" && root.querySelector('nav.tabs button[data-tab="bf"]'));
+  }
+  function cpOverlay(key, title, inner) {
+    const existing = root.querySelector("#ep-backdrop");
+    if (existing && existing.dataset.ep === key) return null;
+    if (existing) existing.remove();
+    const holder = document.createElement("div");
+    holder.innerHTML = `
+      <div class="feed-backdrop ep-detail" id="ep-backdrop" data-ep="${esc(key)}">
+        <div class="ep-sticky"><div class="feed-header">
+          <button class="back-link" id="ep-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <p class="feed-title">${esc(title)}</p>
+        </div></div>
+        <div class="ep-wrap">${inner}</div>
+      </div>`;
+    const backdrop = holder.firstElementChild;
+    root.appendChild(backdrop);
+    animateOverlayIn(backdrop);
+    document.body.style.overflow = "hidden";
+    backdrop.querySelector("#ep-close").addEventListener("click", () => {
+      if (cpFromList && location.hash.startsWith("#cp=")) { cpFromList = false; history.back(); }
+      else { history.replaceState(null, "", location.pathname + location.search); closeEpisode(); }
+    });
+    return backdrop;
+  }
+  let cpFromList = false;
+  async function openCoupons() {
+    const C = await loadCoupons();
+    if (!C || !Array.isArray(C.list)) { history.replaceState(null, "", location.pathname + location.search); return; }
+    const bd = cpOverlay("cps", "지금 쓰기 좋은 쿠폰", `
+      <div class="ep-hero"><h1 class="ep-hero-title">지금 쓰기 좋은 쿠폰</h1><p class="ep-note" style="margin:6px 0 0">무신사 쿠폰함 ${C.list.length}개 · ${esc(cpTime(C.at))} 확인 · 1시간마다 업데이트돼요</p></div>
+      <div class="cpz-filter"><button data-f="" class="on">전체</button><button data-f="C">장바구니 쿠폰</button><button data-f="P">상품 쿠폰</button><input type="search" placeholder="브랜드·쿠폰 검색 (예: 아디다스)" aria-label="쿠폰 검색"></div>
+      <div class="cpz-all" id="cpz-all"></div>`);
+    if (!bd) return;
+    let f = "", q = "";
+    const draw = () => { const L = C.list.filter((c) => (!f || c.k === f) && (!q || (c.n + " " + (c.g || []).map((g) => g.b).join(" ")).toLowerCase().includes(q))); bd.querySelector("#cpz-all").innerHTML = L.length ? L.map(cpChip).join("") : `<p class="ep-empty">찾는 쿠폰이 없어요</p>`; };
+    bd.querySelectorAll(".cpz-filter button").forEach((b) => b.addEventListener("click", () => { f = b.dataset.f; bd.querySelectorAll(".cpz-filter button").forEach((x) => x.classList.toggle("on", x === b)); draw(); }));
+    bd.querySelector(".cpz-filter input").addEventListener("input", (e) => { q = e.target.value.trim().toLowerCase(); draw(); });
+    bd.querySelector("#cpz-all").addEventListener("click", (e) => { if (e.target.closest('a[href^="#cp="]')) cpFromList = true; });
+    draw();
+  }
+  async function openCoupon(no) {
+    const C = await loadCoupons();
+    const c = C && (C.list || []).find((x) => String(x.no) === String(no));
+    if (!c) { history.replaceState(null, "", location.pathname + location.search); return; }
+    const items = (c.g || []).map((g) => ({ brand: g.b, product_name: g.n, curator_url: "https://www.musinsa.com/curator/goods/" + g.l, image_url: "https://image.msscdn.net" + g.i }));
+    cpOverlay("cp" + c.no, c.n, `
+      <div class="cpz-hero k-${esc(c.k)}"><b>${esc(c.v)}</b><p>${esc(c.n)}</p><small>${esc([cpKind(c) + " 쿠폰", c.cond, c.exp ? c.exp + "까지" : "", c.cnt ? "적용 상품 " + Number(c.cnt).toLocaleString("ko-KR") + "개" : ""].filter(Boolean).join(" · "))}</small></div>
+      <div id="ep-sections"><div class="ep-brand-row"><p class="ep-brand-name" style="margin:0 16px 8px">이 쿠폰으로 제일 많이 사는 상품</p><div class="ep-prod-grid">${items.map(productCardHtml).join("")}</div></div></div>
+      <p class="ep-note">상품 페이지에서 '쿠폰 받기'를 누르면 바로 적용돼요. 쿠폰 내용은 무신사 사정에 따라 바뀔 수 있어요.<br>이 페이지의 링크로 구매하시면 광만두가 일정 수수료를 받을 수 있어요.</p>`);
+  }
+
   // 주인장 BEST PICK 전체보기
   function openPicks() {
     if (!AWARDS || AW_TEASER) { history.replaceState(null, "", location.pathname + location.search); return; }
@@ -1729,6 +1827,8 @@ async function renderPublicSite(root) {
     else if (/^#sp=\d+_\d+/.test(location.hash)) openPack(location.hash.slice(4));
     else if (/^#lp=\d+_\d+/.test(location.hash)) openPack(location.hash.slice(4), true);
     else if (location.hash === "#bp") openPicks();
+    else if (location.hash === "#cps") openCoupons();
+    else if (/^#cp=\d+/.test(location.hash)) openCoupon(location.hash.slice(4));
     else if (cm) openCat(cm[0].startsWith("#ca=") ? decodeURIComponent(cm[1]) : cm[1]);
     else closeEpisode();
     const l = location.hash.match(/^#look=([\w-]+)/);
@@ -1927,6 +2027,7 @@ async function renderPublicSite(root) {
       <button data-tab="levelup">레벨업 팩</button>
     </nav>
 
+    <section class="cpz" id="cpz" hidden></section>
     ${AWARDS ? `<section class="aw${AW_TEASER ? " is-teaser" : ""}" aria-label="${esc(AWARDS.title || "주인장 베스트 픽")}">
       <div class="aw-head">
         <div>
@@ -2649,6 +2750,8 @@ async function renderPublicSite(root) {
     // 블프 주인장 BEST PICK은 무진장 블프 탭에서만 보여요
     const awSec = root.querySelector("section.aw");
     if (awSec) awSec.style.display = (!TAB_ORDER.includes("bf") || TAB_ORDER[activeIndex] === "bf") ? "" : "none";
+    const cpSec = root.querySelector("#cpz");
+    if (cpSec && cpSec.dataset.ready) cpSec.hidden = !(!TAB_ORDER.includes("bf") || TAB_ORDER[activeIndex] === "bf");
     writeUI({ tab: activeIndex, tabKey: TAB_ORDER[activeIndex] });
     fitSliderHeight();
     if (opts.instant) slider.getBoundingClientRect(); // 강제 리플로우
@@ -2724,7 +2827,8 @@ async function renderPublicSite(root) {
     }
   } catch (e) {}
   window.addEventListener("hashchange", routeFromHash);
-  if (/^#(ep|st|ct|ca|sp|lp|look|looks)=/.test(location.hash) || location.hash === "#bp") routeFromHash();
+  if (/^#(ep|st|ct|ca|sp|lp|look|looks|cp)=/.test(location.hash) || location.hash === "#bp" || location.hash === "#cps") routeFromHash();
+  loadCoupons().then(renderCouponStrip);
   finishIntro();
 
 
