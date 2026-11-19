@@ -11,6 +11,18 @@
     if (cm) { (d.cartCoupons.items || []).forEach((x) => all.push(x)); cm = d.cartCoupons.hasNext; cp++; }
     if (pm) { (d.productCoupons.items || []).forEach((x) => all.push(x)); pm = d.productCoupons.hasNext; pp++; }
   }
+  // 무진장(블프) 쿠폰은 맨 앞으로
+  const bfNo = new Set();
+  try {
+    let bc = 0, bp = 0, bcm = true, bpm = true;
+    for (let i = 0; i < 60 && (bcm || bpm); i++) {
+      const j = await (await fetch(`https://api.musinsa.com/api/coupon/coupon-box/v1/coupons?sort=POPULARITY&cartPage=${bcm ? bc : 999}&productPage=${bpm ? bp : 999}&size=50&attributes=MUJINJANG`, { credentials: "include" })).json();
+      const d = j.data;
+      if (bcm) { (d.cartCoupons.items || []).forEach((x) => bfNo.add(x.couponNo)); bcm = d.cartCoupons.hasNext; bc++; }
+      if (bpm) { (d.productCoupons.items || []).forEach((x) => bfNo.add(x.couponNo)); bpm = d.productCoupons.hasNext; bp++; }
+    }
+  } catch (e) {}
+  all.sort((a, b) => (bfNo.has(b.couponNo) ? 1 : 0) - (bfNo.has(a.couponNo) ? 1 : 0));
   const seen = new Set(), pick = [];
   for (const x of all) {
     if (x.couponChannel !== "ONLINE" || EX.test(x.couponName) || new Date(x.expireDateTime) < new Date()) continue;
@@ -51,7 +63,7 @@
     const cond = [c.minOrderQuantity ? c.minOrderQuantity + "개 이상" : "", c.minOrderAmount ? won(c.minOrderAmount) + " 이상" : "", c.maxDiscountAmount && c.discountType === "PERCENT" ? "최대 " + won(c.maxDiscountAmount) : ""].filter(Boolean).join(" · ");
     const e = new Date(c.expireDateTime);
     return {
-      no: c.couponNo, k: c.couponKind === "CART" ? "C" : "P", n: c.couponName.replace(/\s+/g, " ").trim(), v, cond, exp: e.getMonth() + 1 + "/" + e.getDate(), cnt: r.tot,
+      no: c.couponNo, k: c.couponKind === "CART" ? "C" : "P", bf: bfNo.has(c.couponNo) ? 1 : 0, n: c.couponName.replace(/\s+/g, " ").trim(), v, cond, exp: e.getMonth() + 1 + "/" + e.getDate(), cnt: r.tot,
       g: r.goods.filter((g) => cache[String(g.goodsNo)]).map((g) => ({ i: String(g.thumbnail).replace("https://image.msscdn.net", ""), l: cache[String(g.goodsNo)], n: g.goodsName, b: g.brandName, s: g.price, r: g.saleRate })),
     };
   }).filter((x) => x.g.length >= 3);
