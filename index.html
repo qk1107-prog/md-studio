@@ -406,6 +406,22 @@
   #app-root .cpz-n { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 3px; font-size: 11px; font-weight: 700; line-height: 1.3; letter-spacing: -0.3px; min-height: 28px; }
   #app-root .cpz-m { display: block; margin-top: 3px; font-size: 9.5px; color: #8a847b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #app-root .cpz-k { position: absolute; right: 7px; top: 7px; font-size: 8.5px; font-weight: 800; color: #8a847b; }
+  #app-root .cpz-fire { display: inline-block; animation: cpzFlick 1.1s ease-in-out infinite; transform-origin: 50% 90%; }
+  @keyframes cpzFlick { 0%,100% { transform: scale(1) rotate(-3deg); filter: drop-shadow(0 0 0 rgba(255,80,40,0)); } 50% { transform: scale(1.18) rotate(4deg); filter: drop-shadow(0 0 6px rgba(255,80,40,.7)); } }
+  #app-root .cpz-live { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; font-size: 9.5px; font-weight: 900; color: #ff3d3f; letter-spacing: 0.3px; vertical-align: 2px; }
+  #app-root .cpz-live i { width: 6px; height: 6px; border-radius: 50%; background: #ff3d3f; animation: cpzPulse 1.4s ease-out infinite; }
+  @keyframes cpzPulse { 0% { box-shadow: 0 0 0 0 rgba(255,61,63,.6); } 100% { box-shadow: 0 0 0 7px rgba(255,61,63,0); } }
+  #app-root .cpz-tick { position: relative; overflow: hidden; margin: 0 0 8px; border-radius: 8px; background: linear-gradient(90deg, #2a0f08, #141312 60%); color: #ffd9c2; font-size: 11.5px; font-weight: 800; letter-spacing: -0.2px; white-space: nowrap; height: 28px; line-height: 28px; }
+  #app-root .cpz-tick-in { display: inline-block; padding-left: 100%; animation: cpzTick 38s linear infinite; }
+  #app-root .cpz-tick-in a { color: #ffd9c2; text-decoration: none; margin-right: 22px; }
+  #app-root .cpz-tick-in a b { color: #ff6a3d; margin-right: 3px; }
+  #app-root .cpz-tick:hover .cpz-tick-in { animation-play-state: paused; }
+  @keyframes cpzTick { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+  #app-root .cpz-hot { position: absolute; left: 8px; top: -1px; font-size: 8.5px; font-weight: 900; color: #fff; background: linear-gradient(135deg, #ff7a2f, #ff2d3f); border-radius: 0 0 5px 5px; padding: 2px 5px 1px; letter-spacing: 0.3px; }
+  #app-root .cpz-chip.is-hot { border-color: #ffb08a; box-shadow: 0 0 0 1px rgba(255,90,40,.15), 0 4px 12px rgba(255,80,40,.12); }
+  #app-root .cpz-chip.is-hot::before { background: linear-gradient(180deg, #ff9a3d, #ff2d3f); }
+  #app-root .cpz-chip.is-hot .cpz-v { margin-top: 8px; }
+  #app-root .cpz-new { font-style: normal; color: #141312; background: #E4FF1A; border-radius: 3px; padding: 1px 4px 0; }
   #app-root .cpz-bf { font-style: normal; color: #fff; background: #ff3d3f; border-radius: 3px; padding: 1px 4px 0; }
   #app-root .cpz-all { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 7px; padding: 0 16px 24px; }
   #app-root .cpz-filter { display: flex; gap: 6px; padding: 4px 16px 12px; flex-wrap: wrap; }
@@ -1614,14 +1630,23 @@ async function renderPublicSite(root) {
     return couponsP;
   }
   const cpKind = (c) => (c.k === "C" ? "장바구니" : "상품");
-  const cpChip = (c) => `<a class="cpz-chip k-${esc(c.k)}" href="#cp=${esc(c.no)}"><span class="cpz-k">${c.bf ? '<em class="cpz-bf">무진장</em>' : cpKind(c)}</span><span class="cpz-v">${esc(c.v)}</span><span class="cpz-n">${esc(c.n)}</span><span class="cpz-m">${esc([c.cond, c.exp ? "~" + c.exp : ""].filter(Boolean).join(" · "))}</span></a>`;
+  const cpHotSet = () => { if (!COUPONS || !COUPONS.list) return new Set(); const L = COUPONS.list; const pct = (c) => (/%$/.test(c.v) ? parseFloat(c.v) : 0); const pool = L.slice(0, 60).filter((c) => pct(c) >= 10 || /만원|천원/.test(c.v)); const top = pool.slice().sort((a, b) => (b.bf || 0) - (a.bf || 0) || pct(b) - pct(a) || (b.cnt || 0) - (a.cnt || 0)).slice(0, 6); return new Set(top.map((c) => String(c.no))); };
+  let CP_HOT = new Set();
+  const cpChip = (c) => `<a class="cpz-chip k-${esc(c.k)}${CP_HOT.has(String(c.no)) ? " is-hot" : ""}" href="#cp=${esc(c.no)}">${CP_HOT.has(String(c.no)) ? '<span class="cpz-hot">🔥 HOT</span>' : ""}<span class="cpz-k">${c.nw ? '<em class="cpz-new">NEW</em> ' : ""}${c.bf ? '<em class="cpz-bf">무진장</em>' : cpKind(c)}</span><span class="cpz-v">${esc(c.v)}</span><span class="cpz-n">${esc(c.n)}</span><span class="cpz-m">${esc([c.cond, c.exp ? "~" + c.exp : ""].filter(Boolean).join(" · "))}</span></a>`;
   const cpTime = (iso) => { try { const d = new Date(iso); const k = new Date(d.getTime() + 9 * 3600e3); return `${k.getUTCMonth() + 1}/${k.getUTCDate()} ${String(k.getUTCHours()).padStart(2, "0")}:${String(k.getUTCMinutes()).padStart(2, "0")}`; } catch (e) { return ""; } };
   function renderCouponStrip() {
     const box = root.querySelector("#cpz");
     if (!box || !COUPONS || !Array.isArray(COUPONS.list) || !COUPONS.list.length) return;
     if (!(COUPONS.on || CP_PV)) return;
-    box.innerHTML = `<div class="cpz-head"><p class="cpz-title">🎟️ 지금 쓰기 좋은 쿠폰<small>${COUPONS.list.length}개 · ${esc(cpTime(COUPONS.at))} 확인</small></p><a class="cpz-more" href="#cps">전체보기</a></div>
-      <div class="cpz-scroll">${COUPONS.list.slice(0, 40).map(cpChip).join("")}</div>`;
+    CP_HOT = cpHotSet();
+    const L = COUPONS.list;
+    const hot = L.filter((c) => CP_HOT.has(String(c.no)));
+    const rest = L.filter((c) => !CP_HOT.has(String(c.no)));
+    const nw = L.filter((c) => c.nw);
+    const tickItems = [...hot, ...nw.filter((c) => !CP_HOT.has(String(c.no))), ...rest].slice(0, 12);
+    box.innerHTML = `<div class="cpz-head"><p class="cpz-title"><span class="cpz-fire">🔥</span> 지금 쓰기 좋은 쿠폰<span class="cpz-live"><i></i>LIVE</span><small>${L.length}개 · ${esc(cpTime(COUPONS.at))} 확인</small></p><a class="cpz-more" href="#cps">전체보기</a></div>
+      <div class="cpz-tick"><div class="cpz-tick-in">${tickItems.map((c) => `<a href="#cp=${esc(c.no)}"><b>${c.nw ? "NEW" : "🔥"} ${esc(c.v)}</b>${esc(c.n)}</a>`).join("")}</div></div>
+      <div class="cpz-scroll">${[...hot, ...rest].slice(0, 40).map(cpChip).join("")}</div>`;
     box.dataset.ready = "1";
     const t = root.querySelector("nav.tabs button.active");
     box.hidden = !!(t && t.dataset.tab && t.dataset.tab !== "bf" && root.querySelector('nav.tabs button[data-tab="bf"]'));
@@ -1654,12 +1679,13 @@ async function renderPublicSite(root) {
     const C = await loadCoupons();
     if (!C || !Array.isArray(C.list)) { history.replaceState(null, "", location.pathname + location.search); return; }
     const bd = cpOverlay("cps", "지금 쓰기 좋은 쿠폰", `
-      <div class="ep-hero"><h1 class="ep-hero-title">지금 쓰기 좋은 쿠폰</h1><p class="ep-note" style="margin:6px 0 0">무신사 쿠폰함 ${C.list.length}개 · ${esc(cpTime(C.at))} 확인 · 1시간마다 업데이트돼요</p></div>
+      <div class="ep-hero"><h1 class="ep-hero-title"><span class="cpz-fire">🔥</span> 지금 쓰기 좋은 쿠폰</h1><p class="ep-note" style="margin:6px 0 0">무신사 쿠폰함 ${C.list.length}개 · ${esc(cpTime(C.at))} 확인 · 1시간마다 업데이트돼요</p></div>
       <div class="cpz-filter"><button data-f="" class="on">전체</button><button data-f="C">장바구니 쿠폰</button><button data-f="P">상품 쿠폰</button><input type="search" placeholder="브랜드·쿠폰 검색 (예: 아디다스)" aria-label="쿠폰 검색"></div>
       <div class="cpz-all" id="cpz-all"></div>`);
     if (!bd) return;
     let f = "", q = "";
-    const draw = () => { const L = C.list.filter((c) => (!f || c.k === f) && (!q || (c.n + " " + (c.g || []).map((g) => g.b).join(" ")).toLowerCase().includes(q))); bd.querySelector("#cpz-all").innerHTML = L.length ? L.map(cpChip).join("") : `<p class="ep-empty">찾는 쿠폰이 없어요</p>`; };
+    CP_HOT = cpHotSet();
+    const draw = () => { const L = [...C.list.filter((c) => CP_HOT.has(String(c.no))), ...C.list.filter((c) => !CP_HOT.has(String(c.no)))].filter((c) => (!f || c.k === f) && (!q || (c.n + " " + (c.g || []).map((g) => g.b).join(" ")).toLowerCase().includes(q))); bd.querySelector("#cpz-all").innerHTML = L.length ? L.map(cpChip).join("") : `<p class="ep-empty">찾는 쿠폰이 없어요</p>`; };
     bd.querySelectorAll(".cpz-filter button").forEach((b) => b.addEventListener("click", () => { f = b.dataset.f; bd.querySelectorAll(".cpz-filter button").forEach((x) => x.classList.toggle("on", x === b)); draw(); }));
     bd.querySelector(".cpz-filter input").addEventListener("input", (e) => { q = e.target.value.trim().toLowerCase(); draw(); });
     bd.querySelector("#cpz-all").addEventListener("click", (e) => { if (e.target.closest('a[href^="#cp="]')) cpFromList = true; });
@@ -1673,7 +1699,7 @@ async function renderPublicSite(root) {
     cpOverlay("cp" + c.no, c.n, `
       <div class="cpz-hero k-${esc(c.k)}"><b>${esc(c.v)}</b><p>${esc(c.n)}</p><small>${esc([cpKind(c) + " 쿠폰", c.cond, c.exp ? c.exp + "까지" : "", c.cnt ? "적용 상품 " + Number(c.cnt).toLocaleString("ko-KR") + "개" : ""].filter(Boolean).join(" · "))}</small></div>
       <div id="ep-sections"><div class="ep-brand-row"><p class="ep-brand-name" style="margin:0 16px 8px">이 쿠폰으로 제일 많이 사는 상품</p><div class="ep-prod-grid">${items.map(productCardHtml).join("")}</div></div></div>
-      <p class="ep-note">상품 페이지에서 '쿠폰 받기'를 누르면 바로 적용돼요. 쿠폰 내용은 무신사 사정에 따라 바뀔 수 있어요.<br>이 페이지의 링크로 구매하시면 광만두가 일정 수수료를 받을 수 있어요.</p>`);
+      <p class="ep-note">상품 페이지에서 '쿠폰 받기'를 누르면 바로 적용돼요. 쿠폰 내용은 무신사 사정에 따라 바뀔 수 있어요.</p>`);
   }
 
   // 주인장 BEST PICK 전체보기
