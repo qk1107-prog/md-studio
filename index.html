@@ -384,7 +384,7 @@
   #app-root .aw-dept { color: #e9e2d6; }
   #app-root .aw-price { margin: 5px 0 0; display: flex; flex-direction: column; gap: 1px; }
   #app-root .aw-price s { font-size: 10px; color: #7d766c; text-decoration-thickness: 1.5px; text-decoration-color: #ff3d3f; font-variant-numeric: tabular-nums; }
-  #app-root .aw-sale { display: flex; align-items: baseline; gap: 4px; font-size: 13px; font-weight: 900; color: #fff; letter-spacing: -0.3px; font-variant-numeric: tabular-nums; }
+  #app-root .aw-sale { display: flex; align-items: baseline; gap: 4px; font-size: 13px; font-weight: 900; color: #fff; letter-spacing: -0.3px; font-variant-numeric: tabular-nums; white-space: nowrap; }
   #app-root .aw-sale em { font-style: normal; color: #ff3d3f; font-size: 13px; }
   #app-root .aw-sale small { font-size: 8.5px; font-weight: 800; color: #141312; background: #E4FF1A; border-radius: 3px; padding: 1px 4px 0; letter-spacing: 0; align-self: center; }
   #app-root .aw-soon { display: inline-block; margin-left: 7px; vertical-align: 3px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px; color: #141312; background: #e9e2d6; border-radius: 999px; padding: 2px 7px; }
@@ -1837,7 +1837,7 @@ async function renderPublicSite(root) {
     if (!it || !it.price) return "";
     const showAll = AW_MOCK || (AWARDS && AWARDS.showPrice);
     if (!showAll) return "";
-    if (AW_MOCK === "q") return `<p class="aw-price"><s>${won(it.price)}원</s><span class="aw-sale"><small>BLACK FRIDAY</small>???,???원</span></p>`;
+    if (AW_MOCK === "q") return `<p class="aw-price"><s>${won(it.price)}원</s><span class="aw-sale"><small>블프가</small>???,???원</span></p>`;
     const sp = it.bfPrice || it.sale;
     if (!sp || sp >= it.price) return `<p class="aw-price"><span class="aw-sale">${won(it.price)}원</span></p>`;
     const pct = Math.round((1 - sp / it.price) * 100);
