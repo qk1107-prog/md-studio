@@ -911,6 +911,13 @@
   #app-root .bf-item .pt s { text-decoration-thickness: 1.5px; text-decoration-color: #ff3d3f; }
   #app-root .bf-item .pt.same { color: #8a8378; }
   #app-root .bf-item .real { position: absolute; right: 4px; bottom: 4px; font-size: 8.5px; font-weight: 900; color: #141312; background: #E4FF1A; border-radius: 4px; padding: 2px 5px 1px; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  #app-root .bf-brief { margin: 0 0 10px; padding: 12px 13px 11px; border-radius: 12px; background: #141312; color: #fff; }
+  #app-root .bf-brief-h { margin: 0 0 8px; font-size: 13px; font-weight: 900; letter-spacing: -0.3px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  #app-root .bf-brief-h small { font-size: 9.5px; font-weight: 700; color: #a9a196; white-space: nowrap; }
+  #app-root .bf-brief ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  #app-root .bf-brief li { display: flex; align-items: flex-start; gap: 7px; font-size: 11.5px; line-height: 1.45; color: #eee8de; }
+  #app-root .bf-brief li .bf-cp-tag { flex: none; margin-top: 1px; }
+  #app-root .bf-brief-foot { margin: 9px 0 0; font-size: 9.5px; color: #8a8378; }
   #app-root .bf-pick-sec .bf-pick-banner { margin: 0 0 10px; padding: 12px 14px; border-radius: 12px; background: #141312; color: #fff; }
   #app-root .bf-pick-sec .bf-pick-banner b { display: block; font-size: 14px; font-weight: 900; letter-spacing: -0.3px; }
   #app-root .bf-pick-sec .bf-pick-banner b em { font-style: normal; color: #E4FF1A; }
@@ -2191,7 +2198,18 @@ async function renderPublicSite(root) {
         { tag: "라이브 한정 할인", c: "blue", when: "11.23 ~ 12.2 중 8일 · 19~21시", desc: "라이브 방송 중에만 받는 할인·쿠폰이에요. 일부 방송은 5~10% 장바구니 쿠폰까지.", s: st(at(2026, 11, 23, 0), T_END) },
         { tag: "무료배송·무탠다드", c: "gray", when: "11.30(월) ~ 12.1(화)", desc: "4회차는 무료배송 데이 + 무신사 스탠다드 집중 할인이에요.", s: st(at(2026, 11, 30, 0), at(2026, 12, 2, 0)) },
       ];
+      // 오늘 무신사에 뜬 혜택 브리핑 (bf.brief["YYYY-MM-DD"] = { at, lines:[{tag,c,text}], note }) — 예약 작업이 매일 채워요
+      const BR = BFD.brief || {};
+      const tk = (() => { const c = kp(now); return `${c.y}-${pad(c.m)}-${pad(c.d)}`; })();
+      const bk = Object.keys(BR).filter((k) => k <= tk).sort().pop();
+      const br = bk ? BR[bk] : null;
+      const briefHtml = br && Array.isArray(br.lines) && br.lines.length ? `<div class="bf-brief">
+          <p class="bf-brief-h">📡 ${bk === tk ? "오늘" : `${Number(bk.slice(5, 7))}/${Number(bk.slice(8, 10))}`} 무신사에 뜬 혜택<small>${esc(`${Number(bk.slice(5, 7))}/${Number(bk.slice(8, 10))}${br.at ? " " + br.at : ""} 업데이트`)}</small></p>
+          <ul>${br.lines.map((l) => `<li>${l.tag ? `<span class="bf-cp-tag c-${esc(l.c || "black")}">${esc(l.tag)}</span>` : ""}<span class="t">${esc(l.text)}</span></li>`).join("")}</ul>
+          ${br.note ? `<p class="bf-brief-foot">${esc(br.note)}</p>` : ""}
+        </div>` : "";
       return `<div class="bf-sec" id="bf-benefit">${secHead("🎟️", "쿠폰·혜택 정리", "날짜만 보면 끝")}
+        ${briefHtml}
         <div class="bf-cps">${B.map((b) => `<div class="bf-cp ${b.s[0]}">
           <span class="bf-cp-tag c-${b.c}">${esc(b.tag)}</span>
           <div class="bf-cp-body"><p class="bf-cp-when">${esc(b.when)}</p><p class="bf-cp-desc">${esc(b.desc)}</p></div>
