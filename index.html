@@ -680,6 +680,11 @@
   #app-root .sp-chips button { border: 1px solid var(--line); background: #fff; border-radius: 20px; padding: 7px 14px; font-size: 12.5px; font-weight: 800; color: #141312; cursor: pointer; }
   #app-root .sp-chips button.active { background: #141312; color: #fff; border-color: #141312; }
   #app-root .sp-chips[hidden] { display: none; }
+  #app-root #br-sty button.br-trend { border-color: #ff5a2a; color: #ff3d3f; }
+  #app-root #br-sty button.br-trend.active { background: linear-gradient(135deg, #ff7a2f, #ff2d3f); color: #fff; border-color: transparent; }
+  #app-root .br-note { margin: 6px 0 2px; font-size: 11px; color: #8a847b; }
+  #app-root .br-rank { position: absolute; left: 6px; top: 6px; min-width: 22px; height: 22px; border-radius: 6px; background: #141312; color: #fff; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
+  #app-root .br-rank.top { background: #ff3d3f; }
   #app-root .sp-chips button.sp-lv { border-color: #141312; }
   #app-root .sp-sep { width: 1px; align-self: stretch; background: var(--line); margin: 4px 4px; }
   #app-root #cat-age { margin-top: 0; }
@@ -1969,6 +1974,8 @@ async function renderPublicSite(root) {
     return true;
   })();
   // 가격 표시: 정가 취소선 + 블프 할인가. 시안은 ?mock=1(예시가) / ?mock=q(???)
+  // 나이대별 브랜드 탭: 미리보기(?awards=1)이거나 관리자에서 켰을 때(main.brandsOn)만
+  const BR_ON = (() => { try { if (new URLSearchParams(location.search).get("awards") === "1") return true; } catch (e) {} return !!(ADMIN && ADMIN.brandsOn); })();
   const AW_MOCK = (() => { try { return new URLSearchParams(location.search).get("mock") || ""; } catch (e) { return ""; } })();
   const won = (n) => Number(n).toLocaleString("ko-KR");
   function awPriceHtml(it) {
@@ -2048,6 +2055,7 @@ async function renderPublicSite(root) {
       <button data-tab="outfits" class="active">실착</button>
       <button data-tab="stories">릴스 꿀템</button>
       <button data-tab="picks">추천 브랜드+꿀템</button>
+      ${BR_ON ? `<button data-tab="brands">나이대별 브랜드</button>` : ""}
       <button data-tab="cats">카테고리 꿀템</button>
       <button data-tab="mood">분위기별</button>
       <button data-tab="starter">스타터팩</button>
@@ -2099,6 +2107,14 @@ async function renderPublicSite(root) {
         </div>
         <div id="ep-list"></div>
       </section>
+      ${BR_ON ? `
+      <section id="tab-brands" class="section">
+        <p class="tab-intro">무신사 주간 랭킹 기준 · 나이대·스타일별로 제일 많이 사는 브랜드 TOP 10</p>
+        <div class="sp-chips" id="br-sex"><button type="button" data-v="M" class="active">브로</button><button type="button" data-v="F">시스터</button></div>
+        <div class="sp-chips" id="br-age"><button type="button" data-v="10대">10대</button><button type="button" data-v="20대" class="active">20대</button><button type="button" data-v="30대">30대</button></div>
+        <div class="sp-chips" id="br-sty"></div>
+        <div id="br-list"><p class="rec-loading">불러오는 중…</p></div>
+      </section>` : ""}
 
       <section id="tab-cats" class="section">
         <div class="sp-chips" id="cat-sex"><button type="button" data-s="" class="active">전체 인기</button><button type="button" data-s="M">브로</button><button type="button" data-s="F">시스터</button><button type="button" data-s="acc">액세서리</button><button type="button" data-s="shoe">신발</button><button type="button" data-s="bag">가방</button></div>
@@ -2650,6 +2666,44 @@ async function renderPublicSite(root) {
       </div>`;
     }).join("") : `<p class="ep-empty">릴스 꿀템이 곧 올라와요 🎵</p>`;
 
+    // ---------- 나이대별 브랜드 (site_data id='brands') ----------
+    if (BR_ON && root.querySelector("#tab-brands")) {
+      const bBox = root.querySelector("#br-list"), styBox = root.querySelector("#br-sty");
+      const bst = Object.assign({ sex: "M", age: "20대", sty: "캐주얼" }, readUI().br || {});
+      let BRD = null;
+      const STY = ["캐주얼", "스트릿", "포멀", "핀터"];
+      const drawBr = () => {
+        if (!BRD) return;
+        const styles = [...STY, ...(bst.sex === "M" && bst.age === "20대" && BRD.groups.some((g) => g.key === "M|20대|트렌드세터") ? ["트렌드세터"] : [])];
+        if (!styles.includes(bst.sty)) bst.sty = "캐주얼";
+        styBox.innerHTML = styles.map((v) => `<button type="button" data-v="${v}" class="${v === "트렌드세터" ? "br-trend " : ""}${v === bst.sty ? "active" : ""}">${v === "트렌드세터" ? "🔥 요즘 트렌드세터" : v}</button>`).join("");
+        ["#br-sex", "#br-age"].forEach((q, i) => root.querySelectorAll(q + " button").forEach((b) => b.classList.toggle("active", b.dataset.v === (i ? bst.age : bst.sex))));
+        const g = BRD.groups.find((x) => x.key === `${bst.sex}|${bst.age}|${bst.sty}`);
+        const note = bst.sty === "트렌드세터" ? `<p class="br-note">요즘 제일 앞서가는 패션 계정들이 실제로 고른 브랜드예요</p>` : "";
+        bBox.innerHTML = note + (g && g.brands.length ? g.brands.map((B, i) => {
+          const items = B.items.map((x) => ({ brand: B.b, name: x.n, img: "https://image.msscdn.net" + x.i, link: "https://www.musinsa.com/curator/goods/" + x.l }));
+          const first = items[0];
+          return `<div class="rec-row">
+            <a class="rec-thumb cat-thumb" href="${esc(first.link)}" target="_blank" rel="noopener" style="position:relative">
+              <img src="${esc(first.img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              <span class="br-rank${i < 3 ? " top" : ""}">${i + 1}</span>
+              <span class="cat-thumb-name">${esc(B.b)}</span>
+            </a>
+            <div class="rec-body">
+              <div class="rec-head"><p class="story-title" style="margin:0">${i + 1}. ${esc(B.b)}<small>옆으로 넘겨보세요 →</small></p></div>
+              <div class="rec-scroll">${items.map(prod).join("")}</div>
+            </div>
+          </div>`;
+        }).join("") : `<p class="ep-empty">곧 올라와요</p>`);
+        writeUI({ br: Object.assign({}, bst) });
+      };
+      [["#br-sex", "sex"], ["#br-age", "age"]].forEach(([q, k]) => root.querySelectorAll(q + " button").forEach((b) => b.addEventListener("click", () => { bst[k] = b.dataset.v; drawBr(); })));
+      styBox.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; bst.sty = b.dataset.v; drawBr(); });
+      supabaseClient.from("site_data").select("value").eq("id", "brands").single()
+        .then(({ data }) => { BRD = (data && data.value) || null; if (BRD) drawBr(); else bBox.innerHTML = `<p class="ep-empty">곧 올라와요</p>`; })
+        .catch(() => { bBox.innerHTML = `<p class="ep-empty">잠시 후 다시 눌러 주세요</p>`; });
+    }
+
     const cats = (ADMIN && Array.isArray(ADMIN.catPicks)) ? ADMIN.catPicks : [];
     const cBox = root.querySelector("#cat-list");
     const catRow = (c, href) => {
@@ -2759,7 +2813,7 @@ async function renderPublicSite(root) {
   })();
 
   // ---------- 탭 ----------
-  const TAB_ORDER = BF_ON ? ["bf", "outfits", "stories", "picks", "cats", "mood", "starter", "levelup"] : ["outfits", "stories", "picks", "cats", "mood", "starter", "levelup"];
+  const TAB_ORDER = [BF_ON ? "bf" : "", "outfits", "stories", "picks", BR_ON ? "brands" : "", "cats", "mood", "starter", "levelup"].filter(Boolean);
   const buttons = root.querySelectorAll("nav.tabs button");
   const slider = root.querySelector("#tab-slider");
   const viewport = root.querySelector("#tab-viewport");
