@@ -1,6 +1,6 @@
 // 무신사 쿠폰함 → MD STUDIO "지금 쓰기 좋은 쿠폰" 수집기
 // 무신사 탭(www.musinsa.com, 로그인 상태)에서 실행. 결과 JSON은 window.__cpData 에 담기고, 노란 COPY 버튼으로 복사.
-(async () => {
+window.__cpRun = async () => {
   const EX = /깜짝|생일|정기|베네피아|큐레이터|등급|웰컴|신규|가입|첫 ?구매|앱 ?전용|임직원|제휴|카드|페이|뷰티|키즈|아동|우먼|여성|라이프|홈|반려|골프|예약 ?배송|재구매|리뷰|VIP|매일 새로운 추천|화이트|좋은느낌|글램팜|셀렉스|생리|화장|스킨|향수|쿠션/i;
   const won = (n) => n >= 10000 && n % 10000 === 0 ? n / 10000 + "만원" : n >= 1000 && n % 1000 === 0 ? n / 1000 + "천원" : Number(n).toLocaleString() + "원";
   const all = [];
@@ -86,5 +86,17 @@
   btn.textContent = "COPY " + list.length;
   btn.onclick = async () => { try { await navigator.clipboard.writeText(window.__cpData); btn.textContent = "OK " + window.__cpData.length; } catch (e) { btn.textContent = "FAIL " + e.message; } };
   window.scrollTo(0, 0);
+  // 빠른 모드: window.__cpLoop = 분(예: 5) 이면, 관리자 창에 바로 보내 저장하고 N분마다 다시 돌아요
+  if (window.__cpLoop) {
+    try {
+      if (!window.__cpAdmin || window.__cpAdmin.closed) { window.__cpAdmin = window.open("https://md-studio-lovat.vercel.app/admin.html#cpsink", "mdcpsink"); await new Promise((r) => setTimeout(r, 6000)); }
+      window.__cpAdmin.postMessage({ type: "mdcp", data: window.__cpData }, "https://md-studio-lovat.vercel.app");
+      window.__cpLast = new Date().toLocaleTimeString();
+      btn.textContent = "LIVE " + list.length + " · " + window.__cpLast;
+    } catch (e) { btn.textContent = "LIVE 실패 " + e.message; }
+    clearTimeout(window.__cpTimer);
+    window.__cpTimer = setTimeout(() => window.__cpRun(), Math.max(2, Number(window.__cpLoop)) * 60000);
+  }
   return list.length;
-})();
+};
+window.__cpRun();
