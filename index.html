@@ -387,7 +387,9 @@
   #app-root .aw-sale { display: flex; align-items: baseline; gap: 4px; font-size: 13px; font-weight: 900; color: #fff; letter-spacing: -0.3px; font-variant-numeric: tabular-nums; white-space: nowrap; }
   #app-root .aw-sale em { font-style: normal; color: #ff3d3f; font-size: 13px; }
   #app-root .aw-sale small { font-size: 8.5px; font-weight: 800; color: #141312; background: #E4FF1A; border-radius: 3px; padding: 1px 4px 0; letter-spacing: 0; align-self: center; }
-  #app-root .aw-real { align-self: flex-start; margin-top: 3px; font-size: 9.5px; font-weight: 800; color: #141312; background: #E4FF1A; border-radius: 4px; padding: 2px 5px 1px; letter-spacing: -0.2px; white-space: nowrap; }
+  #app-root .aw-row { display: flex; align-items: center; gap: 5px; }
+  #app-root .aw-bf { font-size: 8.5px; font-weight: 800; color: #141312; background: #E4FF1A; border-radius: 3px; padding: 1px 4px 0; }
+  #app-root .aw-real { align-self: flex-start; margin-top: 3px; font-size: 9.5px; font-weight: 800; color: #E4FF1A; background: rgba(228,255,26,.12); border: 1px solid rgba(228,255,26,.45); border-radius: 4px; padding: 2px 5px 1px; letter-spacing: -0.2px; white-space: nowrap; }
   #app-root .aw-soon { display: inline-block; margin-left: 7px; vertical-align: 3px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px; color: #141312; background: #e9e2d6; border-radius: 999px; padding: 2px 7px; }
   #app-root .aw-body { position: relative; }
   #app-root .aw.is-teaser .aw-scroll { filter: blur(6px); pointer-events: none; user-select: none; -webkit-user-select: none; }
@@ -1849,7 +1851,7 @@ async function renderPublicSite(root) {
     const pct = Math.round((1 - bp / it.price) * 100);
     const pre = it.sale && it.sale < it.price ? it.sale : 0; // 블프 직전 할인가
     const real = pre && bp < pre ? Math.round((1 - bp / pre) * 100) : 0;
-    return `<p class="aw-price"><s>${won(it.price)}원</s><span class="aw-sale"><small>블프가</small><em>${pct}%</em>${won(bp)}원</span>${real ? `<span class="aw-real">직전가보다 -${real}%</span>` : ""}</p>`;
+    return `<p class="aw-price"><span class="aw-row"><s>${won(it.price)}원</s><small class="aw-bf">블프가</small></span><span class="aw-sale"><em>${pct}%</em>${won(bp)}원</span>${real ? `<span class="aw-real">직전가보다 -${real}%</span>` : ""}</p>`;
   }
   const BF_ON = (() => {
     const B = (ADMIN && ADMIN.bf) || {};
