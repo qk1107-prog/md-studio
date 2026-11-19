@@ -83,13 +83,13 @@
     groups.push({ key: "M|20대|트렌드세터", brands: top });
   }
 
-  // 후기 확인 (후기 점수 85점 미만 & 후기 5개 이상인 상품은 뒤로, 상품당 최대 6개)
+  // 후기 확인 (후기 점수 85점 미만 & 후기 5개 이상인 상품은 뒤로, 상품당 최대 12개)
   const allIds = [...new Set([].concat(...groups.map((g) => [].concat(...g.brands.map((b) => b.items.map((x) => x.id))))))].filter((id) => !info[id]);
   await fetchInfo(allIds);
   groups.forEach((g) => g.brands.forEach((B) => {
     const ok = (x) => { const f = info[x.id]; return !f || !f.isSoldOut; };
     const good = (x) => { const f = info[x.id]; return !f || f.reviewCount < 5 || f.reviewScore >= 85; };
-    B.items = [...B.items.filter((x) => ok(x) && good(x)), ...B.items.filter((x) => ok(x) && !good(x))].slice(0, 6);
+    B.items = [...B.items.filter((x) => ok(x) && good(x)), ...B.items.filter((x) => ok(x) && !good(x))].slice(0, 12);
   }));
 
   // 큐레이터 링크 (localStorage 캐시)

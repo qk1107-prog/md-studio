@@ -1805,7 +1805,13 @@ async function renderPublicSite(root) {
   // 카테고리 꿀템 전체보기 (릴스 꿀템 전체보기와 같은 화면)
   async function openCat(idx) {
     let c;
-    if (String(idx).includes("|")) {
+    if (String(idx).startsWith("br:")) {
+      const [gk, bi] = String(idx).slice(3).split("~");
+      let D = window.__mdBRD;
+      if (!D) { try { const r = await supabaseClient.from("site_data").select("value").eq("id", "brands").single(); D = window.__mdBRD = r.data && r.data.value; } catch (e) {} }
+      const g = D && (D.groups || []).find((x) => x.key === gk); const B = g && g.brands[Number(bi)];
+      if (B) { const [sx, ag, st] = gk.split("|"); c = { title: `${Number(bi) + 1}. ${B.b}`, sub: `${sx === "F" ? "시스터" : "브로"} ${ag} ${st}`, cat: B.b, items: B.items.map((x) => ({ brand: B.b, name: x.n, img: "https://image.msscdn.net" + x.i, link: "https://www.musinsa.com/curator/goods/" + x.l })) }; }
+    } else if (String(idx).includes("|")) {
       await loadCatRank();
       const k = String(idx); const a = CATRANK && CATRANK[k];
       if (a) { const [sx, ag, ct] = k.split("|"); c = { cat: `${sx === "F" ? "시스터" : "브로"} ${ag} ${ct}`, items: a.map(crItem) }; }
@@ -1834,12 +1840,12 @@ async function renderPublicSite(root) {
         <div class="ep-sticky">
           <div class="feed-header">
             <button class="back-link" id="ep-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
-            <p class="feed-title">카테고리 꿀템</p>
+            <p class="feed-title">${c.sub ? "나이대별 브랜드" : "카테고리 꿀템"}</p>
           </div>
         </div>
         <div class="ep-wrap">
           <div class="ep-hero">
-            <span class="ep-series s-heart">${c.title ? "PICK" : "TOP 20"}</span>
+            <span class="ep-series s-heart">${c.sub ? esc(c.sub) : c.title ? "PICK" : "TOP 20"}</span>
             <h1 class="ep-hero-title">${esc(c.title || c.cat + " TOP 20")}</h1>
           </div>
           <div id="ep-sections">
@@ -1871,6 +1877,7 @@ async function renderPublicSite(root) {
     else if (location.hash === "#bp") openPicks();
     else if (location.hash === "#cps") openCoupons();
     else if (/^#cp=\d+/.test(location.hash)) openCoupon(location.hash.slice(4));
+    else if (/^#br=/.test(location.hash)) openCat("br:" + decodeURIComponent(location.hash.slice(4)));
     else if (cm) openCat(cm[0].startsWith("#ca=") ? decodeURIComponent(cm[1]) : cm[1]);
     else closeEpisode();
     const l = location.hash.match(/^#look=([\w-]+)/);
@@ -2633,7 +2640,7 @@ async function renderPublicSite(root) {
   }));
   renderRecList();
   root.querySelector("#ep-list").addEventListener("click", (e) => {
-    if (e.target.closest('a[href^="#ep="], a[href^="#st="], a[href^="#ct="], a[href^="#ca="], a[href^="#sp="], a[href^="#lp="], a[href="#bp"]')) openedFromList = true;
+    if (e.target.closest('a[href^="#ep="], a[href^="#st="], a[href^="#ct="], a[href^="#ca="], a[href^="#br="], a[href^="#sp="], a[href^="#lp="], a[href="#bp"]')) openedFromList = true;
   });
 
   // ---------- 실착: 분류(타이트 컷 → 전체 컷)마다 9개 + 더보기 ----------
@@ -2712,7 +2719,7 @@ async function renderPublicSite(root) {
               <span class="cat-thumb-name">${esc(B.b)}</span>
             </a>
             <div class="rec-body">
-              <div class="rec-head"><p class="story-title" style="margin:0">${i + 1}. ${esc(B.b)}<small>옆으로 넘겨보세요 →</small></p></div>
+              <div class="rec-head"><p class="story-title" style="margin:0">${i + 1}. ${esc(B.b)}<small>옆으로 넘겨보세요 →</small></p><a class="rec-more" href="#br=${encodeURIComponent(g.key + "~" + i)}">전체보기</a></div>
               <div class="rec-scroll">${items.map(prod).join("")}</div>
             </div>
           </div>`;
@@ -2722,7 +2729,7 @@ async function renderPublicSite(root) {
       [["#br-sex", "sex"], ["#br-age", "age"]].forEach(([q, k]) => root.querySelectorAll(q + " button").forEach((b) => b.addEventListener("click", () => { bst[k] = b.dataset.v; drawBr(); })));
       styBox.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; bst.sty = b.dataset.v; drawBr(); });
       supabaseClient.from("site_data").select("value").eq("id", "brands").single()
-        .then(({ data }) => { BRD = (data && data.value) || null; if (BRD) drawBr(); else bBox.innerHTML = `<p class="ep-empty">곧 올라와요</p>`; })
+        .then(({ data }) => { BRD = (data && data.value) || null; window.__mdBRD = BRD; if (BRD) drawBr(); else bBox.innerHTML = `<p class="ep-empty">곧 올라와요</p>`; })
         .catch(() => { bBox.innerHTML = `<p class="ep-empty">잠시 후 다시 눌러 주세요</p>`; });
     }
 
@@ -2915,6 +2922,7 @@ async function renderPublicSite(root) {
     : location.hash.startsWith("#sp=") ? TAB_ORDER.indexOf("starter")
     : location.hash.startsWith("#lp=") ? TAB_ORDER.indexOf("levelup")
     : (location.hash.startsWith("#ct=") || location.hash.startsWith("#ca=")) ? TAB_ORDER.indexOf("cats")
+    : (location.hash.startsWith("#br=") && TAB_ORDER.includes("brands")) ? TAB_ORDER.indexOf("brands")
     : (BF_ON && !savedUI.tabKey) ? 0
     : (savedUI.tabKey && TAB_ORDER.includes(savedUI.tabKey)) ? TAB_ORDER.indexOf(savedUI.tabKey) : 0;
   setActive(startTab, { instant: true });
@@ -2930,7 +2938,7 @@ async function renderPublicSite(root) {
     }
   } catch (e) {}
   window.addEventListener("hashchange", routeFromHash);
-  if (/^#(ep|st|ct|ca|sp|lp|look|looks|cp)=/.test(location.hash) || location.hash === "#bp" || location.hash === "#cps") routeFromHash();
+  if (/^#(ep|st|ct|ca|br|sp|lp|look|looks|cp)=/.test(location.hash) || location.hash === "#bp" || location.hash === "#cps") routeFromHash();
   loadCoupons().then(renderCouponStrip);
   finishIntro();
 
