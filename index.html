@@ -387,6 +387,7 @@
   #app-root .aw-sale { display: flex; align-items: baseline; gap: 4px; font-size: 13px; font-weight: 900; color: #fff; letter-spacing: -0.3px; font-variant-numeric: tabular-nums; white-space: nowrap; }
   #app-root .aw-sale em { font-style: normal; color: #ff3d3f; font-size: 13px; }
   #app-root .aw-sale small { font-size: 8.5px; font-weight: 800; color: #141312; background: #E4FF1A; border-radius: 3px; padding: 1px 4px 0; letter-spacing: 0; align-self: center; }
+  #app-root .aw-real { align-self: flex-start; margin-top: 3px; font-size: 9.5px; font-weight: 800; color: #141312; background: #E4FF1A; border-radius: 4px; padding: 2px 5px 1px; letter-spacing: -0.2px; white-space: nowrap; }
   #app-root .aw-soon { display: inline-block; margin-left: 7px; vertical-align: 3px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px; color: #141312; background: #e9e2d6; border-radius: 999px; padding: 2px 7px; }
   #app-root .aw-body { position: relative; }
   #app-root .aw.is-teaser .aw-scroll { filter: blur(6px); pointer-events: none; user-select: none; -webkit-user-select: none; }
@@ -1838,10 +1839,17 @@ async function renderPublicSite(root) {
     const showAll = AW_MOCK || (AWARDS && AWARDS.showPrice);
     if (!showAll) return "";
     if (AW_MOCK === "q") return `<p class="aw-price"><s>${won(it.price)}원</s><span class="aw-sale"><small>블프가</small>???,???원</span></p>`;
-    const sp = it.bfPrice || it.sale;
-    if (!sp || sp >= it.price) return `<p class="aw-price"><span class="aw-sale">${won(it.price)}원</span></p>`;
-    const pct = Math.round((1 - sp / it.price) * 100);
-    return `<p class="aw-price"><s>${won(it.price)}원</s><span class="aw-sale"><em>${pct}%</em>${won(sp)}원</span></p>`;
+    // 블프가: 실제 값(bfPrice) 우선, 시안(?mock=1)에서는 지금 할인율 +10%p 예시가
+    let bp = it.bfPrice || 0;
+    if (!bp && AW_MOCK) {
+      const curRate = it.sale && it.sale < it.price ? Math.round((1 - it.sale / it.price) * 100) : 0;
+      bp = Math.round(it.price * (1 - Math.min(70, curRate + 10) / 100) / 100) * 100;
+    }
+    if (!bp || bp >= it.price) return `<p class="aw-price"><span class="aw-sale">${won(it.sale || it.price)}원</span></p>`;
+    const pct = Math.round((1 - bp / it.price) * 100);
+    const pre = it.sale && it.sale < it.price ? it.sale : 0; // 블프 직전 할인가
+    const real = pre && bp < pre ? Math.round((1 - bp / pre) * 100) : 0;
+    return `<p class="aw-price"><s>${won(it.price)}원</s><span class="aw-sale"><small>블프가</small><em>${pct}%</em>${won(bp)}원</span>${real ? `<span class="aw-real">직전가보다 -${real}%</span>` : ""}</p>`;
   }
   const BF_ON = (() => {
     const B = (ADMIN && ADMIN.bf) || {};
