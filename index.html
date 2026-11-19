@@ -1699,8 +1699,8 @@ async function renderPublicSite(root) {
         </div>
         <div class="ep-wrap">
           <div class="ep-hero">
-            <span class="ep-series s-heart">TOP 20</span>
-            <h1 class="ep-hero-title">${esc(c.cat)} TOP 20</h1>
+            <span class="ep-series s-heart">${c.title ? "PICK" : "TOP 20"}</span>
+            <h1 class="ep-hero-title">${esc(c.title || c.cat + " TOP 20")}</h1>
           </div>
           <div id="ep-sections">
             <div class="ep-brand-row">
@@ -2525,7 +2525,7 @@ async function renderPublicSite(root) {
         </a>
         <div class="rec-body">
           <div class="rec-head">
-            <p class="story-title" style="margin:0">${esc(c.cat)} TOP 20<small>옆으로 넘겨보세요 →</small></p>
+            <p class="story-title" style="margin:0">${esc(c.title || c.cat + " TOP 20")}<small>옆으로 넘겨보세요 →</small></p>
             <a class="rec-more" href="${href}">전체보기</a>
           </div>
           <div class="rec-scroll">${c.items.slice(0, 20).map(prod).join("")}</div>
@@ -2547,7 +2547,7 @@ async function renderPublicSite(root) {
     const sexBox = root.querySelector("#cat-sex"), ageBox = root.querySelector("#cat-age");
     const drawPickList = (key, pre, suffix) => {
       const list = ((ADMIN && Array.isArray(ADMIN[key])) ? ADMIN[key] : []).filter((c) => (c.items || []).length);
-      if (cBox) cBox.innerHTML = list.length ? list.map((c, i) => catRow({ cat: c.cat + suffix, items: c.items, thumb: c.thumb }, `#ct=${pre}${i}`)).join("") : `<p class="ep-empty">곧 올라와요</p>`;
+      if (cBox) cBox.innerHTML = list.length ? list.map((c, i) => catRow({ cat: c.cat + suffix, title: c.title, items: c.items, thumb: c.thumb }, `#ct=${pre}${i}`)).join("") : `<p class="ep-empty">곧 올라와요</p>`;
     };
     if (sexBox) sexBox.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
       catSex = b.dataset.s;
