@@ -2038,7 +2038,15 @@ async function renderPublicSite(root) {
     const gidOf = (p) => { const m = String((p && p.img) || "").match(/\/(\d{5,9})\/(?:detail_)?\d{5,9}_/); return m ? m[1] : (p && p.id ? String(p.id) : ""); };
     const PRE_SNAPS = (BFD.pre && BFD.pre.snaps) || {};
     const PRE_KEY = Object.keys(PRE_SNAPS).filter((k) => k <= "2026-11-20").sort().pop() || "";
-    const PRE = PRE_KEY ? PRE_SNAPS[PRE_KEY] : {};
+    // 블프 직전가: 11/20 이전 스냅샷들 중 상품별 가장 낮은 값 (블프 직전에 가격 올린 걸 걸러내요)
+    const PRE = (() => {
+      const o = {};
+      Object.keys(PRE_SNAPS).filter((k) => k <= "2026-11-20").forEach((k) => {
+        const s = PRE_SNAPS[k] || {};
+        Object.keys(s).forEach((id) => { const v = s[id]; if (!v || !v[0]) return; if (!o[id] || Number(v[0]) < Number(o[id][0])) o[id] = [v[0], Math.max(Number(v[1] || 0), Number((o[id] && o[id][1]) || 0))]; });
+      });
+      return o;
+    })();
     const NOWP = BFD.now || {};
     const PRE_LABEL = PRE_KEY ? `${Number(PRE_KEY.slice(5, 7))}/${Number(PRE_KEY.slice(8, 10))}` : "";
     const priceNow = (p, id) => {
