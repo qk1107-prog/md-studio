@@ -2314,7 +2314,7 @@ async function renderPublicSite(root) {
               ${tile("bf-bday", "🏷️", "브랜드특가", "브랜드별 꿀템", cd(T_OPEN), false, (BFD.sigBrands || []).length)}
             </div>
           </div>
-          ${pickSec()}${navSec(false)}${sigSec(false, {})}${brandDaySec(at(2026, 11, 22, 20))}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec("")}`;
+          ${navSec(false)}${sigSec(false, {})}${brandDaySec(at(2026, 11, 22, 20))}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec("")}`;
       } else {
         phase = "live";
         const day = (BFD.days && BFD.days[key]) || (preview ? (BFD.sample || {}) : {});
@@ -2338,7 +2338,7 @@ async function renderPublicSite(root) {
               ${tile("bf-brand", "🏷️", "브랜드특가", "오늘의 브랜드", cd(mid), false, brands.length)}
             </div>
           </div>
-          ${alertSec()}${pickSec()}
+          ${alertSec()}
           ${navSec(true)}
           <div class="bf-sec" id="bf-hot">${secHead("🔥", "오늘의 하루특가", "오늘 자정에 끝나요")}${curated("오늘 하루특가 전체 중 인기·할인 좋은 꿀템만 골랐어요")}${priceNote()}${chipsGrid("hot", hotGroups, true)}</div>
           ${sigSec(true, day)}
