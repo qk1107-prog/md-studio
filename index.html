@@ -2200,11 +2200,11 @@ async function renderPublicSite(root) {
       </div>`;
     }
 
-    // 시그니처특가 (할인율 구간별)
+    // 시그니처특가 (카테고리별, 카드 태그 = 예정 할인율 구간)
     function sigSec(live, day) {
       const groups = (live && day.sig && day.sig.length) ? [{ label: "오늘 꿀템", items: day.sig }] :
-        (BFD.sigPreview || []).map((g) => ({ label: g.label.replace(" 할인", "").replace(/ /g, ""), sub: g.items.length, items: g.items.map((p) => Object.assign({}, p, { tag: g.label.replace(" 할인", "").replace(/ /g, "") })) }));
-      return `<div class="bf-sec" id="bf-sig">${secHead("✨", "시그니처특가", live ? "블프 기간 내내 이 가격" : "할인율 구간별 · 후기 많은 순", "꿀템 선별")}${curated("시그니처특가 1,500여 개 중 후기·할인율 좋은 꿀템만 골랐어요")}
+        (BFD.sigPreview || []).map((g) => ({ label: g.label.replace(" 할인", "").replace(/ /g, ""), sub: g.items.length, items: g.items.map((p) => Object.assign({}, p, { tag: p.band || g.label.replace(" 할인", "").replace(/ /g, "") })) }));
+      return `<div class="bf-sec" id="bf-sig">${secHead("✨", "시그니처특가", live ? "블프 기간 내내 이 가격" : "카테고리별 · 후기 많은 순", "꿀템 선별")}${curated("시그니처특가 1,500여 개 중 후기·할인율 좋은 꿀템만 골랐어요")}
         ${!live ? `<p class="bf-hint">11.22 19시 오픈 때 이 할인율로 열릴 예정이에요 (가격은 지금 기준, 오픈 때 내려가요). 장바구니에 미리 담아두세요!</p>` : ""}
         ${chipsGrid("sig", groups, false)}
       </div>`;
