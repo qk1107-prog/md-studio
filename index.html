@@ -2048,7 +2048,12 @@ async function renderPublicSite(root) {
         }
         return `<p class="pr">${esc(won(cur))}</p><p class="pt same">직전가랑 같아요</p>`;
       }
-      return p.sale ? `<p class="pr">${p.rate ? `<i>${esc(p.rate)}%</i>` : ""}${esc(won(p.sale))}</p>` : "";
+      // 평소: 정가 취소선 + 할인율·할인가 (정가는 직전 스냅샷 → 없으면 할인율로 역산)
+      if (!p.sale) return "";
+      let nor = PRE[id] ? Number(PRE[id][1]) : 0;
+      if (!nor && p.rate) nor = Math.round(p.sale / (1 - p.rate / 100) / 100) * 100;
+      const pct = nor > p.sale ? Math.round((1 - p.sale / nor) * 100) : 0;
+      return `${pct ? `<p class="pt"><s>${esc(won(nor))}</s></p>` : ""}<p class="pr">${pct ? `<i>${pct}%</i>` : ""}${esc(won(p.sale))}</p>`;
     }
     function realBadge(p) {
       const id = gidOf(p), pre = PRE[id] ? Number(PRE[id][0]) : 0;
