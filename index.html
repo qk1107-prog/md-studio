@@ -1148,6 +1148,8 @@
 #app-root #tab-bf > .cpz { margin-top: 10px; }
 #app-root .cpz-scroll { margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; scroll-padding-left: 20px; }
 #app-root .cpz .cpz-ticker, #app-root .cpz > .cpz-tk { }
+
+#app-root .cpz-scroll, #app-root .aw-scroll, #app-root .bf-chips, #app-root .polaroid-scroll, #app-root .rec-scroll, #app-root .rec-chips, #app-root .tz-al-links { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -3123,7 +3125,9 @@ async function renderPublicSite(root) {
 
   // 스와이프 제스처 (가로로 넘기는 사진 줄 위에서는 탭이 안 넘어가게)
   let touchStartX = 0, touchStartY = 0, touchCurrentX = 0, dragging = false, viewportWidth = 0, decided = false, horizontal = false;
+  const SWIPE_TABS = false; // 손가락으로 옆으로 밀어서 탭 넘기기 끔 (상품·쿠폰 넘기다 탭이 넘어가는 문제) — 탭은 버튼으로만
   viewport.addEventListener("touchstart", (e) => {
+    if (!SWIPE_TABS) { dragging = false; return; }
     if (e.target.closest(".polaroid-scroll, .rec-scroll, .rec-chips")) { dragging = false; return; }
     dragging = true; decided = false; horizontal = false;
     touchStartX = touchCurrentX = e.touches[0].clientX;
