@@ -65,11 +65,17 @@ window.__bmRun = async (opts) => {
     const o = document.createElement("canvas"); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1; o.getContext("2d").drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height); return o;
   }
   const cache = new Map(); // gno -> cutout canvas (최근 것만)
+  // 대표 사진이 모델 컷이면, 상세 이미지(alt) 중 흰 배경 제품 컷을 찾아 씀
+  async function tryUrl(url) {
+    if (cache.has(url)) return cache.get(url);
+    let r = null;
+    try { const bmp = await loadImg(url); const c = toCanvas(bmp, 520); bmp.close && bmp.close(); if (floodAlpha(c)) { S.flood++; r = crop(c); } } catch (e) {}
+    cache.set(url, r); if (cache.size > 400) cache.delete(cache.keys().next().value); return r;
+  }
   async function cutout(it) {
-    if (cache.has(it.img)) return cache.get(it.img);
-    const bmp = await loadImg(it.img); const c = toCanvas(bmp, 520); bmp.close && bmp.close();
-    let ml = false; if (floodAlpha(c)) S.flood++; else { ml = true; S.ml++; }
-    const r = ml ? null : crop(c); cache.set(it.img, r); if (cache.size > 160) cache.delete(cache.keys().next().value); return r;
+    const urls = [it.img, ...((it.alt || []).filter((u) => u !== it.img))];
+    for (const u of urls) { const r = await tryUrl(u); if (r && r.width > 60 && r.height > 60) { it.flat = u; return r; } }
+    S.ml++; return null;
   }
   // ---------- 배치 ----------
   const BOX = { o: [80, 60, 440, 720], t: [570, 50, 440, 540], b: [565, 600, 450, 710], s: [70, 880, 460, 360] };
@@ -81,7 +87,7 @@ window.__bmRun = async (opts) => {
     const role = (r) => st.items.find((i) => i.role === r);
     const o = role("아우터"), t = role("상의"), b = role("하의"), s = role("신발");
     const [co, ct, cb, cs] = await Promise.all([o, t, b, s].map((i) => (i ? cutout(i).catch(() => null) : null)));
-    if (!co || !cb || (t && !ct)) throw new Error("model photo");
+    if (!co || !cb) throw new Error("model photo");
     const c = document.createElement("canvas"); c.width = W; c.height = H; const ctx = c.getContext("2d"); ctx.drawImage(bg, 0, 0);
     const box = Object.assign({}, BOX);
     if (!ct) { box.b = [565, 120, 450, 1120]; }
@@ -118,6 +124,8 @@ window.__bmRun = async (opts) => {
   };
   await Promise.all([1, 2, 3].map(worker));
   for (const pk of ["starter", "levelup"]) for (const sx of ["M", "F"]) for (const ag of ["10대", "20대", "30대"]) if (P[pk][sx] && P[pk][sx][ag]) P[pk][sx][ag] = P[pk][sx][ag].filter((c) => c.sets.length);
+  for (const pk of ["starter", "levelup"]) for (const sx of ["M", "F"]) for (const ag of ["10대", "20대", "30대"]) ((P[pk][sx] || {})[ag] || []).forEach((c) => c.sets.forEach((st) => st.items.forEach((i) => { delete i.alt; })));
+  if (!opts.only) P.ready = true;
   S.st = "saving";
   let ok = false; for (let k = 0; k < 5 && !ok; k++) { try { const { error } = await supabaseClient.from("site_data").upsert({ id: "packs", value: P }); if (error) throw error; ok = true; } catch (e) { await new Promise((r) => setTimeout(r, 4000)); } }
   S.st = ok ? "done" : "save fail"; window.__bmP = P;
