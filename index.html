@@ -1123,6 +1123,10 @@
   #app-root .bf-cp-desc { margin: 2px 0 0; font-size: 11px; line-height: 1.45; color: #6b665f; }
   #app-root .bf-cp-st { flex: none; font-size: 9.5px; font-weight: 800; color: #a9a196; }
   #app-root .bf-cp.on .bf-cp-st { color: #ff3d3f; }
+
+#app-root .tz-cd{display:block;margin-top:6px;font-style:normal;font-size:12px;font-weight:800;color:#ff3d3f;letter-spacing:-.2px}
+#app-root .tz-cd.live{color:#fff;background:#ff3d3f;border-radius:6px;padding:3px 7px;display:inline-block}
+#app-root .tz-sub small{font-size:11px;font-weight:500;color:#999;margin-left:4px}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2564,10 +2568,12 @@ async function renderPublicSite(root) {
       const groups = (T.groups || []).filter((g) => (g.items || []).length).map((g) => ({ label: g.label, items: g.items }));
       const nb = (T.newBrands || []).filter((b) => (b.items || []).length).map((b) => ({ label: b.brand, items: b.items }));
       if (!groups.length && !nb.length) return "";
-      const info = (T.info || []).map((x) => `<${x.link ? `a href="${esc(safeUrl(x.link))}" target="_blank" rel="noopener"` : "div"} class="tz-info"><b>${esc(x.t)}</b><span>${esc(x.d || "")}</span></${x.link ? "a" : "div"}>`).join("");
+      const br = (T.brands || []).filter((b) => (b.items || []).length).map((b) => ({ label: b.brand, sub: b.rate ? `~${b.rate}%` : "", items: b.items }));
+      const info = (T.info || []).map((x) => `<${x.link ? `a href="${esc(safeUrl(x.link))}" target="_blank" rel="noopener"` : "div"} class="tz-info"><b>${esc(x.t)}</b><span>${esc(x.d || "")}</span>${x.cd ? `<em class="tz-cd" data-cd="${esc(x.cd)}"></em>` : ""}</${x.link ? "a" : "div"}>`).join("");
       return `<div class="bf-sec bf-tease" id="bf-tease">${secHead("⚡", "프리오픈 · 티징 특가", "", "11.22(일) 19시 본편 전까지")}
         ${info ? `<div class="tz-infos">${info}</div>` : ""}
         ${groups.length ? `<p class="tz-sub">🛍️ 지금 사도 되는 프리오픈 상품</p><a class="tz-cpnote" href="https://www.musinsa.com/coupon" target="_blank" rel="noopener">🎟️ 사진 위 <b>'쿠폰 N%↓'</b> 붙은 상품은 할인 0%로 보여도, <b>쿠폰함에서 프리오픈 쿠폰 받으면</b> 그만큼 더 싸져요 → 쿠폰 받으러 가기</a>${chipsGrid("tease", groups, false)}` : ""}
+        ${br.length ? `<p class="tz-sub">🏷️ 프리오픈 브랜드별 특가 <small>브랜드 누르면 꿀템만 · 칩 옆 숫자 = 브랜드 최대 할인율</small></p>${chipsGrid("tzbr", br, false)}` : ""}
         ${nb.length ? `<p class="tz-sub">🆕 신규 브랜드 최대 30% 쿠폰</p><p class="tz-cpnote">🎟️ 제품 링크 들어가셔서 <b>30% 쿠폰 꼭 확인</b>하고 <b>쿠폰함에 받아두세요!</b></p>${chipsGrid("tznb", nb, false)}` : ""}
       </div>`;
     }
@@ -3310,6 +3316,27 @@ renderPublicSite(ROOT_EL);
       };
     },1200);
   }catch(e){}
+})();
+</script>
+
+<script>
+// 선착순 카운트다운: data-cd="2026-11-20T21:00+09:00,..." (가장 가까운 다음 오픈까지)
+(function(){
+  function f(n){return String(n).padStart(2,"0");}
+  function run(){
+    document.querySelectorAll(".tz-cd[data-cd]").forEach(function(el){
+      var ts=el.dataset.cd.split(",").map(function(x){return Date.parse(x.trim());}).filter(function(x){return x;}).sort(function(a,b){return a-b;});
+      var now=Date.now(), nx=ts.find(function(t){return t+30*6e4>now;});
+      if(!nx){el.textContent="";return;}
+      var d=nx-now;
+      if(d<=0){el.className="tz-cd live";el.textContent="🔥 지금 오픈! 서두르세요";return;}
+      el.className="tz-cd";
+      var h=Math.floor(d/36e5), m=Math.floor(d%36e5/6e4), s=Math.floor(d%6e4/1e3);
+      var dt=new Date(nx), lab=(dt.getMonth()+1)+"/"+dt.getDate()+" "+f(dt.getHours())+":"+f(dt.getMinutes());
+      el.textContent="⏰ "+lab+" 오픈까지 "+(h?h+"시간 ":"")+f(m)+"분 "+f(s)+"초";
+    });
+  }
+  setInterval(run,1000); document.addEventListener("DOMContentLoaded",run);
 })();
 </script>
 </body>
