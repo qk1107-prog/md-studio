@@ -1938,7 +1938,7 @@ async function renderPublicSite(root) {
   const savePsel = () => { try { localStorage.setItem("mds_psel", JSON.stringify(PSEL)); } catch (e) {} };
   function loadPacks() {
     if (PACKS) return Promise.resolve(PACKS);
-    if (!packsP) packsP = sdRow("packs").then(({ data }) => (PACKS = (data && data.value) || null)).catch(() => null).finally(() => { if (!PACKS) packsP = null; });
+    if (!packsP) packsP = sdRow("packs").then(({ data }) => (PACKS = (data && data.value && data.value.ready) ? data.value : null)).catch(() => null).finally(() => { if (!PACKS) packsP = null; });
     return packsP;
   }
   const OUTER_CATS = ["코트", "패딩", "자켓", "MA-1"];
