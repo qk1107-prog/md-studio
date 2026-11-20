@@ -3097,7 +3097,7 @@ async function renderPublicSite(root) {
     : location.hash.startsWith("#lp=") ? TAB_ORDER.indexOf("levelup")
     : (location.hash.startsWith("#ct=") || location.hash.startsWith("#ca=")) ? TAB_ORDER.indexOf("cats")
     : (location.hash.startsWith("#br=") && TAB_ORDER.includes("brands")) ? TAB_ORDER.indexOf("brands")
-    : (BF_ON && !savedUI.tabKey) ? 0
+    : BF_ON ? 0
     : (savedUI.tabKey && TAB_ORDER.includes(savedUI.tabKey)) ? TAB_ORDER.indexOf(savedUI.tabKey) : 0;
   setActive(startTab, { instant: true });
   const miniBtn = root.querySelector("#bf-mini");
