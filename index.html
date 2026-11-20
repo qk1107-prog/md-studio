@@ -901,6 +901,7 @@
   #app-root .bf-day.past { opacity: .35; }
   /* 오늘의 꿀템 허브 */
   #app-root .bf-hub { margin: 14px 0 0; }
+  #app-root #bf-topcard { margin: 0 0 14px; }
   #app-root .bf-hub-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 2px 8px; }
   #app-root .bf-h { margin: 0; font-size: 14.5px; font-weight: 900; letter-spacing: -0.6px; }
   #app-root .bf-h small { font-size: 10px; color: #ff3d3f; font-weight: 800; margin-left: 4px; letter-spacing: 0; }
@@ -1032,7 +1033,11 @@
   #app-root .bf-price-note s { text-decoration-color: #ff3d3f; text-decoration-thickness: 1.5px; }
   #app-root .bf-jump { position: sticky; top: 56px; z-index: 5; display: flex; gap: 5px; overflow-x: auto; margin: 14px -16px 0; padding: 8px 16px; background: rgba(255,255,255,.96); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); scrollbar-width: none; }
   #app-root .bf-jump::-webkit-scrollbar { display: none; }
-  #app-root .bf-jump button { flex: none; border: none; background: #f3f1ee; border-radius: 999px; padding: 6px 11px 5px; font-family: inherit; font-size: 11px; font-weight: 800; color: #141312; cursor: pointer; }
+  #app-root .bf-jump button { flex: none; border: none; background: #f3f1ee; border-radius: 999px; padding: 8px 13px 7px; font-family: inherit; font-size: 12.5px; font-weight: 900; color: #141312; cursor: pointer; letter-spacing: -0.3px; }
+  #app-root .bf-jump button.k0 { background: #141312; color: #fff; }
+  #app-root .bf-jump button.k1 { background: #ff3d3f; color: #fff; }
+  #app-root .bf-jump button.k2 { background: #5b2fd6; color: #fff; }
+  #app-root .bf-jump button.k3 { background: #fff; color: #141312; box-shadow: inset 0 0 0 1.5px #141312; }
   #app-root .bf-bens { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   #app-root .bf-ben { border-radius: 12px; background: #faf9f7; padding: 10px 10px 9px; border: 1px solid transparent; }
   #app-root .bf-ben.on { background: #fff; border-color: #141312; }
@@ -1173,6 +1178,7 @@
 #app-root .hotz-head small { font-size: 10.5px; font-weight: 700; color: #8a847b; }
 #app-root .hotz .cpz-live { vertical-align: 3px; }
 #app-root .hotz .bf-chips { margin: 0 0 10px; padding: 0; flex-wrap: wrap; overflow: visible; gap: 5px; }
+#app-root .hotz-title em { font-style: normal; color: #fff; background: linear-gradient(90deg, #ff3d3f, #ff7a2f); padding: 1px 7px 2px; border-radius: 6px; margin-left: 2px; }
 #app-root .hotz-more { display: block; width: 100%; margin: 10px 0 0; padding: 11px 0; border: 1px solid #141312; border-radius: 10px; background: #fff; font: inherit; font-size: 13px; font-weight: 900; color: #141312; cursor: pointer; }
 #app-root .hotz-more small { font-size: 11px; color: #ff3d3f; margin-left: 2px; }
 #app-root .hotz .bf-chips::-webkit-scrollbar { display: none; }
@@ -2774,8 +2780,8 @@ async function renderPublicSite(root) {
     function navSec(live) {
       const MC = BFD.mycart || {}; const mcOn = MC.on && (MC.items || []).length && (!MC.from || nowFn() >= Date.parse(MC.from) || preview);
       const L = live ? [...(mcOn ? [["bf-mycart", "🛒 광만두 장바구니"]] : []), ["bf-sig", "시그니처특가"], ["bf-pad", "블프 겨울 준비"], ["bf-hot", "하루특가"], ["bf-brand", "브랜드특가"], ["bf-bday", "브랜드데이"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
-        : [["bf-tease", "⚡ 프리오픈"], ["bf-pad", "블프 겨울 준비"], ["bf-sig", "시그니처특가"], ["bf-bday", "브랜드특가"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"], ["bf-live", "라이브"]];
-      return `<div class="bf-jump">${L.map(([id, t]) => `<button type="button" data-go="${id}">${t}</button>`).join("")}</div>`;
+        : [["bf-pad", "🧥 블프 겨울 준비"], ["bf-sig", "✨ 시그니처특가"], ["bf-tease", "⚡ 프리오픈"], ["bf-bday", "🏷️ 브랜드특가"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"], ["bf-live", "라이브"]];
+      return `<div class="bf-jump">${L.map(([id, t], i) => `<button type="button" data-go="${id}"${i < 4 ? ` class="k${i}"` : ""}>${t}</button>`).join("")}</div>`;
     }
 
     let phase = "";
@@ -2802,10 +2808,10 @@ async function renderPublicSite(root) {
       const rise = (H.rise || []).filter((x) => x && x.link);
       if (hotView === -2 && !rise.length) hotView = -1;
       const full = (hotView === -2 ? rise : hotView < 0 || !cats[hotView] ? mix : cats[hotView].items);
-      const LIM = 16, list = (hotOpen ? full : full.slice(0, LIM)).map((p) => { const r = Number(p.rate) || 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
+      const LIM = hotView >= 0 ? 6 : 8, list = (hotOpen ? full : full.slice(0, LIM)).map((p) => { const r = Number(p.rate) || 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
       const sig = (H.at || "") + hotView + list.length;
       const fresh = box.dataset.sig !== sig; box.dataset.sig = sig;
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 가장 핫한 아이템 중 꿀템<span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 가장 핫한 <em>아이템 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small></div>
         <div class="hotz-bar"><i></i></div>
         <div class="bf-chips"><button type="button" data-hv="-1" class="${hotView === -1 ? "active" : ""}">🔥 실시간 HOT</button>${rise.length ? `<button type="button" data-hv="-2" class="${hotView === -2 ? "active" : ""}">📈 급상승</button>` : ""}${cats.map((c, i) => `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`).join("")}</div>
         ${hotView === -2 ? `<p class="hotz-sub">📈 지금 갑자기 많이 찾는 상품</p>` : ""}${hotView >= 0 && cats[hotView] ? `<p class="hotz-sub">${esc((cats[hotView].grp ? cats[hotView].grp + " · " : "") + cats[hotView].cat)} 지금 제일 많이 보는 상품</p>` : ""}
@@ -2823,6 +2829,14 @@ async function renderPublicSite(root) {
       const t = Date.parse(el.dataset.hotat || ""); if (!t) { el.textContent = "실시간 트래픽 반영 중"; return; }
       const m = Math.max(0, Math.round((Date.now() - t) / 6e4));
       el.textContent = `실시간 트래픽 반영 · ${m < 1 ? "방금" : m < 60 ? m + "분 전" : Math.floor(m / 60) + "시간 전"} 업데이트 · 매시간 바뀌어요`;
+    }
+    function liftCard() {
+      const card = zone.querySelector(":scope > .bf-card"), bfSec = root.querySelector("#tab-bf");
+      if (!card || !bfSec) return;
+      let top = root.querySelector("#bf-topcard");
+      if (!top) { top = document.createElement("div"); top.id = "bf-topcard"; }
+      if (bfSec.firstChild !== top) bfSec.insertBefore(top, bfSec.firstChild);
+      top.replaceChildren(card);
     }
     function render() {
       setTimeout(renderHot, 0);
@@ -2853,7 +2867,7 @@ async function renderPublicSite(root) {
               ${tile("bf-bday", "🏷️", "브랜드특가", "브랜드별 꿀템", cd(T_OPEN), false, (BFD.sigBrands || []).length)}
             </div>
           </div>
-          ${navSec(false)}${teaseSec()}${padSec()}${sigSec(false, {})}${brandDaySec(at(2026, 11, 22, 20))}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec("")}`;
+          ${navSec(false)}${padSec()}${sigSec(false, {})}${teaseSec()}${brandDaySec(at(2026, 11, 22, 20))}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec("")}`;
       } else {
         phase = "live";
         const day = (BFD.days && BFD.days[key]) || (preview ? (BFD.sample || {}) : {});
@@ -2886,7 +2900,8 @@ async function renderPublicSite(root) {
           <div class="bf-sec" id="bf-brand">${secHead("🏷️", "오늘의 브랜드특가", "브랜드 누르면 꿀템만")}${curated("오늘 열린 브랜드 상품 중 꿀템만 골랐어요")}${cartNote()}${chipsGrid("brand", brands.map((b) => ({ label: b.brand, sub: b.rate ? `~${b.rate}%` : "", items: b.items || [] })), false)}</div>
           ${brandDaySec(now)}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec(todayKey)}`;
       }
-      const nowDay = zone.querySelector(".bf-day.now");
+      liftCard();
+      const nowDay = root.querySelector("#bf-topcard .bf-day.now") || zone.querySelector(".bf-day.now");
       if (nowDay) nowDay.parentNode.scrollLeft = Math.max(0, nowDay.offsetLeft - 50);
       tick();
     }
@@ -2910,7 +2925,7 @@ async function renderPublicSite(root) {
     });
     function tick() {
       const now = nowFn();
-      zone.querySelectorAll("[data-cd]").forEach((el) => { el.innerHTML = fmtLeft(+el.dataset.cd - now); });
+      [zone, root.querySelector("#bf-topcard")].forEach((z) => z && z.querySelectorAll("[data-cd]").forEach((el) => { el.innerHTML = fmtLeft(+el.dataset.cd - now); }));
       const mini = root.querySelector("#bf-mini-cd");
       if (mini) mini.innerHTML = fmtLeft((now < T_TEASE ? T_TEASE : now < T_OPEN ? T_OPEN : nextMidnight(now)) - now);
       const want = now >= T_END ? "end" : now < T_OPEN ? "pre" : "live";
