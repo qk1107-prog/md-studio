@@ -2,7 +2,7 @@
 // (방문자가 몇천 명이어도 수파베이스는 1분에 몇 번만 읽힘 → 전송량 절약)
 const SB = "https://cbuydjkvvzbluyohdkie.supabase.co";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
-const OK = { main: 1, coupons: 1, brands: 1, catrank: 1, episodes: 1 };
+const OK = { main: 1, coupons: 1, brands: 1, catrank: 1, packs: 1, episodes: 1 };
 module.exports = async function handler(req, res) {
   const id = String((req.query && req.query.id) || "main");
   if (!OK[id]) { res.statusCode = 400; return res.end("bad id"); }
