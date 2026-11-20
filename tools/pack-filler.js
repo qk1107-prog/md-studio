@@ -1,7 +1,7 @@
 // 스타터팩·레벨업 팩 빈칸 채우기 (www.musinsa.com 탭에서 실행)
 // 입력: window.__pfRun({ P: packs 값, flagged: [gno...], target: 12 })
 // 결과: window.__pfData (JSON 문자열: { cells:[{pk,sx,ag,cat,replace,sets}], alts:{gno:[url]} }), 노란 COPY 버튼(id __pfb)
-window.__pfRun = async ({ P, flagged = [], target = 12 }) => {
+window.__pfRun = async ({ P, flagged = [], target = 12, skip = [], deep = 1 }) => {
   const S = (window.__pf = { st: "start", log: [] });
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const A = "https://content.musinsa.com/api2/content/snap/v1/snaps?sort=POPULAR&size=50&seasonLabels=1";
@@ -15,7 +15,7 @@ window.__pfRun = async ({ P, flagged = [], target = 12 }) => {
   const get = async (q) => { for (let k = 0; k < 3; k++) { try { const j = await (await fetch(A + q, { credentials: "include" })).json(); return (j.data && j.data.list) || []; } catch (e) { await sleep(700); } } return []; };
   const many = async (qs) => { const out = []; const q = qs.slice(); await Promise.all([1, 2, 3, 4, 5, 6].map(async () => { while (q.length) { const x = q.shift(); out.push(...(await get(x))); } })); return out; };
   // 1) 칸별 부족분
-  const need = []; const used = new Set(), usedOuter = {};
+  const need = []; const used = new Set(skip.map(String)), usedOuter = {};
   for (const pk of PKS) for (const sx of ["M", "F"]) for (const ag of AGES) {
     const node = (P[pk][sx] || {})[ag] || [];
     node.forEach((c) => c.sets.forEach((s) => { used.add(String(s.sid)); const o = (s.items.find((i) => i.role === "아우터") || {}).gno; if (o) (usedOuter[sx + c.cat] = usedOuter[sx + c.cat] || new Set()).add(String(o)); }));
@@ -58,11 +58,11 @@ window.__pfRun = async ({ P, flagged = [], target = 12 }) => {
   for (const n of need) {
     const { sx, cat } = n; S.st = "snaps " + sx + cat;
     let qs = [];
-    if (OUTER[cat]) OUTER[cat].forEach((c) => { for (let p = 1; p <= (cat === "MA-1" ? 16 : 8); p++) qs.push(`&genders=${G[sx]}&goodsCategories=${c}&page=${p}`); });
+    if (OUTER[cat]) OUTER[cat].forEach((c) => { for (let p = 1; p <= (cat === "MA-1" ? 16 : 8) * deep; p++) qs.push(`&genders=${G[sx]}&goodsCategories=${c}&page=${p}`); });
     else {
       const br = await brandsFor(sx, cat); S.log.push(sx + cat + " brands " + br.slice(0, 16).join(","));
-      br.forEach((b) => { for (let p = 1; p <= 3; p++) qs.push(`&genders=${G[sx]}&brands=${b}&page=${p}`); });
-      if (!(sx === "F" && cat === "미니멀")) for (let p = 1; p <= 14; p++) qs.push(`&genders=${G[sx]}&styleLabels=${STYLE[cat]}&page=${p}`);
+      br.forEach((b) => { for (let p = 1; p <= 3 + 2 * (deep - 1); p++) qs.push(`&genders=${G[sx]}&brands=${b}&page=${p}`); });
+      for (let p = 1; p <= 14 * deep; p++) qs.push(`&genders=${G[sx]}&styleLabels=${STYLE[cat]}&page=${p}`);
     }
     const snaps = await many(qs);
     const seenSid = new Set(), uo = usedOuter[sx + cat] || new Set(), perBrand = {};
