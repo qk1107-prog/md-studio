@@ -1762,7 +1762,7 @@ async function renderPublicSite(root) {
     const tzDemo = !tz.length && CP_PV && Date.now() < Date.parse("2026-11-20T10:00:00Z");
     if (tzDemo) { const b = L.find((c) => c.bf) || L[0]; tz = [Object.assign({}, b, { tz: true, nw: true, n: "[예시] 무진장 티징 전용 " + (b.k === "CART" ? "장바구니" : "상품") + " 쿠폰" })]; }
     const tickItems = [...tz, ...hot, ...nw.filter((c) => !CP_HOT.has(String(c.no))), ...rest].slice(0, 12);
-    box.innerHTML = `<div class="cpz-head"><p class="cpz-title"><span class="cpz-fire">🔥</span> 지금 쓰기 좋은 쿠폰<span class="cpz-live"><i></i>LIVE</span><small>${L.length}개 · ${esc(cpTime(COUPONS.at))} 확인</small></p><a class="cpz-more" href="#cps">전체보기</a></div>
+    box.innerHTML = `<div class="cpz-head"><p class="cpz-title"><span class="cpz-fire">🔥</span> 실시간 지금 쓰기 좋은 쿠폰<span class="cpz-live"><i></i>LIVE</span><small>실시간 업데이트 · ${esc(cpTime(COUPONS.at))} 확인</small></p><a class="cpz-more" href="#cps">전체보기</a></div>
       <div class="cpz-tick"><div class="cpz-tick-in">${tickItems.map((c) => `<a href="#cp=${esc(c.no)}"><b>${c.nw ? "NEW" : "🔥"} ${esc(c.v)}</b>${esc(c.n)}</a>`).join("")}</div></div>
       ${tz.length ? `<p class="cpz-sub">⚡ 티징 전용 쿠폰 <small>${tzDemo ? "미리보기 예시 · 19시에 실제 쿠폰으로 바뀌어요" : "11/20 19시 ~ 11/22 본편 전까지"}</small></p><div class="cpz-scroll cpz-one">${tz.map(cpChip).join("")}</div><p class="cpz-sub">🔥 지금 쓰기 좋은 쿠폰</p>` : ""}
       <div class="cpz-scroll">${[...hot, ...rest].filter((c) => !c.tz).slice(0, 40).map(cpChip).join("")}</div>`;
