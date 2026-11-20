@@ -2427,7 +2427,7 @@ async function renderPublicSite(root) {
       const groups = (X.groups || []).filter((g) => (g.items || []).length >= 4).map((g) => ({ label: g.label, items: g.items }));
       if (!groups.length) return "";
       return `<div class="bf-sec bf-xmas" id="bf-xmas"><span class="xm-snow" aria-hidden="true">❄ ✦ ❄ ✦ ❄</span>${secHead("🎄", "크리스마스 선물 준비", "블프 때 미리 사두면 12월이 편해요 🎁")}
-        <p class="xm-lead">향수 · 머플러 · 장갑 · 지갑 · 주얼리 — 받으면 기분 좋은 것들만 🎅</p>
+        <p class="xm-lead">커플템 · 머플러 · 장갑 · 지갑 · 주얼리 — 같이 하기 좋은 선물만 🎅</p>
         ${chipsGrid("xmas", groups, false)}
       </div>`;
     }
