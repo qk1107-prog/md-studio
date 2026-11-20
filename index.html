@@ -1157,6 +1157,12 @@
   #app-root .bf-item .pr{white-space:normal;word-break:keep-all;line-height:1.25;font-size:10px}
   #app-root .bf-item .pr i{display:inline-block}
 }
+
+#app-root .hotz { margin: 4px 0 16px; }
+#app-root .hotz-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 8px; }
+#app-root .hotz-title { margin: 0; font-size: 15px; font-weight: 900; letter-spacing: -0.4px; color: #141312; }
+#app-root .hotz-head small { font-size: 10.5px; font-weight: 700; color: #8a847b; }
+#app-root .hotz .bf-chips { margin-bottom: 10px; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2628,13 +2634,11 @@ async function renderPublicSite(root) {
       const nb = (T.newBrands || []).filter((b) => (b.items || []).length).map((b) => ({ label: b.brand, items: b.items }));
       if (!groups.length && !nb.length) return "";
       const br = (T.brands || []).filter((b) => (b.items || []).length).map((b) => ({ label: b.brand, sub: b.rate ? `~${b.rate}%` : "", items: b.items }));
-      const hot = ((T.hot && T.hot.items) || []).filter((p) => p && p.link);
       const al = (T.alarms || []).map((a) => `<div class="tz-al"><div class="tz-al-top"><div><b>${esc(a.t)}</b><span>${esc(a.d || "")}</span></div><em class="tz-cd" data-tzcd="${esc(a.cd || "")}"></em></div>${(a.links && a.links.length) || a.link ? `<div class="tz-al-links">${(a.links || []).map((l) => `<a href="${esc(safeUrl(l.link))}" target="_blank" rel="noopener">${esc(l.t)}</a>`).join("")}${a.link ? `<a class="go" href="${esc(safeUrl(a.link))}" target="_blank" rel="noopener">${esc(a.go || "선착순 받으러 가기")} →</a>` : ""}</div>` : ""}</div>`).join("");
       const info = (T.info || []).map((x) => `<${x.link ? `a href="${esc(safeUrl(x.link))}" target="_blank" rel="noopener"` : "div"} class="tz-info"><b>${esc(x.t)}</b><span>${esc(x.d || "")}</span>${x.cd ? `<em class="tz-cd" data-tzcd="${esc(x.cd)}"></em>` : ""}</${x.link ? "a" : "div"}>`).join("");
       return `<div class="bf-sec bf-tease" id="bf-tease">${secHead("⚡", "프리오픈 · 티징 특가", "", "11.22(일) 19시 본편 전까지")}
         ${al ? `<div class="tz-alarm"><p class="tz-al-h">⏰ 놓치지 마세요 · 선착순 오픈 시간</p>${al}</div>` : ""}
         ${info ? `<div class="tz-infos">${info}</div>` : ""}
-        ${hot.length ? `<p class="tz-sub">🔥 지금 무신사에서 제일 잘 팔리는 템 <small>20·30대 남녀 실시간 랭킹${T.hot.at ? " · " + esc(cpTime(T.hot.at)) : ""}</small></p>${gridBlock("tzhot", hot, false)}` : ""}
         ${groups.length ? `<p class="tz-sub">🛍️ 지금 사도 되는 프리오픈 상품</p><a class="tz-cpnote" href="https://www.musinsa.com/coupon" target="_blank" rel="noopener">🎟️ 사진 위 <b>'쿠폰 N%↓'</b> 붙은 상품은 할인 0%로 보여도, <b>쿠폰함에서 프리오픈 쿠폰 받으면</b> 그만큼 더 싸져요 → 쿠폰 받으러 가기</a>${chipsGrid("tease", groups, false)}` : ""}
         ${br.length ? `<p class="tz-sub">🏷️ 프리오픈 브랜드별 특가</p>${chipsGrid("tzbr", br, false)}` : ""}
         ${nb.length ? `<p class="tz-sub">🆕 신규 브랜드 최대 30% 쿠폰</p><p class="tz-cpnote">🎟️ 제품 링크 들어가셔서 <b>30% 쿠폰 꼭 확인</b>하고 <b>쿠폰함에 받아두세요!</b></p>${chipsGrid("tznb", nb, false)}` : ""}
@@ -2749,7 +2753,24 @@ async function renderPublicSite(root) {
     }
 
     let phase = "";
+    // ---- 실시간 제일 인기 있는 아이템 (쿠폰 줄 바로 아래, main.bf.hot = {at, cats:[{cat, items}]}) ----
+    let hotView = -1;
+    function renderHot() {
+      const H = BFD.hot || {}; const cats = (H.cats || []).filter((c) => c && (c.items || []).length);
+      let box = root.querySelector("#hotz");
+      if (!cats.length || nowFn() >= T_END) { if (box) box.remove(); return; }
+      const cp = root.querySelector("#cpz");
+      if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-hv]"); if (!b) return; hotView = Number(b.dataset.hv); renderHot(); }); }
+      if (cp && cp.nextSibling !== box) cp.after(box);
+      else if (!cp && !box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
+      const tagged = (c, n) => c.items.slice(0, n).map((p, i) => Object.assign({}, p, { tag: `${c.cat} ${i + 1}위` }));
+      const list = hotView < 0 ? cats.flatMap((c) => tagged(c, 2)) : tagged(cats[hotView] || cats[0], 8);
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 실시간 제일 인기 있는 아이템</p><small>무신사 20·30대 남녀 랭킹${H.at ? " · " + esc(cpTime(H.at)) + " 확인" : ""}</small></div>
+        <div class="bf-chips"><button type="button" data-hv="-1" class="${hotView < 0 ? "active" : ""}">카테고리별 1·2위</button>${cats.map((c, i) => `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`).join("")}</div>
+        <div class="bf-grid">${list.map((p) => itemCard(p, 0)).join("")}</div>`;
+    }
     function render() {
+      setTimeout(renderHot, 0);
       const now = nowFn();
       if (now >= T_END) { phase = "end"; zone.innerHTML = `<p class="bf-empty">이번 무진장은 끝났어요. 다음 블프 때 다시 정리할게요!</p>`; return; }
       const flag = preview ? `<p class="bf-preview-flag">● 시안 미리보기 (${preview === "pre" ? "오픈 전" : "오픈 후"})</p>` : "";
