@@ -964,6 +964,8 @@
   #app-root .bf-item .pt span { display: inline-block; font-size: 8px; font-weight: 800; color: #6b665f; background: #f1eee9; border-radius: 3px; padding: 1px 3px; margin-right: 3px; }
   #app-root .bf-item .pt s { text-decoration-thickness: 1.5px; text-decoration-color: #ff3d3f; }
   #app-root .bf-item .pt.same { color: #8a8378; }
+  #app-root .bf-item .pt .pbf { display: inline-block; margin-left: 4px; font-size: 8px; font-weight: 800; color: #141312; background: #E4FF1A; border-radius: 3px; padding: 1px 4px 0; vertical-align: 1px; }
+  #app-root .bf-item .preal { display: inline-block; margin: 3px 0 0; font-size: 8.5px; font-weight: 800; color: #141312; background: #f4ffb0; border: 1px solid #d6ec2a; border-radius: 4px; padding: 1px 5px 0; white-space: nowrap; letter-spacing: -0.2px; }
   #app-root .bf-item .real { position: absolute; right: 4px; bottom: 4px; font-size: 8.5px; font-weight: 900; color: #141312; background: #E4FF1A; border-radius: 4px; padding: 2px 5px 1px; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
   #app-root .bf-brief { margin: 0 0 10px; padding: 12px 13px 11px; border-radius: 12px; background: #141312; color: #fff; }
   #app-root .bf-brief-h { margin: 0 0 8px; font-size: 13px; font-weight: 900; letter-spacing: -0.3px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -2228,9 +2230,12 @@ async function renderPublicSite(root) {
       const cur = live ? priceNow(p, id) : 0;
       if (live && pre && cur) {
         if (cur < pre) {
+          // BEST PICK과 같은 표시: 정가 취소선 + 블프가 태그 → 할인율·블프가 → 직전가보다 -N%
           const pct = Math.round((1 - cur / pre) * 100);
           const nor = PRE[id] ? Number(PRE[id][1]) : 0;
-          return `${nor > pre ? `<p class="pt"><span>정가</span><s>${esc(won(nor))}</s></p>` : ""}<p class="pt"><span>블프 직전</span><s>${esc(won(pre))}</s></p><p class="pr"><i>-${pct}%</i>${esc(won(cur))}</p>`;
+          const base = nor > cur ? nor : pre;
+          const pctN = Math.round((1 - cur / base) * 100);
+          return `<p class="pt"><s>${esc(won(base))}</s><b class="pbf">블프가</b></p><p class="pr"><i>${pctN}%</i>${esc(won(cur))}</p><p class="preal">직전가보다 -${pct}%</p>`;
         }
         return `<p class="pr">${esc(won(cur))}</p><p class="pt same">직전가랑 같아요</p>`;
       }
@@ -2246,7 +2251,7 @@ async function renderPublicSite(root) {
       if (nowFn() < T_TEASE || !pre) return "";
       const cur = priceNow(p, id);
       if (!cur || cur >= pre) return "";
-      return `<span class="real">진짜 -${Math.round((1 - cur / pre) * 100)}%</span>`;
+      return ""; // 직전가 대비 할인은 가격 아래 '직전가보다 -N%'로 표시
     }
     function itemCard(p, rank) {
       const link = safeUrl(p.link) || "#";
