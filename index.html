@@ -1835,8 +1835,9 @@ async function renderPublicSite(root) {
       </div>`;
     const backdrop = holder.firstElementChild;
     const grid = backdrop.querySelector(".lu-grid");
-    src.querySelectorAll(".collab-card").forEach((c) => grid.appendChild(c.cloneNode(true)));
+    src.querySelectorAll(".collab-card").forEach((c) => { const k = c.cloneNode(true); k.style.aspectRatio = "2/3"; const im = k.querySelector("img.cc-photo[data-crop]"); if (im) im.removeAttribute("style"); grid.appendChild(k); });
     root.appendChild(backdrop);
+    requestAnimationFrame(() => grid.querySelectorAll("img.cc-photo[data-crop]").forEach((im) => { im.style.objectPosition = "50% 0"; window.__ccCrop && window.__ccCrop(im); }));
     animateOverlayIn(backdrop);
     document.body.style.overflow = "hidden";
     backdrop.querySelector("#ep-close").addEventListener("click", () => {
@@ -3139,7 +3140,7 @@ async function renderPublicSite(root) {
   // ---------- 상단 라인업 캐러셀 (그대로) ----------
   const collabScroll = root.querySelector("#collab-scroll");
   // 라인업 사진: 지정한 위치(cropTop, 사진 높이 비율)부터 보이게 잘라서 확대
-  root.querySelectorAll("img.cc-photo[data-crop]").forEach((img) => {
+  const ccCrop = (img) => {
     const apply = () => {
       const box = img.parentElement.getBoundingClientRect();
       if (!img.naturalWidth || !box.height) return;
@@ -3150,7 +3151,9 @@ async function renderPublicSite(root) {
       img.style.transform = `translateY(${(-z * c * 100).toFixed(2)}%) scale(${z.toFixed(3)})`;
     };
     if (img.complete) apply(); else img.addEventListener("load", apply, { once: true });
-  });
+  };
+  window.__ccCrop = ccCrop;
+  root.querySelectorAll("img.cc-photo[data-crop]").forEach(ccCrop);
   // 주인장 베스트 픽: 천천히 오른쪽으로 흘러가다 끝에 닿으면 처음으로 쓱 돌아와요 (손대면 잠깐 멈춤)
   (() => {
     const sc = root.querySelector("#aw-scroll");
