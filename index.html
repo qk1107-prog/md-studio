@@ -2319,15 +2319,11 @@ async function renderPublicSite(root) {
 
 
     <nav class="tabs">
-      ${BF_ON ? `<button data-tab="bf">무진장 블프</button>` : ""}
-      <button data-tab="outfits" class="active">실착</button>
-      <button data-tab="stories">릴스 꿀템</button>
-      <button data-tab="picks">추천 브랜드+꿀템</button>
-      ${BR_ON ? `<button data-tab="brands">나이대별 브랜드</button>` : ""}
-      <button data-tab="cats">카테고리 꿀템</button>
-      <button data-tab="mood">분위기별</button>
-      <button data-tab="starter">스타터팩</button>
-      <button data-tab="levelup">레벨업 팩</button>
+      ${BF_ON ? `<button data-g="bf">무진장 블프</button>` : ""}
+      <button data-g="outfits" class="active">실착</button>
+      <button data-g="reels">릴스 꿀템</button>
+      <button data-g="age">나이대별<i class="nv-dot"></i></button>
+      <button data-g="pack">코디 팩<i class="nv-dot"></i></button>
     </nav>
 
     <section class="cpz" id="cpz" hidden></section>
@@ -2351,6 +2347,7 @@ async function renderPublicSite(root) {
       </div>
     </section>` : ""}
 
+    <div class="subbar" id="subbar" hidden></div>
     <div class="wrap" id="tab-viewport">
       <div class="tab-slider" id="tab-slider">
       ${BF_ON ? `<section id="tab-bf" class="section${BF_LOCKED ? " is-locked" : ""}"><div class="bf-zone" id="bf-zone"></div>${BF_LOCKED ? `<div class="bf-lock" id="bf-lock"><div class="bf-lock-card"><div class="bf-lock-ic">🔒</div><div class="bf-lock-k">무진장 블프 쿠폰·특가·꿀템 총정리</div><div class="bf-lock-t">11월 20일(금) 오후 7시 공개</div><div class="bf-lock-cd"></div><div class="bf-lock-s">공개되면 이 탭에서 가장 빠르게 볼 수 있어요</div></div><div class="bf-lock-card"><div class="bf-lock-ic">🔒</div><div class="bf-lock-k">무진장 블프 쿠폰·특가·꿀템 총정리</div><div class="bf-lock-t">11월 20일(금) 오후 7시 공개</div><div class="bf-lock-cd"></div><div class="bf-lock-s">공개되면 이 탭에서 가장 빠르게 볼 수 있어요</div></div></div>` : ""}</section>` : ""}
@@ -3223,7 +3220,45 @@ async function renderPublicSite(root) {
 
   // ---------- 탭 ----------
   const TAB_ORDER = [BF_ON ? "bf" : "", "outfits", "stories", "picks", BR_ON ? "brands" : "", "cats", "mood", "starter", "levelup"].filter(Boolean);
+  // 메뉴 5개로 묶기: 탭 화면(섹션)은 그대로 두고, 메뉴 버튼만 묶음 단위로 + 묶음 안에서는 위쪽 선택 바로 이동
+  const GROUPS = [
+    BF_ON ? { key: "bf", subs: [["bf", ""]] } : null,
+    { key: "outfits", subs: [["outfits", ""]] },
+    { key: "reels", subs: [["stories", "🎬 릴스 꿀템"], ["picks", "🏷️ 추천 브랜드"]] },
+    { key: "age", subs: [BR_ON ? ["brands", "👕 브랜드"] : null, ["cats", "🗂️ 카테고리"], ["mood", "✨ 분위기"]].filter(Boolean) },
+    { key: "pack", subs: [["starter", "🧩 스타터팩"], ["levelup", "🚀 레벨업 팩"]] },
+  ].filter(Boolean);
+  const gOf = (idx) => Math.max(0, GROUPS.findIndex((g) => g.subs.some((x) => x[0] === TAB_ORDER[idx])));
+  const lastSub = {};
+  const subbar = root.querySelector("#subbar");
+  let subG = -1;
+  function drawSub() {
+    const gi = gOf(activeIndex), g = GROUPS[gi]; if (!subbar || !g) return;
+    if (g.subs.length < 2) { subbar.hidden = true; subG = gi; return; }
+    const si = g.subs.findIndex((x) => x[0] === TAB_ORDER[activeIndex]);
+    if (subG !== gi) { subbar.innerHTML = `<div class="subbar-in" style="--n:${g.subs.length};--i:${si}"><i class="thumb"></i>${g.subs.map(([k, t]) => `<button type="button" data-sub="${k}">${t}</button>`).join("")}</div>`; subG = gi; }
+    subbar.hidden = false;
+    const inn = subbar.firstElementChild; inn.style.setProperty("--i", si);
+    inn.querySelectorAll("button").forEach((b, i) => b.classList.toggle("active", i === si));
+  }
+  if (subbar) subbar.addEventListener("click", (e) => { const b = e.target.closest("[data-sub]"); if (b) setActive(TAB_ORDER.indexOf(b.dataset.sub)); });
+  // 성별·나이대는 한 번 고르면 브랜드·카테고리·코디 팩에 같이 적용
+  const SEL = { sex: "", age: "" }, selApplied = {};
+  root.addEventListener("click", (e) => {
+    if (!e.isTrusted) return;
+    const b = e.target.closest("#br-sex button, #br-age button, #cat-sex button, #cat-age button, #sp-sex button, #sp-age button, #lp-sex button, #lp-age button"); if (!b) return;
+    const v = b.dataset.v || b.dataset.s || b.dataset.a || "";
+    if (/-sex$/.test(b.parentNode.id)) { if (v === "M" || v === "F") SEL.sex = v; } else if (/대$/.test(v)) SEL.age = v;
+  }, true);
+  function applySel(key) {
+    const sig = SEL.sex + "|" + SEL.age; if (sig === "|" || selApplied[key] === sig) return; selApplied[key] = sig;
+    const hit = (q) => { const b = root.querySelector(q); if (b && !b.classList.contains("active")) b.click(); };
+    if (key === "brands") { if (SEL.sex) hit(`#br-sex button[data-v="${SEL.sex}"]`); if (SEL.age) hit(`#br-age button[data-v="${SEL.age}"]`); }
+    else if (key === "cats") { if (SEL.sex) { hit(`#cat-sex button[data-s="${SEL.sex}"]`); if (SEL.age) hit(`#cat-age button[data-a="${SEL.age}"]`); } }
+    else if (key === "starter" || key === "levelup") { const pp = key === "starter" ? "sp" : "lp"; if (SEL.sex) hit(`#${pp}-sex button[data-v="${SEL.sex}"]`); if (SEL.age) hit(`#${pp}-age button[data-v="${SEL.age}"]`); }
+  }
   const buttons = root.querySelectorAll("nav.tabs button");
+  buttons.forEach((b) => { try { if (localStorage.getItem("mds_seen_" + b.dataset.g)) { const d = b.querySelector(".nv-dot"); if (d) d.remove(); } } catch (e) {} });
   const slider = root.querySelector("#tab-slider");
   const viewport = root.querySelector("#tab-viewport");
   let activeIndex = 0;
@@ -3254,7 +3289,12 @@ async function renderPublicSite(root) {
     activeIndex = Math.max(0, Math.min(TAB_ORDER.length - 1, index));
     slider.style.transition = opts.instant ? "none" : "";
     slider.style.transform = `translateX(-${activeIndex * step}%)`;
-    buttons.forEach((b, i) => b.classList.toggle("active", i === activeIndex));
+    const gi = gOf(activeIndex);
+    buttons.forEach((b, i) => b.classList.toggle("active", i === gi));
+    lastSub[GROUPS[gi].key] = TAB_ORDER[activeIndex];
+    drawSub();
+    try { applySel(TAB_ORDER[activeIndex]); } catch (e) {}
+    if (!opts.instant) { const sec = slider.children[activeIndex]; if (sec) { sec.classList.remove("tab-in"); void sec.offsetWidth; sec.classList.add("tab-in"); } }
     // 블프 주인장 BEST PICK은 무진장 블프 탭에서만 보여요
     if (!TAB_ORDER.includes("bf")) { const awSec = root.querySelector("section.aw"); if (awSec) awSec.style.display = ""; }
     showOnly(activeIndex, opts.instant ? 0 : 420);
@@ -3269,16 +3309,29 @@ async function renderPublicSite(root) {
   }
   try { const ro = new ResizeObserver(() => fitSliderHeight()); [...slider.children].forEach((c) => ro.observe(c)); } catch (e) {}
 
-  buttons.forEach((btn, i) => {
-    btn.addEventListener("click", () => {
-      setActive(i);
+  const goGroup = (gi) => {
+      const g = GROUPS[gi]; if (!g) return;
+      const key = lastSub[g.key] && TAB_ORDER.includes(lastSub[g.key]) ? lastSub[g.key] : g.subs[0][0];
+      setActive(TAB_ORDER.indexOf(key));
+      const btn = buttons[gi], dot = btn && btn.querySelector(".nv-dot");
+      if (dot) { dot.remove(); try { localStorage.setItem("mds_seen_" + g.key, "1"); } catch (e) {} }
       // 메뉴가 라인업 바로 아래에 있어서, 누르면 내용 시작 지점으로 내려가요
       const nav = root.querySelector("nav.tabs");
       const navH = nav ? nav.offsetHeight : 0;
-      const y = viewport.getBoundingClientRect().top + window.scrollY - navH - 6;
+      const anchor = subbar && !subbar.hidden ? subbar : viewport;
+      const y = anchor.getBoundingClientRect().top + window.scrollY - navH - 6;
       if (Math.abs(window.scrollY - y) > 8) window.scrollTo({ top: y, behavior: "smooth" });
-    });
-  });
+  };
+  buttons.forEach((btn, gi) => btn.addEventListener("click", () => goGroup(gi)));
+  // 블프 탭 안 바로가기 (나이대별·코디 팩)
+  (function () {
+    const bfSec = root.querySelector("#tab-bf"); if (!bfSec) return;
+    const box = document.createElement("div"); box.className = "bf-short"; box.id = "bf-short";
+    box.innerHTML = `<button type="button" data-gg="age"><b>👕 내 나이대 꿀템 →</b><small>브랜드·카테고리·분위기별</small></button><button type="button" data-gg="pack"><b>🧥 코디 팩 →</b><small>스타터팩·레벨업 한 번에</small></button>`;
+    const before = bfSec.querySelector(":scope > section.aw") || bfSec.querySelector(":scope > #bf-zone");
+    if (before) bfSec.insertBefore(box, before); else bfSec.appendChild(box);
+    box.addEventListener("click", (e) => { const b = e.target.closest("[data-gg]"); if (!b) return; const gi = GROUPS.findIndex((g) => g.key === b.dataset.gg); if (gi >= 0) goGroup(gi); });
+  })();
 
   // 스와이프 제스처 (가로로 넘기는 사진 줄 위에서는 탭이 안 넘어가게)
   let touchStartX = 0, touchStartY = 0, touchCurrentX = 0, dragging = false, viewportWidth = 0, decided = false, horizontal = false;
@@ -3472,6 +3525,31 @@ renderPublicSite(ROOT_EL);
 #mds-wish .w-go{background:#ff3d3f;color:#fff;flex:2!important}
 #mds-wish .w-no{background:#f1f1f1;color:#555}
 #mds-wish .w-done{text-align:center;padding:18px 0 8px;font-size:16px;font-weight:700;line-height:1.5}
+
+/* ---- 메뉴 5개 + 선택 바 + 효과 ---- */
+#app-root nav.tabs { gap: 5px; padding: 10px 16px; }
+#app-root nav.tabs button { flex: 1 1 auto; position: relative; padding: 10px 4px; font-size: 13.5px; text-align: center; transition: background .2s, color .2s, border-color .2s; }
+#app-root nav.tabs button.active { animation: navPop .34s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes navPop { 0% { transform: scale(.9); } 100% { transform: scale(1); } }
+#app-root .nv-dot { position: absolute; top: -3px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background: #ff3d3f; }
+#app-root .nv-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #ff3d3f; animation: nvPing 1.6s ease-out infinite; }
+@keyframes nvPing { to { transform: scale(2.8); opacity: 0; } }
+#app-root .subbar { max-width: 720px; margin: -6px auto 14px; padding: 0 20px; }
+#app-root .subbar[hidden] { display: none; }
+#app-root .subbar-in { position: relative; display: grid; grid-template-columns: repeat(var(--n), 1fr); background: #f1eee9; border-radius: 12px; padding: 4px; animation: subIn .35s ease both; }
+#app-root .subbar-in .thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / var(--n)); border-radius: 9px; background: #fff; box-shadow: 0 1px 5px rgba(0, 0, 0, .14); transform: translateX(calc(100% * var(--i))); transition: transform .34s cubic-bezier(.22, 1, .36, 1); }
+#app-root .subbar-in button { position: relative; z-index: 1; border: 0; background: none; font: inherit; font-size: 13.5px; font-weight: 800; letter-spacing: -0.3px; color: #8a847b; padding: 10px 0; cursor: pointer; transition: color .2s; }
+#app-root .subbar-in button.active { color: #141312; }
+@keyframes subIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+#app-root .tab-slider > .section.tab-in { animation: tabIn .42s ease; }
+@keyframes tabIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+#app-root .bf-short { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 2px 0 16px; }
+#app-root .bf-short button { position: relative; overflow: hidden; text-align: left; border: 1.5px solid #141312; border-radius: 14px; background: #fff; padding: 12px 12px 11px; font: inherit; cursor: pointer; }
+#app-root .bf-short b { display: block; font-size: 13.5px; font-weight: 900; letter-spacing: -0.4px; color: #141312; }
+#app-root .bf-short small { display: block; margin-top: 3px; font-size: 10.5px; font-weight: 700; color: #8a847b; }
+#app-root .bf-short button::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255, 61, 63, .16), transparent); animation: shSweep 2.8s ease-in-out infinite; }
+@keyframes shSweep { 0%, 55% { left: -60%; } 100% { left: 130%; } }
+@media (prefers-reduced-motion: reduce) { #app-root nav.tabs button.active, #app-root .nv-dot::after, #app-root .subbar-in, #app-root .tab-slider > .section.tab-in, #app-root .bf-short button::after { animation: none; } #app-root .subbar-in .thumb { transition: none; } }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
