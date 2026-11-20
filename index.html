@@ -1150,6 +1150,13 @@
 #app-root .cpz .cpz-ticker, #app-root .cpz > .cpz-tk { }
 
 #app-root .cpz-scroll, #app-root .aw-scroll, #app-root .bf-chips, #app-root .polaroid-scroll, #app-root .rec-scroll, #app-root .rec-chips, #app-root .tz-al-links { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+
+#app-root .tz-al-top{flex-direction:column;align-items:flex-start;gap:5px}
+#app-root .tz-al .tz-cd{white-space:nowrap;text-align:left;font-size:12px}
+@media (max-width: 480px){
+  #app-root .bf-item .pr{white-space:normal;word-break:keep-all;line-height:1.25;font-size:10px}
+  #app-root .bf-item .pr i{display:inline-block}
+}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -3372,7 +3379,7 @@ renderPublicSite(ROOT_EL);
       if(el.className!=="tz-cd")el.className="tz-cd";
       var h=Math.floor(d/36e5), m=Math.floor(d%36e5/6e4), s=Math.floor(d%6e4/1e3);
       var dt=new Date(nx), lab=(dt.getMonth()+1)+"/"+dt.getDate()+" "+f(dt.getHours())+":"+f(dt.getMinutes());
-      el.textContent=el.closest(".tz-al")?((h?h+"시간 ":"")+f(m)+"분 "+f(s)+"초 후\n"+lab):("⏰ "+lab+" 오픈까지 "+(h?h+"시간 ":"")+f(m)+"분 "+f(s)+"초");
+      el.textContent=el.closest(".tz-al")?("⏰ "+(h?h+"시간 ":"")+f(m)+"분 "+f(s)+"초 후 오픈 · "+lab):("⏰ "+lab+" 오픈까지 "+(h?h+"시간 ":"")+f(m)+"분 "+f(s)+"초");
     });
   }
   setInterval(run,1000); document.addEventListener("DOMContentLoaded",run);
