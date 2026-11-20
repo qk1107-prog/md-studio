@@ -3192,7 +3192,7 @@ async function renderPublicSite(root) {
         list.innerHTML = c.sets.map((st, n) => {
           const [o, i, p, sh] = st.items;
           return `<div class="rec-row">
-          ${safeImg(st.board) ? `<a class="sp-one" href="${esc(safeImg(st.board))}" target="_blank" rel="noopener" aria-label="${esc(packTitle(c))} ${n + 1} 코디 크게 보기"><img src="${esc(safeImg(st.board))}" alt="" loading="lazy" decoding="async"></a>` : `<div class="sp-board">${tile(o, "o")}${tile(i, "i")}${tile(p, "p")}${tile(sh, "s")}</div>`}
+          ${safeImg(st.board) ? `<a class="sp-one" href="#${hp}=${pfx}${ci}_${n}" aria-label="${esc(packTitle(c))} ${n + 1} 제품 전체보기"><img src="${esc(safeImg(st.board))}" alt="" loading="lazy" decoding="async"></a>` : `<div class="sp-board">${tile(o, "o")}${tile(i, "i")}${tile(p, "p")}${tile(sh, "s")}</div>`}
           <div class="rec-body">
             <div class="rec-head">
               <p class="story-title" style="margin:0">${esc(packTitle(c))} ${String(n + 1).padStart(2, "0")}</p>
