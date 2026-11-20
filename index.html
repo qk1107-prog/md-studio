@@ -3237,6 +3237,7 @@ async function renderPublicSite(root) {
     const cp = root.querySelector("#cpz"), aw = root.querySelector("section.aw");
     if (aw) bfSec.insertBefore(aw, bfSec.firstChild);
     if (cp) bfSec.insertBefore(cp, bfSec.firstChild);
+    const tc = root.querySelector("#bf-topcard"); if (tc) bfSec.insertBefore(tc, bfSec.firstChild);
   })();
   function setActive(index, opts) {
     opts = opts || {};
