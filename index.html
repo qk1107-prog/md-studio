@@ -2406,11 +2406,11 @@ async function renderPublicSite(root) {
     function padSec() {
       const P = BFD.padding || {};
       const groups = (P.groups || []).map((g) => {
-        const items = (g.items || []).filter((p) => (p.rate || 0) >= 5);
+        const items = (g.items || []).filter((p) => !g.disc || (p.rate || 0) >= 5);
         return { label: g.label, sub: items.length, items };
       });
       if (!groups.some((g) => g.items.length)) return "";
-      return `<div class="bf-sec" id="bf-pad">${secHead("🧥", "패딩 특가", "할인 중인 것만 모았어요", "꿀템 선별")}${curated("무신사 패딩 판매 순위에서 할인 중인 인기 브랜드·10만원 아래 기본 패딩만 골랐어요")}
+      return `<div class="bf-sec" id="bf-pad">${secHead("❄️", "겨울 준비", "패딩 · 플리스 · 코트", "꿀템 선별")}${curated("요즘 잘 나가는 패딩(할인 중인 것만)·플리스 상하의·코트를 한곳에 모았어요")}
         ${chipsGrid("pad", groups, false)}
       </div>`;
     }
@@ -2486,8 +2486,8 @@ async function renderPublicSite(root) {
       return `<button type="button" class="bf-tile${lock ? " lock" : ""}" data-go="${id}">${count ? `<span class="n">${count}</span>` : ""}<div class="e">${e}</div><p class="t">${t}</p><p class="s">${sub}</p><p class="c">${cdHtml}</p></button>`;
     }
     function navSec(live) {
-      const L = live ? [["bf-hot", "하루특가"], ["bf-sig", "시그니처특가"], ["bf-brand", "브랜드특가"], ["bf-bday", "브랜드데이"], ["bf-pad", "패딩"], ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
-        : [["bf-sig", "시그니처특가"], ["bf-bday", "브랜드특가"], ["bf-pad", "패딩"], ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"], ["bf-live", "라이브"]];
+      const L = live ? [["bf-pad", "겨울 준비"], ["bf-hot", "하루특가"], ["bf-sig", "시그니처특가"], ["bf-brand", "브랜드특가"], ["bf-bday", "브랜드데이"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
+        : [["bf-pad", "겨울 준비"], ["bf-sig", "시그니처특가"], ["bf-bday", "브랜드특가"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"], ["bf-live", "라이브"]];
       return `<div class="bf-jump">${L.map(([id, t]) => `<button type="button" data-go="${id}">${t}</button>`).join("")}</div>`;
     }
 
@@ -2519,7 +2519,7 @@ async function renderPublicSite(root) {
               ${tile("bf-bday", "🏷️", "브랜드특가", "브랜드별 꿀템", cd(T_OPEN), false, (BFD.sigBrands || []).length)}
             </div>
           </div>
-          ${navSec(false)}${sigSec(false, {})}${brandDaySec(at(2026, 11, 22, 20))}${padSec()}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec("")}`;
+          ${navSec(false)}${padSec()}${sigSec(false, {})}${brandDaySec(at(2026, 11, 22, 20))}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec("")}`;
       } else {
         phase = "live";
         const day = (BFD.days && BFD.days[key]) || (preview ? (BFD.sample || {}) : {});
@@ -2545,10 +2545,11 @@ async function renderPublicSite(root) {
           </div>
           ${alertSec()}
           ${navSec(true)}
+          ${padSec()}
           <div class="bf-sec" id="bf-hot">${secHead("🔥", "오늘의 하루특가", "오늘 자정에 끝나요")}${curated("오늘 하루특가 전체 중 인기·할인 좋은 꿀템만 골랐어요")}${priceNote()}${chipsGrid("hot", hotGroups, true)}</div>
           ${sigSec(true, day)}
           <div class="bf-sec" id="bf-brand">${secHead("🏷️", "오늘의 브랜드특가", "브랜드 누르면 꿀템만")}${curated("오늘 열린 브랜드 상품 중 꿀템만 골랐어요")}${chipsGrid("brand", brands.map((b) => ({ label: b.brand, sub: b.rate ? `~${b.rate}%` : "", items: b.items || [] })), false)}</div>
-          ${brandDaySec(now)}${padSec()}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec(todayKey)}`;
+          ${brandDaySec(now)}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec(todayKey)}`;
       }
       const nowDay = zone.querySelector(".bf-day.now");
       if (nowDay) nowDay.parentNode.scrollLeft = Math.max(0, nowDay.offsetLeft - 50);
