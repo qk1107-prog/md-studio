@@ -3330,7 +3330,6 @@ renderPublicSite(ROOT_EL);
     const qs=location.search, force=/[?&]wish=1/.test(qs);
     if(!force){
       if(window.top!==window.self||/[?&]shot=1/.test(qs)) return;
-      if(localStorage.getItem("mds_owner")==="1") return;
     }
     const URL_="https://cbuydjkvvzbluyohdkie.supabase.co/rest/v1/site_events";
     const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
