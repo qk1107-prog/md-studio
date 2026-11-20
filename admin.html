@@ -799,7 +799,8 @@ async function renderAdminApp(root) {
     if (statsDays === 1) { const d = kstDay(Date.now()); since.setTime(new Date(d + "T00:00:00+09:00").getTime()); } else since.setTime(Date.now() - statsDays * 864e5);
     let ev;
     try { ev = await fetchEvents(since.toISOString()); } catch (err) { main.querySelector("#st-body").innerHTML = `<p class="msg-err">⛔ ${esc(err.message || String(err))}</p>`; return; }
-    const visits = ev.filter((e) => e.kind === "visit"), clicks = ev.filter((e) => e.kind === "click"), wishes = ev.filter((e) => e.kind === "wish");
+    const wishes = ev.filter((e) => e.tab === "wish"); ev = ev.filter((e) => e.tab !== "wish");
+    const visits = ev.filter((e) => e.kind === "visit"), clicks = ev.filter((e) => e.kind === "click");
     const isMs = (u) => /musinsa\.com/i.test(u || "");
     const msClicks = clicks.filter((e) => isMs(e.url));
     const uniq = (a) => new Set(a.map((e) => e.vid)).size;

@@ -3303,7 +3303,7 @@ renderPublicSite(ROOT_EL);
         let vid=""; try{vid=localStorage.getItem("mds_vid")||"";}catch(e){}
         const ua=navigator.userAgent||"";
         const device=(/Instagram/.test(ua)?"ig-":/KAKAOTALK/i.test(ua)?"kakao-":"")+(/iPhone|iPad|iPod/.test(ua)?"ios":/Android/.test(ua)?"android":"pc");
-        try{fetch(URL_,{method:"POST",keepalive:true,headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({vid,device,kind:"wish",label:t.slice(0,400),ref:("예산:"+bud+" | 인스타:"+ig).slice(0,300),tab:"wish",url:location.pathname})}).catch(()=>{});}catch(e){}
+        try{fetch(URL_,{method:"POST",keepalive:true,headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({vid,device,kind:"click",label:t.slice(0,400),ref:("예산:"+bud+" | 인스타:"+ig).slice(0,300),tab:"wish",url:location.pathname})}).catch(()=>{});}catch(e){}
         mark();
         w.querySelector(".w-card").innerHTML='<div class="w-done">✅ 위시리스트 받았어요!<br><span style="font-size:13px;font-weight:500;color:#666">블프 때 찾아서 인스타에 올려드릴게요 🙌</span></div>';
         setTimeout(close,1800);
