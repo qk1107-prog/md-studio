@@ -2548,8 +2548,7 @@ async function renderPublicSite(root) {
       if (!groups.length) return "";
       return `<div class="bf-sec bf-tease" id="bf-tease">${secHead("⚡", "티징 특가", "", "11.22(일) 19시 전까지만!")}
         <p class="tz-lead">티징 상품 중 후기 많고 잘 팔리는, 제일 살 만한 친구들만 골랐어요</p>
-        ${cartNote("티징 가격은 본편 시작 전까지만이에요. 마음에 들면 바로 담고 결제하세요!")}
-        ${chipsGrid("tease", groups, true)}
+        ${chipsGrid("tease", groups, false)}
       </div>`;
     }
 
