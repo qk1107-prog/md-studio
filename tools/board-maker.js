@@ -91,15 +91,17 @@ window.__bmRun = async (opts) => {
     if (cache.has(url)) return cache.get(url);
     let r = null;
     try {
-      let a = await cut1(url, 54);
-      if (a.r && bad(a.q)) { S.fix = (S.fix || 0) + 1; const b2 = await cut1(url, 20); if (b2.r && !bad(b2.q) && b2.q.area > a.q.area * 1.25) a = b2; else if (bad(a.q)) a = { r: null }; }
+      const a = await cut1(url, 54);
+      // 망가진 누끼 걸러내기: 촘촘하게(20) 잘랐을 때 훨씬 많이 남으면 = 54에서 옷이 배경이랑 같이 날아갔거나, 그림자·회색 배경·모델 컷
+      if (a.r) { const b2 = await cut1(url, 20); if (bad(a.q) || (b2.q.area / (a.q.area || 1e-9) > 1.22 && b2.q.fill < 0.97)) { S.reject = (S.reject || 0) + 1; a.r = null; } }
       r = a.r; if (r) S.flood++;
       if (r && (looksPerson(r) || r.height / r.width > 2.6)) { r = null; S.person = (S.person || 0) + 1; }
     } catch (e) {}
     cache.set(url, r); if (cache.size > 400) cache.delete(cache.keys().next().value); return r;
   }
   // 기존 보드 검사용: 원래 방식(54)으로 잘랐을 때 망가졌는지
-  async function wasBad(it) { try { const a = await cut1(it.flat || it.img, 54); return !!a.r && bad(a.q); } catch (e) { return false; } }
+  async function wasBad(it) { try { const u = it.flat || it.img; const a = await cut1(u, 54); if (!a.r) return false; if (bad(a.q)) return true; const b2 = await cut1(u, 20); return b2.q.area / (a.q.area || 1e-9) > 1.22 && b2.q.fill < 0.97; } catch (e) { return false; } }
+  window.__bmWasBad = wasBad;
   window.__bmQ = async (url) => { const a = await cut1(url, 54), b = await cut1(url, 20); return JSON.stringify({ a: a.q, b: b.q }); };
   if (opts.qonly) { S.st = "q"; return; }
   async function cutout(it) {
@@ -142,8 +144,10 @@ window.__bmRun = async (opts) => {
         if (good.length >= NEED) break;
         if (/\/media\/packs\//.test(st.board || "") && new RegExp(key + "_" + good.length + "\\.jpg").test(st.board)) {
           let redo = false;
-          if (opts.recheck) { for (const it of st.items) if (["아우터", "상의", "하의", "신발"].includes(it.role) && (await wasBad(it))) { redo = true; break; } }
+          if (st.redo) redo = true;
+          else if (opts.recheck) { for (const it of st.items) if (["아우터", "상의", "하의", "신발"].includes(it.role) && (await wasBad(it))) { redo = true; break; } }
           if (!redo) { good.push(st); continue; }
+          delete st.redo;
           S.redo = (S.redo || 0) + 1; if (S.log.length < 60) S.log.push("redo " + key + "_" + good.length);
         }
         try {
