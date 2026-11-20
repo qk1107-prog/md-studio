@@ -2787,15 +2787,17 @@ async function renderPublicSite(root) {
       const BR = {}; [...((BFD.teaser || {}).brands || []), ...(BFD.sigBrands || [])].forEach((b) => { const r = Number(b.rate) || 0; if (b.brand && r > (BR[nb(b.brand)] || 0)) BR[nb(b.brand)] = r; });
       const med = (a) => { a = a.filter((x) => x > 0).sort((x, y) => x - y); return a.length ? a[Math.floor(a.length / 2)] : 0; };
       const allMed = med(cats.flatMap((c) => c.items.map((x) => Number(x.rate) || 0)));
-      const expOf = (p, c) => BR[nb(p.brand)] || med(c.items.map((x) => Number(x.rate) || 0)) || allMed;
+      const expOf = (p, c) => BR[nb(p.brand)] || (c ? med(c.items.map((x) => Number(x.rate) || 0)) : 0) || allMed;
       const catOf = new Map(); cats.forEach((c) => c.items.forEach((x) => catOf.set(x, c)));
-      const list = (hotView < 0 || !cats[hotView] ? mix : cats[hotView].items.slice(0, 8)).map((p) => { const r = Number(p.rate) || 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
+      const rise = (H.rise || []).filter((x) => x && x.link);
+      if (hotView === -2 && !rise.length) hotView = -1;
+      const list = (hotView === -2 ? rise : hotView < 0 || !cats[hotView] ? mix : cats[hotView].items.slice(0, 8)).map((p) => { const r = Number(p.rate) || 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
       const sig = (H.at || "") + hotView + list.length;
       const fresh = box.dataset.sig !== sig; box.dataset.sig = sig;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 제일 핫한 아이템<span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small></div>
         <div class="hotz-bar"><i></i></div>
-        <div class="bf-chips"><button type="button" data-hv="-1" class="${hotView < 0 ? "active" : ""}">🔥 실시간 HOT</button>${cats.map((c, i) => `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`).join("")}</div>
-        ${hotView >= 0 && cats[hotView] ? `<p class="hotz-sub">${esc((cats[hotView].grp ? cats[hotView].grp + " · " : "") + cats[hotView].cat)} 지금 제일 많이 보는 상품</p>` : ""}
+        <div class="bf-chips"><button type="button" data-hv="-1" class="${hotView === -1 ? "active" : ""}">🔥 실시간 HOT</button>${rise.length ? `<button type="button" data-hv="-2" class="${hotView === -2 ? "active" : ""}">📈 급상승</button>` : ""}${cats.map((c, i) => `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`).join("")}</div>
+        ${hotView === -2 ? `<p class="hotz-sub">📈 지금 갑자기 많이 찾는 상품</p>` : ""}${hotView >= 0 && cats[hotView] ? `<p class="hotz-sub">${esc((cats[hotView].grp ? cats[hotView].grp + " · " : "") + cats[hotView].cat)} 지금 제일 많이 보는 상품</p>` : ""}
         <div class="bf-grid hotz-grid${fresh ? " hotz-in" : ""}">${list.map((p, i) => itemCard(p, 0).replace(/^(\s*<[a-z]+)/, `$1 style="--d:${i * 60}ms"`)).join("")}</div>`;
       hotAgo();
       if (!window.__hotTick) {

@@ -14,27 +14,29 @@ window.__hotRun = async () => {
   ];
   const BANDS = ["AGE_BAND_20", "AGE_BAND_25", "AGE_BAND_30", "AGE_BAND_35"];
   const PER = 6;
-  const jobs = []; SUBS.forEach((s, si) => BANDS.forEach((b) => jobs.push([si, b])));
-  const rank = SUBS.map(() => ({})); const meta = {};
+  const RISE = ["002", "001", "003", "103", "004", "101", "120"];
+  const jobs = []; SUBS.forEach((s, si) => BANDS.forEach((b) => jobs.push([si, b, s[2], 199])));
+  RISE.forEach((c) => BANDS.forEach((b) => jobs.push([-1, b, c, 201])));
+  const rank = SUBS.map(() => ({})); const meta = {}; const riseSc = {};
   let done = 0;
   await Promise.all([1, 2, 3, 4, 5, 6].map(async () => {
     while (jobs.length) {
-      const [si, b] = jobs.shift();
+      const [si, b, code, sec] = jobs.shift();
       try {
-        const j = await (await fetch(`https://api.musinsa.com/api2/hm/web/v5/pans/ranking/sections/199?storeCode=musinsa&categoryCode=${SUBS[si][2]}&ageBand=${b}&gf=A`, { credentials: "include" })).json();
+        const j = await (await fetch(`https://api.musinsa.com/api2/hm/web/v5/pans/ranking/sections/${sec}?storeCode=musinsa&categoryCode=${code}&ageBand=${b}&gf=A`, { credentials: "include" })).json();
         let i = 0;
         for (const m of (j.data && j.data.modules) || []) for (const it of m.items || []) {
           if (it.type !== "PRODUCT_COLUMN" || !it.info) continue;
           if (i >= 40) break;
           const id = String(it.id); i++;
           if (it.info.isSoldOut) continue;
-          rank[si][id] = (rank[si][id] || 0) + 1 / (i + 2);
+          if (si < 0) { if (i <= 15) riseSc[id] = (riseSc[id] || 0) + 1 / (i + 2); } else rank[si][id] = (rank[si][id] || 0) + 1 / (i + 2);
           const w = ((it.info.additionalInformation || []).map((x) => x.text).filter((x) => /보는 중|구매 중/.test(x)));
           const prev = meta[id];
           if (!prev || (w.join() && !prev.w.join())) meta[id] = { brand: it.info.brandName, name: it.info.productName, img: (it.image || {}).url || "", final: it.info.finalPrice, rate: it.info.discountRatio || 0, w };
         }
       } catch (e) {}
-      done++; S.st = "rank " + done + "/" + SUBS.length * BANDS.length;
+      done++; S.st = "rank " + done;
     }
   }));
   // 세부 카테고리별 상위 (같은 상품은 처음 나온 카테고리에만)
@@ -50,7 +52,8 @@ window.__hotRun = async () => {
       seenName.add(nk); used.add(id); pick[si].push(id);
     }
   });
-  const all = pick.flat();
+  const rise = Object.keys(riseSc).sort((a, b) => riseSc[b] - riseSc[a]).filter((id) => meta[id]).slice(0, 40);
+  const all = [...new Set([...pick.flat(), ...rise])];
   S.st = "info " + all.length;
   const info = {};
   for (let i = 0; i < all.length; i += 30) {
@@ -66,21 +69,23 @@ window.__hotRun = async () => {
     }
   }));
   localStorage.setItem("mdcpLinks", JSON.stringify(cache));
+  const mk = (id) => {
+      const g = meta[id], f = info[id]; if (!cache[id] || !g) return null;
+      if (f && f.isSoldOut) return null;
+      const sale = (f && f.price) || g.final, rate = (f && f.saleRate) || g.rate || 0;
+      const price = (f && f.normalPrice) || (rate ? Math.round(sale / (1 - rate / 100) / 100) * 100 : sale);
+      return { i: id, brand: g.brand, name: g.name, img: String((f && f.thumbnail) || g.img).replace("/thumbnails/images/", "/images/").replace(/_\d{3}\.(jpg|png|webp)$/i, "_500.$1"), link: "https://www.musinsa.com/curator/goods/" + cache[id], price, sale, rate, rv: (f && f.reviewCount) || 0, w: g.w.slice(0, 2) };
+  };
   const cats = [];
   SUBS.forEach(([grp, name], si) => {
     const items = [];
-    for (const id of pick[si]) {
-      if (items.length >= PER) break;
-      const g = meta[id], f = info[id]; if (!cache[id]) continue;
-      if (f && f.isSoldOut) continue;
-      const sale = (f && f.price) || g.final, rate = (f && f.saleRate) || g.rate || 0;
-      const price = (f && f.normalPrice) || (rate ? Math.round(sale / (1 - rate / 100) / 100) * 100 : sale);
-      items.push({ i: id, brand: g.brand, name: g.name, img: String((f && f.thumbnail) || g.img).replace("/thumbnails/images/", "/images/").replace(/_\d{3}\.(jpg|png|webp)$/i, "_500.$1"), link: "https://www.musinsa.com/curator/goods/" + cache[id], price, sale, rate, rv: (f && f.reviewCount) || 0, w: g.w.slice(0, 2) });
-    }
+    for (const id of pick[si]) { if (items.length >= PER) break; const x = mk(id); if (x) items.push(x); }
     if (items.length >= 3) cats.push({ cat: name, grp, items });
   });
-  window.__hotData = JSON.stringify({ at: new Date().toISOString(), cats });
-  S.st = "done " + cats.length + " cats " + cats.reduce((a, c) => a + c.items.length, 0) + " items";
+  const riseItems = []; const rb = new Set();
+  for (const id of rise) { if (riseItems.length >= 30) break; const x = mk(id); if (!x) continue; const k = x.brand + x.name.slice(0, 10); if (rb.has(k)) continue; rb.add(k); riseItems.push(x); }
+  window.__hotData = JSON.stringify({ at: new Date().toISOString(), cats, rise: riseItems });
+  S.st = "done " + cats.length + " cats rise" + riseItems.length + " " + cats.reduce((a, c) => a + c.items.length, 0) + " items";
   let b = document.getElementById("__hpb");
   if (!b) { b = document.createElement("button"); b.id = "__hpb"; b.style.cssText = "position:fixed;left:10px;top:10px;z-index:2147483647;background:#ffe14d;border:2px solid #000;font:bold 16px sans-serif;padding:14px 18px"; document.body.appendChild(b); }
   b.textContent = "COPY HOT"; b.onclick = () => navigator.clipboard.writeText(window.__hotData).then(() => { b.textContent = "OK " + cats.length; });
