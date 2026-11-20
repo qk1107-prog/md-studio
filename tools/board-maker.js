@@ -1,0 +1,112 @@
+// 스타터팩·레벨업 팩 "흰 배경 누끼 플랫레이" 이미지 만들기
+// 관리자 탭(admin.html, 로그인 상태)에서 실행: (0,eval)(await (await fetch('/tools/board-maker.js?'+Date.now())).text()); await window.__bmRun();
+// 진행 상황: window.__bm
+window.__bmRun = async (opts) => {
+  opts = opts || {};
+  const S = (window.__bm = { st: "start", done: 0, total: 0, fail: 0, ml: 0, flood: 0, log: [] });
+  const W = 720, H = 900, K = W / 1080;
+  // ---------- onnx (u2netp) ----------
+  if (!window.ort) {
+    await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  }
+  ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/";
+  ort.env.wasm.numThreads = 1;
+  const sess = window.__u2 || (window.__u2 = await ort.InferenceSession.create("/models/u2netp.onnx", { executionProviders: ["wasm"] }));
+  S.st = "model ok";
+  // ---------- 배경 (흰 퍼) ----------
+  const bg = document.createElement("canvas"); bg.width = W; bg.height = H;
+  { const c = bg.getContext("2d"); c.fillStyle = "#f3f2ef"; c.fillRect(0, 0, W, H);
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 9000; i++) { const x = rnd() * W, y = rnd() * H, a = rnd() * Math.PI * 2, l = 6 + rnd() * 14; const v = 225 + Math.floor(rnd() * 30);
+      c.strokeStyle = `rgba(${v},${v},${v - 2},${0.25 + rnd() * 0.35})`; c.lineWidth = 0.6 + rnd() * 1.2; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + Math.cos(a) * l * 0.5 + (rnd() - 0.5) * 4, y + Math.sin(a) * l * 0.5 + (rnd() - 0.5) * 4, x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke(); }
+    const g = c.createRadialGradient(W / 2, H / 2, W * 0.3, W / 2, H / 2, W * 0.85); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(1, "rgba(200,198,194,0.25)"); c.fillStyle = g; c.fillRect(0, 0, W, H); }
+  // ---------- 누끼 ----------
+  const loadImg = async (url) => { const r = await fetch(url, { mode: "cors" }); if (!r.ok) throw new Error("img " + r.status); return await createImageBitmap(await r.blob()); };
+  const toCanvas = (bmp, max) => { const s = Math.min(1, max / Math.max(bmp.width, bmp.height)); const c = document.createElement("canvas"); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s); c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height); return c; };
+  function floodAlpha(c) {
+    const w = c.width, h = c.height, ctx = c.getContext("2d"), id = ctx.getImageData(0, 0, w, h), d = id.data;
+    // 테두리가 밝고 고른 배경인지
+    let n = 0, ok = 0, sr = 0, sg = 0, sb = 0;
+    const edge = (x, y) => { const i = (y * w + x) * 4; n++; sr += d[i]; sg += d[i + 1]; sb += d[i + 2]; };
+    for (let x = 0; x < w; x += 2) { edge(x, 0); edge(x, h - 1); } for (let y = 0; y < h; y += 2) { edge(0, y); edge(w - 1, y); }
+    const br = sr / n, bgc = sg / n, bb = sb / n;
+    const close = (i, t) => Math.abs(d[i] - br) + Math.abs(d[i + 1] - bgc) + Math.abs(d[i + 2] - bb) < t;
+    for (let x = 0; x < w; x += 2) { if (close((0 * w + x) * 4, 40)) ok++; if (close(((h - 1) * w + x) * 4, 40)) ok++; } for (let y = 0; y < h; y += 2) { if (close((y * w) * 4, 40)) ok++; if (close((y * w + w - 1) * 4, 40)) ok++; }
+    if (ok / n < 0.9 || (br + bgc + bb) / 3 < 200) return false;
+    const T = 54, seen = new Uint8Array(w * h), st = [];
+    for (let x = 0; x < w; x++) { st.push(x, 0, x, h - 1); } for (let y = 0; y < h; y++) { st.push(0, y, w - 1, y); }
+    while (st.length) { const y = st.pop(), x = st.pop(); if (x < 0 || y < 0 || x >= w || y >= h) continue; const p = y * w + x; if (seen[p]) continue; const i = p * 4; if (!close(i, T)) continue; seen[p] = 1; d[i + 3] = 0; st.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1); }
+    // 가장자리 살짝 부드럽게
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const p = y * w + x; if (seen[p]) continue; if (seen[p - 1] || seen[p + 1] || seen[p - w] || seen[p + w]) d[p * 4 + 3] = 150; }
+    ctx.putImageData(id, 0, 0); return true;
+  }
+  async function mlAlpha(c) {
+    const w = c.width, h = c.height, R = 320, t = document.createElement("canvas"); t.width = R; t.height = R; const tc = t.getContext("2d"); tc.drawImage(c, 0, 0, R, R);
+    const px = tc.getImageData(0, 0, R, R).data, f = new Float32Array(3 * R * R), M = [0.485, 0.456, 0.406], SD = [0.229, 0.224, 0.225];
+    let mx = 0; for (let i = 0; i < R * R; i++) mx = Math.max(mx, px[i * 4], px[i * 4 + 1], px[i * 4 + 2]); mx = mx || 255;
+    for (let i = 0; i < R * R; i++) for (let k = 0; k < 3; k++) f[k * R * R + i] = (px[i * 4 + k] / mx - M[k]) / SD[k];
+    const out = await sess.run({ [sess.inputNames[0]]: new ort.Tensor("float32", f, [1, 3, R, R]) });
+    const o = out[sess.outputNames[0]].data; let lo = Infinity, hi = -Infinity; for (const v of o) { if (v < lo) lo = v; if (v > hi) hi = v; }
+    const m = document.createElement("canvas"); m.width = R; m.height = R; const mc = m.getContext("2d"), mi = mc.createImageData(R, R);
+    for (let i = 0; i < R * R; i++) { let a = (o[i] - lo) / (hi - lo || 1); a = Math.max(0, Math.min(1, (a - 0.35) / 0.4)); mi.data[i * 4 + 3] = Math.round(a * 255); }
+    mc.putImageData(mi, 0, 0);
+    const ctx = c.getContext("2d"); ctx.globalCompositeOperation = "destination-in"; ctx.drawImage(m, 0, 0, w, h); ctx.globalCompositeOperation = "source-over";
+  }
+  function crop(c) {
+    const w = c.width, h = c.height, d = c.getContext("2d").getImageData(0, 0, w, h).data; let x0 = w, y0 = h, x1 = 0, y1 = 0;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 <= x0 || y1 <= y0) return null;
+    const o = document.createElement("canvas"); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1; o.getContext("2d").drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height); return o;
+  }
+  const cache = new Map(); // gno -> cutout canvas (최근 것만)
+  async function cutout(it) {
+    if (cache.has(it.img)) return cache.get(it.img);
+    const bmp = await loadImg(it.img); const c = toCanvas(bmp, 520); bmp.close && bmp.close();
+    if (floodAlpha(c)) S.flood++; else { await mlAlpha(c); S.ml++; }
+    const r = crop(c); cache.set(it.img, r); if (cache.size > 120) cache.delete(cache.keys().next().value); return r;
+  }
+  // ---------- 배치 ----------
+  const BOX = { o: [80, 60, 440, 720], t: [570, 50, 440, 540], b: [565, 600, 450, 710], s: [70, 880, 460, 360] };
+  function place(ctx, img, box) {
+    if (!img) return; const [bx, by, bw, bh] = box.map((v) => v * K); const s = Math.min(bw / img.width, bh / img.height); const w = img.width * s, h = img.height * s, x = bx + (bw - w) / 2, y = by + (bh - h) / 2;
+    ctx.save(); ctx.shadowColor = "rgba(0,0,0,0.22)"; ctx.shadowBlur = 14 * K; ctx.shadowOffsetX = 3 * K; ctx.shadowOffsetY = 8 * K; ctx.drawImage(img, x, y, w, h); ctx.restore();
+  }
+  async function makeBoard(st) {
+    const role = (r) => st.items.find((i) => i.role === r);
+    const o = role("아우터"), t = role("상의"), b = role("하의"), s = role("신발");
+    const [co, ct, cb, cs] = await Promise.all([o, t, b, s].map((i) => (i ? cutout(i).catch(() => null) : null)));
+    if (!co || !cb) throw new Error("cut fail");
+    const c = document.createElement("canvas"); c.width = W; c.height = H; const ctx = c.getContext("2d"); ctx.drawImage(bg, 0, 0);
+    const box = Object.assign({}, BOX);
+    if (!ct) { box.b = [565, 120, 450, 1120]; }
+    if (!cs) { box.o = [70, 90, 450, 1150]; }
+    place(ctx, cs, box.s); place(ctx, cb, box.b); place(ctx, ct, box.t); place(ctx, co, box.o);
+    return await new Promise((r) => c.toBlob(r, "image/jpeg", 0.84));
+  }
+  // ---------- 데이터 ----------
+  let P = null; for (let k = 0; k < 5 && !P; k++) { try { const r = await supabaseClient.from("site_data").select("value").eq("id", "packs").single(); P = r.data && r.data.value; } catch (e) {} if (!P) await new Promise((r) => setTimeout(r, 3000)); }
+  if (!P) { S.st = "packs read fail"; return; }
+  const jobs = [];
+  for (const pk of ["starter", "levelup"]) for (const sx of ["M", "F"]) for (const ag of ["10대", "20대", "30대"]) ((P[pk][sx] || {})[ag] || []).forEach((c, ci) => c.sets.forEach((st, si) => { if (!opts.only || opts.only(pk, sx, ag, c.cat)) jobs.push({ st, key: `${pk[0]}${sx}${ag.charAt(0)}_${ci}_${si}` }); }));
+  S.total = jobs.length; S.st = "running";
+  const ver = Date.now(); const base = "https://cbuydjkvvzbluyohdkie.supabase.co/storage/v1/object/public/media/";
+  const q = jobs.slice();
+  const worker = async () => {
+    while (q.length) {
+      const j = q.shift();
+      try {
+        const blob = await makeBoard(j.st);
+        const path = `packs/${j.key}.jpg`;
+        let up = null; for (let k = 0; k < 3; k++) { up = await supabaseClient.storage.from("media").upload(path, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "604800" }); if (!up.error) break; await new Promise((r) => setTimeout(r, 1500)); }
+        if (up.error) throw new Error(up.error.message);
+        if (!j.st.snap) j.st.snap = j.st.board;
+        j.st.board = base + path + "?v=" + ver;
+      } catch (e) { S.fail++; if (S.log.length < 30) S.log.push(j.key + " " + e.message); }
+      S.done++;
+    }
+  };
+  await Promise.all([1, 2, 3].map(worker));
+  S.st = "saving";
+  let ok = false; for (let k = 0; k < 5 && !ok; k++) { try { const { error } = await supabaseClient.from("site_data").upsert({ id: "packs", value: P }); if (error) throw error; ok = true; } catch (e) { await new Promise((r) => setTimeout(r, 4000)); } }
+  S.st = ok ? "done" : "save fail"; window.__bmP = P;
+};
