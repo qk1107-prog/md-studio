@@ -2505,7 +2505,7 @@ async function renderPublicSite(root) {
     }
     const priceNote = () => (PRE_KEY && nowFn() >= T_TEASE) ? `<p class="bf-price-note">줄 그어진 가격 = 블프 직전(${PRE_LABEL}) 실제 판매가 · 노란 표시 = 직전가보다 진짜 내려간 상품</p>` : "";
     const curated = (t) => `<p class="bf-cur"><b>꿀템만 선별</b>${t}</p>`;
-    const cartNote = (t) => `<p class="bf-cartmini">🛒 ${t || "마음에 들면 지금 장바구니에 미리 담아두세요! 오픈하면 바로 결제만"}</p>`;
+    const cartNote = (t) => `<p class="bf-cartmini">🛒 ${t || "마음에 들면 지금 장바구니에 미리 담아두세요!"}</p>`;
     const secHead = (icon, title, note, small) => `<div class="bf-sec-head"><p class="bf-h">${icon} ${title}${small ? ` <small>${small}</small>` : ""}</p>${note ? `<span class="bf-sec-note">${note}</span>` : ""}</div>`;
 
     // 혜택·쿠폰 총정리
@@ -2543,9 +2543,9 @@ async function renderPublicSite(root) {
     // 시그니처특가 (카테고리별, 카드 태그 = 예정 할인율 구간)
     function sigSec(live, day) {
       const groups = (live && day.sig && day.sig.length) ? [{ label: "오늘 꿀템", items: day.sig }] :
-        (BFD.sigPreview || []).map((g) => ({ label: g.label.replace(" 할인", "").replace(/ /g, ""), sub: g.items.length, items: g.items.map((p) => Object.assign({}, p, { tag: p.band || g.label.replace(" 할인", "").replace(/ /g, "") })) }));
+        (BFD.sigPreview || []).map((g) => ({ label: g.label === "기타" ? "그 외" : g.label.replace(" 할인", "").replace(/ /g, ""), items: g.items.map((p) => Object.assign({}, p, { tag: p.band || g.label.replace(" 할인", "").replace(/ /g, "") })) }));
       return `<div class="bf-sec" id="bf-sig">${secHead("✨", "시그니처특가", live ? "블프 기간 내내 이 가격" : "카테고리별 · 후기 많은 순", "꿀템 선별")}${curated("시그니처특가 1,500여 개 중 후기·할인율 좋은 꿀템만 골랐어요")}
-        ${!live ? `<div class="bf-cart"><p class="t">🛒 지금 장바구니에 미리 담아두세요!</p><p class="d">11.22(일) 19시 본편 오픈 때 <b>사진 위 빨간 태그 할인율</b>로 열려요. 인기 사이즈는 오픈 몇 분 만에 품절되니까, 미리 담아두고 19시 되자마자 결제하세요.</p></div>` : `<div class="bf-cart live"><p class="t">🛒 장바구니 담고 쿠폰 먹이면 끝!</p><p class="d">시그니처특가는 블프 끝날 때까지 이 가격이에요. 장바구니 쿠폰까지 같이 쓰면 더 싸져요.</p></div>`}
+        ${!live ? `<div class="bf-cart"><p class="t">🛒 지금 장바구니에 미리 담아두세요!</p><p class="d">11.22(일) 19시 본편 오픈 때 <b>사진 위 빨간 태그 할인율</b>로 열려요. 인기 사이즈는 금방 품절되니까 미리 담아두세요.</p></div>` : `<div class="bf-cart live"><p class="t">🛒 장바구니 담고 쿠폰 먹이면 끝!</p><p class="d">시그니처특가는 블프 끝날 때까지 이 가격이에요. 장바구니 쿠폰까지 같이 쓰면 더 싸져요.</p></div>`}
         ${chipsGrid("sig", groups, false)}
       </div>`;
     }
@@ -2562,7 +2562,7 @@ async function renderPublicSite(root) {
       return `<div class="bf-sec bf-tease" id="bf-tease">${secHead("⚡", "프리오픈 · 티징 특가", "", "11.22(일) 19시 본편 전까지")}
         ${info ? `<div class="tz-infos">${info}</div>` : ""}
         ${groups.length ? `<p class="tz-sub">🛍️ 지금 사도 되는 프리오픈 상품</p><a class="tz-cpnote" href="https://www.musinsa.com/coupon" target="_blank" rel="noopener">🎟️ 사진 위 <b>'쿠폰 N%↓'</b> 붙은 상품은 할인 0%로 보여도, <b>쿠폰함에서 프리오픈 쿠폰 받으면</b> 그만큼 더 싸져요 → 쿠폰 받으러 가기</a>${chipsGrid("tease", groups, false)}` : ""}
-        ${nb.length ? `<p class="tz-sub">🆕 신규 브랜드 최대 30% 쿠폰 · 48시간 먼저 · 브랜드별 5개씩</p>${chipsGrid("tznb", nb, false)}` : ""}
+        ${nb.length ? `<p class="tz-sub">🆕 신규 브랜드 최대 30% 쿠폰</p><p class="tz-cpnote">🎟️ 제품 링크 들어가셔서 <b>30% 쿠폰 꼭 확인</b>하고 <b>쿠폰함에 받아두세요!</b></p>${chipsGrid("tznb", nb, false)}` : ""}
       </div>`;
     }
 
@@ -2610,9 +2610,9 @@ async function renderPublicSite(root) {
       let ri = roundIdx(md); if (ri < 0) ri = 0;
       const r = (BFD.rounds || [])[ri] || {};
       const items = (r.items && r.items.length) ? r.items : (ri === 0 ? (BFD.sigBrands || []) : []);
-      const groups = items.map((b) => ({ label: b.brand, sub: b.rate ? `~${b.rate}%` : "", items: b.items || [] }));
+      const groups = items.map((b) => ({ label: b.brand, sub: b.rate ? `~${b.rate}%` : "", items: (b.items || []).map((p) => Object.assign({}, p, b.rate && !p.tag ? { tag: `예상 ~${b.rate}%` } : {})) }));
       const allR = (BFD.rounds || []).map((x, i) => ({ i, list: [...new Set([...(x.sig || []), ...(x.cat || [])])] })).filter((x) => x.list.length);
-      return `<div class="bf-sec" id="bf-bday">${secHead("🏷️", "브랜드특가", "브랜드 누르면 꿀템만", ROUND_NAME[ri])}${curated("참여 브랜드 수백 곳 상품 중 꿀템만 골랐어요")}${cartNote()}
+      return `<div class="bf-sec" id="bf-bday">${secHead("🏷️", "브랜드특가", "브랜드 누르면 꿀템만", ROUND_NAME[ri])}${curated("참여 브랜드 수백 곳 상품 중 꿀템만 골랐어요")}<p class="bf-hint"><b style="color:#ff3d3f">사진 위 빨간 태그 = 11.22(일) 19시 오픈 예상 특가</b> (브랜드 최대 할인율 기준)</p>${cartNote()}
         ${groups.length ? chipsGrid("bday", groups, false) : `<p class="bf-empty">이번 회차 꿀템 정리 중이에요 · 곧 올라와요</p>`}
         ${allR.length ? `<details class="bf-more"><summary>회차별 참여 브랜드 전체 보기</summary>${allR.map((x) => `<p class="bf-sub2">${esc(ROUND_NAME[x.i])} · ${x.list.length}개</p><div class="bf-chipset">${x.list.map((b) => `<span>${esc(b)}</span>`).join("")}</div>`).join("")}</details>` : ""}
       </div>`;
