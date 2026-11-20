@@ -1962,7 +1962,7 @@ async function renderPublicSite(root) {
     const existing = root.querySelector("#ep-backdrop");
     if (existing && existing.dataset.ep === (lv ? "lp-" : "sp-") + key) return;
     if (existing) existing.remove();
-    const items = (st.items || []).map((it) => ({ brand: it.brand, product_name: (it.role ? `[${it.role}] ` : "") + it.name, curator_url: it.link, image_url: it.img }));
+    const items = (st.items || []).map((it) => ({ brand: it.brand, product_name: (it.role ? `[${it.role}] ` : "") + it.name, curator_url: it.link, image_url: it.flat || it.img }));
     const board = safeImg(st.board);
     const holder = document.createElement("div");
     holder.innerHTML = `
@@ -3098,7 +3098,7 @@ async function renderPublicSite(root) {
               <a class="rec-more" href="#${hp}=${pfx}${ci}_${n}">전체보기</a>
             </div>
             <div class="rec-scroll">${st.items.map((it) => `<a class="rec-prod" href="${esc(safeUrl(it.link) || "#")}" target="_blank" rel="noopener">
-              <div class="rec-prod-img">${safeImg(it.img) ? `<img src="${esc(safeImg(it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : "사진"}<span class="sp-role">${esc(it.role || "")}</span></div>
+              <div class="rec-prod-img">${safeImg(it.flat || it.img) ? `<img src="${esc(safeImg(it.flat || it.img))}" alt="${esc(it.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : "사진"}<span class="sp-role">${esc(it.role || "")}</span></div>
               <p class="rec-prod-brand">${esc(it.brand)}</p>
               <p class="rec-prod-name">${esc(it.name)}</p>
             </a>`).join("")}</div>
