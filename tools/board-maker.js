@@ -36,6 +36,12 @@ window.__bmRun = async (opts) => {
     const T = 54, seen = new Uint8Array(w * h), st = [];
     for (let x = 0; x < w; x++) { st.push(x, 0, x, h - 1); } for (let y = 0; y < h; y++) { st.push(0, y, w - 1, y); }
     while (st.length) { const y = st.pop(), x = st.pop(); if (x < 0 || y < 0 || x >= w || y >= h) continue; const p = y * w + x; if (seen[p]) continue; const i = p * 4; if (!close(i, T)) continue; seen[p] = 1; d[i + 3] = 0; st.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1); }
+    // 색상 점(컬러칩) 같은 작은 조각 지우기: 큰 덩어리만 남김
+    { const lab = new Int32Array(w * h), sizes = [0]; let id2 = 0;
+      for (let p0 = 0; p0 < w * h; p0++) { if (seen[p0] || lab[p0]) continue; id2++; let cnt = 0; const q2 = [p0]; lab[p0] = id2;
+        while (q2.length) { const p = q2.pop(); cnt++; const x = p % w, y = (p / w) | 0; const nb = [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1]; for (const r of nb) if (r >= 0 && !seen[r] && !lab[r]) { lab[r] = id2; q2.push(r); } }
+        sizes.push(cnt); }
+      const big = Math.max(...sizes); for (let p = 0; p < w * h; p++) if (lab[p] && sizes[lab[p]] < big * 0.12) { seen[p] = 1; d[p * 4 + 3] = 0; } }
     // 가장자리 살짝 부드럽게
     for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const p = y * w + x; if (seen[p]) continue; if (seen[p - 1] || seen[p + 1] || seen[p - w] || seen[p + w]) d[p * 4 + 3] = 150; }
     ctx.putImageData(id, 0, 0); return true;
@@ -62,8 +68,8 @@ window.__bmRun = async (opts) => {
   async function cutout(it) {
     if (cache.has(it.img)) return cache.get(it.img);
     const bmp = await loadImg(it.img); const c = toCanvas(bmp, 520); bmp.close && bmp.close();
-    if (floodAlpha(c)) S.flood++; else { await mlAlpha(c); S.ml++; }
-    const r = crop(c); cache.set(it.img, r); if (cache.size > 120) cache.delete(cache.keys().next().value); return r;
+    let ml = false; if (floodAlpha(c)) S.flood++; else { ml = true; S.ml++; }
+    const r = ml ? null : crop(c); cache.set(it.img, r); if (cache.size > 160) cache.delete(cache.keys().next().value); return r;
   }
   // ---------- 배치 ----------
   const BOX = { o: [80, 60, 440, 720], t: [570, 50, 440, 540], b: [565, 600, 450, 710], s: [70, 880, 460, 360] };
@@ -75,37 +81,43 @@ window.__bmRun = async (opts) => {
     const role = (r) => st.items.find((i) => i.role === r);
     const o = role("아우터"), t = role("상의"), b = role("하의"), s = role("신발");
     const [co, ct, cb, cs] = await Promise.all([o, t, b, s].map((i) => (i ? cutout(i).catch(() => null) : null)));
-    if (!co || !cb) throw new Error("cut fail");
+    if (!co || !cb || (t && !ct)) throw new Error("model photo");
     const c = document.createElement("canvas"); c.width = W; c.height = H; const ctx = c.getContext("2d"); ctx.drawImage(bg, 0, 0);
     const box = Object.assign({}, BOX);
     if (!ct) { box.b = [565, 120, 450, 1120]; }
     if (!cs) { box.o = [70, 90, 450, 1150]; }
+    if (s && !cs) box.o = [70, 90, 450, 1150];
     place(ctx, cs, box.s); place(ctx, cb, box.b); place(ctx, ct, box.t); place(ctx, co, box.o);
     return await new Promise((r) => c.toBlob(r, "image/jpeg", 0.84));
   }
   // ---------- 데이터 ----------
   let P = null; for (let k = 0; k < 5 && !P; k++) { try { const r = await supabaseClient.from("site_data").select("value").eq("id", "packs").single(); P = r.data && r.data.value; } catch (e) {} if (!P) await new Promise((r) => setTimeout(r, 3000)); }
   if (!P) { S.st = "packs read fail"; return; }
-  const jobs = [];
-  for (const pk of ["starter", "levelup"]) for (const sx of ["M", "F"]) for (const ag of ["10대", "20대", "30대"]) ((P[pk][sx] || {})[ag] || []).forEach((c, ci) => c.sets.forEach((st, si) => { if (!opts.only || opts.only(pk, sx, ag, c.cat)) jobs.push({ st, key: `${pk[0]}${sx}${ag.charAt(0)}_${ci}_${si}` }); }));
-  S.total = jobs.length; S.st = "running";
+  const cats = [];
+  for (const pk of ["starter", "levelup"]) for (const sx of ["M", "F"]) for (const ag of ["10대", "20대", "30대"]) ((P[pk][sx] || {})[ag] || []).forEach((c, ci) => { if (!opts.only || opts.only(pk, sx, ag, c.cat)) cats.push({ c, key: `${pk[0]}${sx}${ag.charAt(0)}_${ci}` }); });
+  S.total = cats.length; S.st = "running";
   const ver = Date.now(); const base = "https://cbuydjkvvzbluyohdkie.supabase.co/storage/v1/object/public/media/";
-  const q = jobs.slice();
+  const NEED = opts.need || 12;
+  const q = cats.slice();
   const worker = async () => {
     while (q.length) {
-      const j = q.shift();
-      try {
-        const blob = await makeBoard(j.st);
-        const path = `packs/${j.key}.jpg`;
-        let up = null; for (let k = 0; k < 3; k++) { up = await supabaseClient.storage.from("media").upload(path, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "604800" }); if (!up.error) break; await new Promise((r) => setTimeout(r, 1500)); }
-        if (up.error) throw new Error(up.error.message);
-        if (!j.st.snap) j.st.snap = j.st.board;
-        j.st.board = base + path + "?v=" + ver;
-      } catch (e) { S.fail++; if (S.log.length < 30) S.log.push(j.key + " " + e.message); }
-      S.done++;
+      const { c, key } = q.shift(); const good = [];
+      for (const st of c.sets) {
+        if (good.length >= NEED) break;
+        try {
+          const blob = await makeBoard(st);
+          const path = `packs/${key}_${good.length}.jpg`;
+          let up = null; for (let k = 0; k < 3; k++) { up = await supabaseClient.storage.from("media").upload(path, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "604800" }); if (!up.error) break; await new Promise((r) => setTimeout(r, 1500)); }
+          if (up.error) throw new Error(up.error.message);
+          if (!st.snap) st.snap = st.board;
+          st.board = base + path + "?v=" + ver; good.push(st);
+        } catch (e) { S.fail++; if (S.log.length < 30 && !/model photo/.test(e.message)) S.log.push(key + " " + e.message); }
+      }
+      c.sets = good; S.done++;
     }
   };
   await Promise.all([1, 2, 3].map(worker));
+  for (const pk of ["starter", "levelup"]) for (const sx of ["M", "F"]) for (const ag of ["10대", "20대", "30대"]) if (P[pk][sx] && P[pk][sx][ag]) P[pk][sx][ag] = P[pk][sx][ag].filter((c) => c.sets.length);
   S.st = "saving";
   let ok = false; for (let k = 0; k < 5 && !ok; k++) { try { const { error } = await supabaseClient.from("site_data").upsert({ id: "packs", value: P }); if (error) throw error; ok = true; } catch (e) { await new Promise((r) => setTimeout(r, 4000)); } }
   S.st = ok ? "done" : "save fail"; window.__bmP = P;
