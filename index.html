@@ -3076,7 +3076,7 @@ async function renderPublicSite(root) {
           const items = B.items.map((x) => ({ brand: B.b, name: x.n, img: "https://image.msscdn.net" + x.i, link: curl(x.l) }));
           const first = items[0];
           return `<div class="rec-row">
-            <a class="rec-thumb cat-thumb" href="${esc(first.link)}" target="_blank" rel="noopener" style="position:relative">
+            <a class="rec-thumb cat-thumb" href="#br=${encodeURIComponent(g.key + "~" + i)}" style="position:relative" aria-label="${esc(B.b)} 전체보기">
               <img src="${esc(first.img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
               <span class="cat-thumb-name">${esc(B.b)}</span>
             </a>
@@ -3100,7 +3100,7 @@ async function renderPublicSite(root) {
     const catRow = (c, href) => {
       const first = c.items[0]; const th = safeImg(c.thumb || first.img);
       return `<div class="rec-row">
-        <a class="rec-thumb cat-thumb" href="${esc(safeUrl(first.link) || "#")}" target="_blank" rel="noopener" aria-label="${esc(c.cat)} 1위">
+        <a class="rec-thumb cat-thumb" href="${href}" aria-label="${esc(c.cat)} 전체보기">
           ${th ? `<img src="${esc(th)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}
           <span class="cat-thumb-name">${esc(c.cat)}</span>
         </a>
