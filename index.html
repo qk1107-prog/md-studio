@@ -1130,7 +1130,12 @@
 
 #app-root .tz-alarm{background:#111;border-radius:14px;padding:12px 12px 6px;margin:0 0 12px}
 #app-root .tz-al-h{color:#fff;font-size:14px;font-weight:800;margin:0 0 8px}
-#app-root .tz-al{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-top:1px solid #2a2a2a;color:#fff;text-decoration:none}
+#app-root .tz-al{padding:10px 0;border-top:1px solid #2a2a2a;color:#fff}
+#app-root .tz-al-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#app-root .tz-al-links{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px;scrollbar-width:none}
+#app-root .tz-al-links::-webkit-scrollbar{display:none}
+#app-root .tz-al-links a{flex:0 0 auto;font-size:11.5px;font-weight:700;color:#fff;background:#2a2a2a;border-radius:999px;padding:6px 10px;text-decoration:none;white-space:nowrap}
+#app-root .tz-al-links a.go{background:#ffe14d;color:#111}
 #app-root .tz-al:first-of-type{border-top:0}
 #app-root .tz-al b{display:block;font-size:13px;font-weight:700}
 #app-root .tz-al span{display:block;font-size:11px;color:#aaa;margin-top:2px}
@@ -2580,7 +2585,7 @@ async function renderPublicSite(root) {
       const nb = (T.newBrands || []).filter((b) => (b.items || []).length).map((b) => ({ label: b.brand, items: b.items }));
       if (!groups.length && !nb.length) return "";
       const br = (T.brands || []).filter((b) => (b.items || []).length).map((b) => ({ label: b.brand, sub: b.rate ? `~${b.rate}%` : "", items: b.items }));
-      const al = (T.alarms || []).map((a) => `<${a.link ? `a href="${esc(safeUrl(a.link))}" target="_blank" rel="noopener"` : "div"} class="tz-al"><div><b>${esc(a.t)}</b><span>${esc(a.d || "")}</span></div><em class="tz-cd" data-tzcd="${esc(a.cd || "")}"></em></${a.link ? "a" : "div"}>`).join("");
+      const al = (T.alarms || []).map((a) => `<div class="tz-al"><div class="tz-al-top"><div><b>${esc(a.t)}</b><span>${esc(a.d || "")}</span></div><em class="tz-cd" data-tzcd="${esc(a.cd || "")}"></em></div>${(a.links && a.links.length) || a.link ? `<div class="tz-al-links">${(a.links || []).map((l) => `<a href="${esc(safeUrl(l.link))}" target="_blank" rel="noopener">${esc(l.t)}</a>`).join("")}${a.link ? `<a class="go" href="${esc(safeUrl(a.link))}" target="_blank" rel="noopener">${esc(a.go || "선착순 받으러 가기")} →</a>` : ""}</div>` : ""}</div>`).join("");
       const info = (T.info || []).map((x) => `<${x.link ? `a href="${esc(safeUrl(x.link))}" target="_blank" rel="noopener"` : "div"} class="tz-info"><b>${esc(x.t)}</b><span>${esc(x.d || "")}</span>${x.cd ? `<em class="tz-cd" data-tzcd="${esc(x.cd)}"></em>` : ""}</${x.link ? "a" : "div"}>`).join("");
       return `<div class="bf-sec bf-tease" id="bf-tease">${secHead("⚡", "프리오픈 · 티징 특가", "", "11.22(일) 19시 본편 전까지")}
         ${al ? `<div class="tz-alarm"><p class="tz-al-h">⏰ 놓치지 마세요 · 선착순 오픈 시간</p>${al}</div>` : ""}
@@ -3303,15 +3308,13 @@ renderPublicSite(ROOT_EL);
 #mds-wish .w-done{text-align:center;padding:18px 0 8px;font-size:16px;font-weight:700;line-height:1.5}
 </style>
 <script>
-// ---------- 블프 위시리스트 팝업 (처음 들어올 때 한 번, 바로 닫을 수 있음 · 하루 동안 다시 안 뜸) ----------
+// ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
 (function(){
   try{
     const qs=location.search, force=/[?&]wish=1/.test(qs);
     if(!force){
       if(window.top!==window.self||/[?&]shot=1/.test(qs)) return;
       if(localStorage.getItem("mds_owner")==="1") return;
-      const seen=+localStorage.getItem("mds_wish_seen")||0;
-      if(Date.now()-seen<864e5) return;
     }
     const URL_="https://cbuydjkvvzbluyohdkie.supabase.co/rest/v1/site_events";
     const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
