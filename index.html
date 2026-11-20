@@ -971,6 +971,11 @@
   #app-root .bf-xmas .xm-lead { margin: 2px 0 10px; font-size: 11.5px; font-weight: 700; color: #2f6b3a; }
   #app-root .bf-xmas .bf-chips button.active { background: #c8262c; border-color: #c8262c; color: #fff; }
   #app-root .bf-xmas .bf-item .im { box-shadow: 0 0 0 1.5px #f3d6d2 inset; }
+  #app-root .bf-cart { margin: 4px 0 12px; padding: 12px 14px; border-radius: 12px; background: #ff3d3f; color: #fff; box-shadow: 0 4px 14px rgba(255,61,63,.25); }
+  #app-root .bf-cart .t { margin: 0; font-size: 15px; font-weight: 900; letter-spacing: -0.4px; }
+  #app-root .bf-cart .d { margin: 4px 0 0; font-size: 11.5px; font-weight: 600; line-height: 1.45; opacity: .95; }
+  #app-root .bf-cart .d b { color: #E4FF1A; }
+  #app-root .bf-cart.live { background: #141312; }
   #app-root .bf-item .preal { display: inline-block; margin: 3px 0 0; font-size: 8.5px; font-weight: 800; color: #141312; background: #f4ffb0; border: 1px solid #d6ec2a; border-radius: 4px; padding: 1px 5px 0; white-space: nowrap; letter-spacing: -0.2px; }
   #app-root .bf-item .real { position: absolute; right: 4px; bottom: 4px; font-size: 8.5px; font-weight: 900; color: #141312; background: #E4FF1A; border-radius: 4px; padding: 2px 5px 1px; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
   #app-root .bf-brief { margin: 0 0 10px; padding: 12px 13px 11px; border-radius: 12px; background: #141312; color: #fff; }
@@ -2423,7 +2428,7 @@ async function renderPublicSite(root) {
       const groups = (live && day.sig && day.sig.length) ? [{ label: "오늘 꿀템", items: day.sig }] :
         (BFD.sigPreview || []).map((g) => ({ label: g.label.replace(" 할인", "").replace(/ /g, ""), sub: g.items.length, items: g.items.map((p) => Object.assign({}, p, { tag: p.band || g.label.replace(" 할인", "").replace(/ /g, "") })) }));
       return `<div class="bf-sec" id="bf-sig">${secHead("✨", "시그니처특가", live ? "블프 기간 내내 이 가격" : "카테고리별 · 후기 많은 순", "꿀템 선별")}${curated("시그니처특가 1,500여 개 중 후기·할인율 좋은 꿀템만 골랐어요")}
-        ${!live ? `<p class="bf-hint"><b style="color:#ff3d3f">11.22(일) 19시 본편 오픈 때 사진 위 빨간 태그 할인율로 열릴 예정이에요.</b> 아래 가격은 지금 기준이라, 오픈 때 더 내려가요. 장바구니에 미리 담아두세요!</p>` : ""}
+        ${!live ? `<div class="bf-cart"><p class="t">🛒 지금 장바구니에 미리 담아두세요!</p><p class="d">11.22(일) 19시 본편 오픈 때 <b>사진 위 빨간 태그 할인율</b>로 열려요. 인기 사이즈는 오픈 몇 분 만에 품절되니까, 미리 담아두고 19시 되자마자 결제하세요.</p></div>` : `<div class="bf-cart live"><p class="t">🛒 장바구니 담고 쿠폰 먹이면 끝!</p><p class="d">시그니처특가는 블프 끝날 때까지 이 가격이에요. 장바구니 쿠폰까지 같이 쓰면 더 싸져요.</p></div>`}
         ${chipsGrid("sig", groups, false)}
       </div>`;
     }
