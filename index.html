@@ -458,6 +458,11 @@
     margin: 0 20px 10px;
     text-transform: uppercase;
   }
+  #app-root .collab-head { display: flex; align-items: baseline; justify-content: space-between; }
+  #app-root .collab-head .collab-label { margin-bottom: 10px; }
+  #app-root .lu-more { margin: 0 20px 10px; font-size: 11.5px; font-weight: 800; color: #141312; text-decoration: none; border-bottom: 1.5px solid #141312; padding-bottom: 1px; }
+  #app-root .lu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 4px 0 20px; }
+  #app-root .lu-grid .collab-card { width: auto; max-width: none; flex: none; scroll-snap-align: none; }
   #app-root .collab-scroll {
     display: flex;
     align-items: flex-start;
@@ -1803,6 +1808,38 @@ async function renderPublicSite(root) {
   }
 
   // 주인장 BEST PICK 전체보기
+  function openLineup() {
+    const existing = root.querySelector("#ep-backdrop");
+    if (existing && existing.dataset.ep === "lu") return;
+    if (existing) existing.remove();
+    const src = root.querySelector("#collab-scroll");
+    if (!src) { history.replaceState(null, "", location.pathname + location.search); return; }
+    const holder = document.createElement("div");
+    holder.innerHTML = `
+      <div class="feed-backdrop ep-detail" id="ep-backdrop" data-ep="lu">
+        <div class="ep-sticky">
+          <div class="feed-header">
+            <button class="back-link" id="ep-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button>
+            <p class="feed-title">LINE UP</p>
+          </div>
+        </div>
+        <div class="ep-wrap">
+          <div class="ep-hero"><h1 class="ep-hero-title">LINE UP 전체보기</h1></div>
+          <div class="lu-grid"></div>
+          <p class="ep-note">이 페이지의 링크로 구매하시면 광만두가 일정 수수료를 받을 수 있어요.</p>
+        </div>
+      </div>`;
+    const backdrop = holder.firstElementChild;
+    const grid = backdrop.querySelector(".lu-grid");
+    src.querySelectorAll(".collab-card").forEach((c) => grid.appendChild(c.cloneNode(true)));
+    root.appendChild(backdrop);
+    animateOverlayIn(backdrop);
+    document.body.style.overflow = "hidden";
+    backdrop.querySelector("#ep-close").addEventListener("click", () => {
+      if (openedFromList) history.back();
+      else { history.replaceState(null, "", location.pathname + location.search); closeEpisode(); }
+    });
+  }
   function openPicks() {
     if (!AWARDS || AW_TEASER) { history.replaceState(null, "", location.pathname + location.search); return; }
     const existing = root.querySelector("#ep-backdrop");
@@ -1961,6 +1998,7 @@ async function renderPublicSite(root) {
     else if (/^#lp=\d+_\d+/.test(location.hash)) openPack(location.hash.slice(4), true);
     else if (location.hash === "#bp") openPicks();
     else if (location.hash === "#lf") openLongform();
+    else if (location.hash === "#lu") openLineup();
     else if (location.hash === "#cps") openCoupons();
     else if (/^#cp=\d+/.test(location.hash)) openCoupon(location.hash.slice(4));
     else if (/^#br=/.test(location.hash)) openCat("br:" + decodeURIComponent(location.hash.slice(4)));
@@ -2140,7 +2178,7 @@ async function renderPublicSite(root) {
     ${BF_ON ? `<div class="bf-mini"><button type="button" id="bf-mini"><span class="l"><b>🔥 무진장 블프</b>쿠폰·특가·꿀템 한 번에 정리</span><span class="r"><span id="bf-mini-cd"></span> →</span></button></div>` : ""}
 
     <div class="collab-section">
-      <p class="collab-label">LINE UP</p>
+      <div class="collab-head"><p class="collab-label">LINE UP</p><a class="lu-more" href="#lu">전체보기 →</a></div>
       <div class="collab-scroll" id="collab-scroll">
         ${collabs.map((c) => `
           <a class="collab-card" style="--collab-pop:${esc(c.pop)}; aspect-ratio:${esc(c.ratio || "4/5")};" ${c.look ? `href="#look=${esc(c.look)}"` : `href="${esc(safeUrl(c.link) || "#")}" target="_blank" rel="noopener"`}>
@@ -2758,7 +2796,7 @@ async function renderPublicSite(root) {
   }));
   renderRecList();
   root.querySelector("#ep-list").addEventListener("click", (e) => {
-    if (e.target.closest('a[href^="#ep="], a[href^="#st="], a[href^="#ct="], a[href^="#ca="], a[href^="#br="], a[href^="#sp="], a[href^="#lp="], a[href="#bp"], a[href="#lf"]')) openedFromList = true;
+    if (e.target.closest('a[href^="#ep="], a[href^="#st="], a[href^="#ct="], a[href^="#ca="], a[href^="#br="], a[href^="#sp="], a[href^="#lp="], a[href="#bp"], a[href="#lf"], a[href="#lu"]')) openedFromList = true;
   });
 
   // ---------- 실착: 분류(타이트 컷 → 전체 컷)마다 9개 + 더보기 ----------
@@ -3056,7 +3094,7 @@ async function renderPublicSite(root) {
     }
   } catch (e) {}
   window.addEventListener("hashchange", routeFromHash);
-  if (/^#(ep|st|ct|ca|br|sp|lp|look|looks|cp)=/.test(location.hash) || location.hash === "#bp" || location.hash === "#lf" || location.hash === "#cps") routeFromHash();
+  if (/^#(ep|st|ct|ca|br|sp|lp|look|looks|cp)=/.test(location.hash) || location.hash === "#bp" || location.hash === "#lf" || location.hash === "#lu" || location.hash === "#cps") routeFromHash();
   loadCoupons().then(renderCouponStrip);
   finishIntro();
 
