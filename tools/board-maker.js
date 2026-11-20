@@ -93,14 +93,14 @@ window.__bmRun = async (opts) => {
     try {
       const a = await cut1(url, 54);
       // 망가진 누끼 걸러내기: 촘촘하게(20) 잘랐을 때 훨씬 많이 남으면 = 54에서 옷이 배경이랑 같이 날아갔거나, 그림자·회색 배경·모델 컷
-      if (a.r) { const b2 = await cut1(url, 20); if (bad(a.q) || (b2.q.area / (a.q.area || 1e-9) > 1.22 && b2.q.fill < 0.97)) { S.reject = (S.reject || 0) + 1; a.r = null; } }
+      if (a.r) { const b2 = await cut1(url, 20); if (bad(a.q) || (b2.q.area / (a.q.area || 1e-9) > 1.4 && b2.q.fill < 0.97)) { S.reject = (S.reject || 0) + 1; a.r = null; } }
       r = a.r; if (r) S.flood++;
       if (r && (looksPerson(r) || r.height / r.width > 2.6)) { r = null; S.person = (S.person || 0) + 1; }
     } catch (e) {}
     cache.set(url, r); if (cache.size > 400) cache.delete(cache.keys().next().value); return r;
   }
   // 기존 보드 검사용: 원래 방식(54)으로 잘랐을 때 망가졌는지
-  async function wasBad(it) { try { const u = it.flat || it.img; const a = await cut1(u, 54); if (!a.r) return false; if (bad(a.q)) return true; const b2 = await cut1(u, 20); return b2.q.area / (a.q.area || 1e-9) > 1.22 && b2.q.fill < 0.97; } catch (e) { return false; } }
+  async function wasBad(it) { try { const u = it.flat || it.img; const a = await cut1(u, 54); if (!a.r) return false; if (bad(a.q)) return true; const b2 = await cut1(u, 20); return b2.q.area / (a.q.area || 1e-9) > 1.4 && b2.q.fill < 0.97; } catch (e) { return false; } }
   window.__bmWasBad = wasBad;
   window.__bmQ = async (url) => { const a = await cut1(url, 54), b = await cut1(url, 20); return JSON.stringify({ a: a.q, b: b.q }); };
   if (opts.qonly) { S.st = "q"; return; }
@@ -142,7 +142,7 @@ window.__bmRun = async (opts) => {
       const { c, key } = q.shift(); const good = [];
       for (const st of c.sets) {
         if (good.length >= NEED) break;
-        if (/\/media\/packs\//.test(st.board || "") && new RegExp(key + "_" + good.length + "\\.jpg").test(st.board)) {
+        if (/\/media\/packs\//.test(st.board || "")) {
           let redo = false;
           if (st.redo) redo = true;
           else if (opts.recheck) { for (const it of st.items) if (["아우터", "상의", "하의", "신발"].includes(it.role) && (await wasBad(it))) { redo = true; break; } }
@@ -152,7 +152,7 @@ window.__bmRun = async (opts) => {
         }
         try {
           const blob = await makeBoard(st);
-          const path = `packs/${key}_${good.length}.jpg`;
+          const path = `packs/${key}_${String(st.sid || Math.random().toString(36).slice(2)).replace(/[^A-Za-z0-9_-]/g, "")}.jpg`;
           let up = null; for (let k = 0; k < 3; k++) { up = await supabaseClient.storage.from("media").upload(path, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "604800" }); if (!up.error) break; await new Promise((r) => setTimeout(r, 1500)); }
           if (up.error) throw new Error(up.error.message);
           if (!st.snap) st.snap = st.board;
