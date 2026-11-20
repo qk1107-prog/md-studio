@@ -2670,7 +2670,7 @@ async function renderPublicSite(root) {
       if (liveMode === "big") {
         const sorted = [...LIVE].sort((a, b) => b.max - a.max);
         const list = liveAll ? sorted : sorted.slice(0, 8);
-        return `<div class="bf-lvbig">${list.map((l) => `<div class="bf-lvb${l.d === todayKey ? " today" : ""}"><span class="pct">${l.max ? `<small>최대</small>${l.max}%` : "<small>단독</small>혜택"}</span><span class="txt"><b>${esc(l.b)}</b><em>${esc(l.x)}</em></span><span class="when">${esc(l.d)}(${esc(W[l.d] || "")})<br>${esc(l.t)}</span></div>`).join("")}</div>${!liveAll && sorted.length > 8 ? `<button type="button" class="bf-more-btn" id="bf-live-all" style="width:100%;margin-top:8px">라이브 ${sorted.length}개 전부 보기 ↓</button>` : ""}`;
+        return `<div class="bf-lvbig">${list.map((l) => `<div class="bf-lvb${l.d === todayKey ? " today" : ""}"><span class="pct">${l.max ? `<small>최대</small>${l.max}%` : "<small>단독</small>혜택"}</span><span class="txt"><b>${esc(l.b)}</b><em>${esc(l.x)}</em></span><span class="when">${esc(l.d)}(${esc(W[l.d] || "")})<br>${esc(l.t)}</span></div>`).join("")}</div>${!liveAll && sorted.length > 8 ? `<button type="button" class="bf-more-btn" id="bf-live-all" style="width:100%;margin-top:8px">라이브 전부 보기 ↓</button>` : ""}`;
       }
       const days = [...new Set(LIVE.map((l) => l.d))];
       return `<div class="bf-lives">${days.map((d) => `<div class="bf-lvday${d === todayKey ? " today" : ""}"><b>${esc(d)}<small>${esc(W[d] || "")}</small></b><div class="bf-lvrows">${LIVE.filter((l) => l.d === d).map((l) => `<div class="bf-lvrow"><i>${esc(l.t)}</i><span><b>${esc(l.b)}</b><em>${esc(l.x)}</em></span></div>`).join("")}</div></div>`).join("")}</div>`;
@@ -2678,7 +2678,7 @@ async function renderPublicSite(root) {
     function liveSec(todayKey) {
       if (!LIVE.length) return "";
       const today = LIVE.filter((l) => l.d === todayKey);
-      return `<div class="bf-sec" id="bf-live">${secHead("📺", "무진장 라이브", "19~21시 · 라이브 한정 혜택", `${new Set(LIVE.map((l) => l.d)).size}일 ${LIVE.length}개`)}
+      return `<div class="bf-sec" id="bf-live">${secHead("📺", "무진장 라이브", "19~21시 · 라이브 한정 혜택")}
         ${today.length ? `<div class="bf-today-live"><p>오늘 라이브</p>${today.map((l) => `<span><i>${esc(l.t)}</i>${esc(l.b)}</span>`).join("")}</div>` : ""}
         <div class="bf-chips" id="bf-live-mode"><button type="button" data-m="big" class="active">혜택 큰 순서</button><button type="button" data-m="date">날짜순</button></div>
         <div id="bf-live-list">${liveList(todayKey)}</div>
@@ -2689,14 +2689,14 @@ async function renderPublicSite(root) {
     const BEST_TABS = (BFD.bestTabs && Object.keys(BFD.bestTabs).length) ? Object.entries(BFD.bestTabs).filter(([, a]) => a && a.length) : [];
     function bestSec() {
       if (!BEST_TABS.length) return "";
-      return `<div class="bf-sec" id="bf-best">${secHead("🏆", "작년 무진장 BEST", "작년에 제일 많이 팔린 순")}${curated("작년 무진장에서 제일 많이 팔린 것 중 올해도 살 만한 것만 골랐어요")}
-        ${chipsGrid("best", BEST_TABS.map(([t, a]) => ({ label: t, sub: a.length, items: a })), true)}
+      return `<div class="bf-sec" id="bf-best">${secHead("🏆", "작년 무진장 BEST", "작년에 많이 팔린 것")}${curated("작년 무진장에서 제일 많이 팔린 것 중 올해도 살 만한 것만 골랐어요")}
+        ${chipsGrid("best", BEST_TABS.map(([t, a]) => ({ label: /^TOP\s*\d+$/.test(t) ? "전체" : t, items: a })), false)}
       </div>`;
     }
 
     function tipsSec() {
       const T = [
-        ["🛒", "장바구니에 미리 담기", "오픈 첫 3일에 거래가 제일 몰려요. 사고 싶은 건 미리 담아두면 오픈하자마자 바로 결제!"],
+        ["🛒", "장바구니에 미리 담기", "오픈 첫 3일에 거래가 제일 몰려요. 사고 싶은 건 지금 장바구니에 미리 담아두세요!"],
         ["🎟️", "회차 바뀌는 날 쿠폰 다시 받기", "11.22 · 11.25 · 11.28 · 11.30 · 12.2에 새 쿠폰이 열려요."],
         ["⏰", "하루특가는 자정 땡", "11.22 · 11.27 · 12.2 하루특가는 그날 밤 12시에 끝나요."],
         ["📺", "라이브 시간 맞춰 들어가기", "라이브 중에만 받는 할인·장바구니 쿠폰이 있어요. 저녁 7~9시 체크!"],
