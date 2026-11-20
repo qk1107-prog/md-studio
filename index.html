@@ -1160,17 +1160,23 @@ const SUPABASE_URL = "https://cbuydjkvvzbluyohdkie.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// 방문자는 Vercel 캐시(/api/sd)로 받음 → 수파베이스 전송량 절약. 실패하거나 주인(owner)·?fresh 면 수파베이스 직접.
+const SD_DIRECT = (() => { try { return /[?&](fresh|owner)=1/.test(location.search) || localStorage.getItem("mds_owner") === "1"; } catch (e) { return false; } })();
+async function sdFetch(id) {
+  if (!SD_DIRECT) {
+    try { const r = await fetch("/api/sd?id=" + id); if (r.ok) { const v = await r.json(); if (v != null) return v; } } catch (e) {}
+  }
+  if (id === "episodes") return null;
+  const { data } = await supabaseClient.from("site_data").select("value").eq("id", id).maybeSingle();
+  return data ? data.value : null;
+}
+function sdRow(id) { return sdFetch(id).then((value) => ({ data: value == null ? null : { value } })); }
 async function loadSiteDataFromSupabase() {
-  const { data, error } = await supabaseClient
-    .from("site_data")
-    .select("value")
-    .eq("id", "main")
-    .maybeSingle();
-  if (error || !data) return null;
-  return data.value;
+  return await sdFetch("main");
 }
 
 async function loadEpisodesFromSupabase() {
+  if (!SD_DIRECT) { try { const v = await sdFetch("episodes"); if (Array.isArray(v)) return v; } catch (e) {} }
   const { data, error } = await supabaseClient
     .from("episodes")
     .select("id,title,series,upload_date,reel_url,thumbnail_url,pick_comment,created_at")
@@ -1716,7 +1722,7 @@ async function renderPublicSite(root) {
   let CATRANK = null, catRankP = null, CATTHUMB = null;
   function loadCatRank() {
     if (CATRANK) return Promise.resolve(CATRANK);
-    if (!catRankP) catRankP = supabaseClient.from("site_data").select("value").eq("id", "catrank").single()
+    if (!catRankP) catRankP = sdRow("catrank")
       .then(({ data }) => { CATTHUMB = (data && data.value && data.value.thumbs) || null; return (CATRANK = (data && data.value && data.value.data) || null); })
       .catch(() => null).finally(() => { if (!CATRANK) catRankP = null; });
     return catRankP;
@@ -1738,7 +1744,7 @@ async function renderPublicSite(root) {
   const CP_PV = (() => { try { return new URLSearchParams(location.search).get("awards") === "1"; } catch (e) { return false; } })();
   function loadCoupons() {
     if (COUPONS) return Promise.resolve(COUPONS);
-    if (!couponsP) couponsP = supabaseClient.from("site_data").select("value").eq("id", "coupons").single()
+    if (!couponsP) couponsP = sdRow("coupons")
       .then(({ data }) => (COUPONS = (data && data.value) || null)).catch(() => null).finally(() => { if (!COUPONS) couponsP = null; });
     return couponsP;
   }
@@ -1945,7 +1951,7 @@ async function renderPublicSite(root) {
     if (String(idx).startsWith("br:")) {
       const [gk, bi] = String(idx).slice(3).split("~");
       let D = window.__mdBRD;
-      if (!D) { try { const r = await supabaseClient.from("site_data").select("value").eq("id", "brands").single(); D = window.__mdBRD = r.data && r.data.value; } catch (e) {} }
+      if (!D) { try { const r = await sdRow("brands"); D = window.__mdBRD = r.data && r.data.value; } catch (e) {} }
       const g = D && (D.groups || []).find((x) => x.key === gk); const B = g && g.brands[Number(bi)];
       if (B) { const [sx, ag, st] = gk.split("|"); c = { title: B.b, sub: `${sx === "F" ? "시스터" : "브로"} ${ag} ${st === "HOT" ? "🔥 HOT" : st}`, cat: B.b, items: B.items.map((x) => ({ brand: B.b, name: x.n, img: "https://image.msscdn.net" + x.i, link: curl(x.l) })) }; }
     } else if (String(idx).includes("|")) {
@@ -2915,7 +2921,7 @@ async function renderPublicSite(root) {
       };
       [["#br-sex", "sex"], ["#br-age", "age"]].forEach(([q, k]) => root.querySelectorAll(q + " button").forEach((b) => b.addEventListener("click", () => { bst[k] = b.dataset.v; drawBr(); })));
       styBox.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; bst.sty = b.dataset.v; drawBr(); });
-      supabaseClient.from("site_data").select("value").eq("id", "brands").single()
+      sdRow("brands")
         .then(({ data }) => { BRD = (data && data.value) || null; window.__mdBRD = BRD; if (BRD) drawBr(); else bBox.innerHTML = `<p class="ep-empty">곧 올라와요</p>`; })
         .catch(() => { bBox.innerHTML = `<p class="ep-empty">잠시 후 다시 눌러 주세요</p>`; });
     }
