@@ -2413,10 +2413,10 @@ async function renderPublicSite(root) {
       const P = BFD.padding || {};
       const groups = (P.groups || []).map((g) => {
         const items = (g.items || []).filter((p) => !g.disc || (p.rate || 0) >= 5);
-        return { label: g.label, sub: items.length, items };
+        return { label: g.label, items };
       });
       if (!groups.some((g) => g.items.length)) return "";
-      return `<div class="bf-sec" id="bf-pad">${secHead("❄️", "블프 겨울 준비", "할인 쿠폰·장바구니 쿠폰 꼭 확인하기!")}
+      return `<div class="bf-sec" id="bf-pad">${secHead("❄️", "블프 겨울 준비", "", "할인 쿠폰·장바구니 쿠폰 꼭 확인하기!")}
         ${chipsGrid("pad", groups, false)}
       </div>`;
     }
@@ -2424,7 +2424,7 @@ async function renderPublicSite(root) {
     // 크리스마스 선물 준비
     function xmasSec() {
       const X = BFD.xmas || {};
-      const groups = (X.groups || []).filter((g) => (g.items || []).length >= 4).map((g) => ({ label: g.label, sub: g.items.length, items: g.items }));
+      const groups = (X.groups || []).filter((g) => (g.items || []).length >= 4).map((g) => ({ label: g.label, items: g.items }));
       if (!groups.length) return "";
       return `<div class="bf-sec bf-xmas" id="bf-xmas"><span class="xm-snow" aria-hidden="true">❄ ✦ ❄ ✦ ❄</span>${secHead("🎄", "크리스마스 선물 준비", "블프 때 미리 사두면 12월이 편해요 🎁")}
         <p class="xm-lead">향수 · 머플러 · 장갑 · 지갑 · 주얼리 — 받으면 기분 좋은 것들만 🎅</p>
