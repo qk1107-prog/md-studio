@@ -117,6 +117,7 @@ window.__bmRun = async (opts) => {
       const { c, key } = q.shift(); const good = [];
       for (const st of c.sets) {
         if (good.length >= NEED) break;
+        if (/\/media\/packs\//.test(st.board || "") && new RegExp(key + "_" + good.length + "\\.jpg").test(st.board)) { good.push(st); continue; }
         try {
           const blob = await makeBoard(st);
           const path = `packs/${key}_${good.length}.jpg`;
