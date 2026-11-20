@@ -1199,7 +1199,7 @@ function safeUrl(u) {
   u = String(u || "").trim();
   return /^https?:\/\//i.test(u) ? u : "";
 }
-function curl(c) { c = String(c || ""); return /^https?:\/\//.test(c) ? c : "https://www.musinsa.com/curator/goods/" + c; }
+function curl(c) { c = String(c || ""); return /^https:\/\/www\.musinsa\.com\/curator\//.test(c) ? c : /^[A-Za-z0-9]{4,12}$/.test(c) ? "https://www.musinsa.com/curator/goods/" + c : ""; }
 function safeImg(u) {
   u = String(u || "").trim();
   return /^(https?:\/\/|data:image\/)/i.test(u) ? u : "";

@@ -48,12 +48,14 @@ window.__cpRun = async () => {
   const top = res.slice(0, 250);
   let cache = {};
   try { cache = JSON.parse(localStorage.getItem("mdcpLinks") || "{}"); } catch (e) {}
+  // 큐레이터 링크(코드)만 인정: 일반 상품 주소가 섞여 있으면 지우고 다시 받기
+  for (const k of Object.keys(cache)) if (!/^[A-Za-z0-9]{4,12}$/.test(String(cache[k]))) delete cache[k];
   const ids = [...new Set([].concat(...top.map((r) => r.goods.map((g) => String(g.goodsNo)))))].filter((id) => !cache[id]);
   for (let i = 0; i < ids.length; i += 20) {
     await Promise.all(ids.slice(i, i + 20).map(async (id) => {
       try {
         const l = await (await fetch("https://api.one.musinsa.com/api2/affiliate/v2/link/product/" + id, { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json", "X-Platform": "MUSINSA" }, body: "{}", credentials: "include" })).json();
-        if (l.data && l.data.link) cache[id] = l.data.link.replace("https://www.musinsa.com/curator/goods/", "");
+        if (l.data && l.data.link && /^https:\/\/www\.musinsa\.com\/curator\/goods\/[A-Za-z0-9]+$/.test(l.data.link)) cache[id] = l.data.link.replace("https://www.musinsa.com/curator/goods/", "");
       } catch (e) {}
     }));
   }
