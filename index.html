@@ -1034,6 +1034,11 @@
   #app-root .bf-tip p { margin: 0; font-size: 10.5px; line-height: 1.45; color: #6b665f; }
   #app-root .bf-tip p b { display: block; font-size: 12px; color: #141312; margin-bottom: 1px; }
   #app-root .bf-sub2 { margin: 12px 2px 6px; font-size: 11px; font-weight: 800; color: #6b665f; }
+  #app-root .lf-bar { max-width: 720px; margin: 10px auto 0; padding: 0 20px; display: flex; justify-content: flex-end; }
+  #app-root .lf-pill { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; border: 1px solid #e4dfd6; border-radius: 999px; padding: 5px 10px 5px 6px; text-decoration: none; color: #141312; background: #fff; font-size: 11px; font-weight: 700; letter-spacing: -0.2px; }
+  #app-root .lf-pill i { font-style: normal; width: 18px; height: 18px; border-radius: 50%; background: #ff3d3f; color: #fff; font-size: 8px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  #app-root .lf-pill span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #app-root .lf-pill em { font-style: normal; color: #a9a196; font-weight: 600; flex: none; }
   #app-root .bf-mini { max-width: 720px; margin: 12px auto 0; padding: 0 20px; }
   #app-root .bf-mini button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; border: none; border-radius: 12px; background: #0f0e0d; color: #fff; padding: 11px 13px; font-family: inherit; cursor: pointer; text-align: left; }
   #app-root .bf-mini .l { font-size: 12px; font-weight: 800; letter-spacing: -0.3px; }
@@ -2030,6 +2035,13 @@ async function renderPublicSite(root) {
     return Date.now() < BF_UNLOCK_AT; // 공개 전에는 잠금(흐림) 상태로 탭 노출
   })();
   // 11/20(금) 오후 7시(KST) 전까지는 흐리게 잠금. 시안(?bf=pre|live)·관리자 bf.on 은 잠금 없음
+  // 롱폼 영상 (상단 작게) — site_data main.longform = {url, title, on}
+  const LF = (ADMIN && ADMIN.longform) || {};
+  const LF_URL = safeUrl(LF.url || "");
+  const LF_PV = /[?&]awards=1/.test(location.search);
+  const LF_HTML = (LF_URL && (LF.on !== false)) || LF_PV
+    ? `<div class="lf-bar"><a class="lf-pill" href="${esc(LF_URL || "#")}"${LF_URL ? ' target="_blank" rel="noopener"' : ""}><i>▶</i><span>${esc(LF.title || "무신사 블프 총정리 영상")}</span><em>${LF_URL ? "보러가기" : "링크 대기"}</em></a></div>`
+    : "";
   const BF_LOCKED = BF_ON && !BF_PREVIEW && !(((ADMIN && ADMIN.bf) || {}).on) && Date.now() < BF_UNLOCK_AT;
 
   root.innerHTML = `
@@ -2050,6 +2062,7 @@ async function renderPublicSite(root) {
       <hr class="head-divider">
     </header>
 
+    ${LF_HTML}
     ${BF_ON ? `<div class="bf-mini"><button type="button" id="bf-mini"><span class="l"><b>🔥 무진장 블프</b>쿠폰·특가·꿀템 한 번에 정리</span><span class="r"><span id="bf-mini-cd"></span> →</span></button></div>` : ""}
 
     <div class="collab-section">
