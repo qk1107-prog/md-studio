@@ -1162,7 +1162,16 @@
 #app-root .hotz-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 8px; }
 #app-root .hotz-title { margin: 0; font-size: 15px; font-weight: 900; letter-spacing: -0.4px; color: #141312; }
 #app-root .hotz-head small { font-size: 10.5px; font-weight: 700; color: #8a847b; }
+#app-root .hotz .cpz-live { vertical-align: 3px; }
 #app-root .hotz .bf-chips { margin-bottom: 10px; }
+#app-root .hotz-bar { position: relative; height: 2px; margin: 0 0 10px; background: #f1ece6; border-radius: 2px; overflow: hidden; }
+#app-root .hotz-bar i { position: absolute; top: 0; left: -30%; width: 30%; height: 100%; background: linear-gradient(90deg, transparent, #ff3d3f, transparent); animation: hotScan 2.2s linear infinite; }
+@keyframes hotScan { to { left: 100%; } }
+#app-root .hotz-grid > * { position: relative; transition: box-shadow .5s, transform .5s; border-radius: 10px; }
+#app-root .hotz-grid > .hot-on { box-shadow: 0 0 0 2px #ff3d3f, 0 6px 18px rgba(255, 61, 63, .22); transform: translateY(-2px); }
+#app-root .hotz-in > * { animation: hotIn .5s ease both; animation-delay: var(--d, 0ms); }
+@keyframes hotIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { #app-root .hotz-bar i, #app-root .hotz-in > * { animation: none; } #app-root .hotz-grid > .hot-on { transform: none; } }
 
 #app-root .cpz-hint { margin: 0 0 8px; font-size: 11.5px; font-weight: 800; color: #ff3d3f; letter-spacing: -0.2px; }
 </style>
@@ -2765,11 +2774,28 @@ async function renderPublicSite(root) {
       if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-hv]"); if (!b) return; hotView = Number(b.dataset.hv); renderHot(); }); }
       if (cp && cp.nextSibling !== box) cp.after(box);
       else if (!cp && !box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
-      const tagged = (c, n) => c.items.slice(0, n).map((p, i) => Object.assign({}, p, { tag: `${c.cat} ${i + 1}위` }));
-      const list = hotView < 0 ? cats.flatMap((c) => tagged(c, 2)) : tagged(cats[hotView] || cats[0], 8);
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 실시간 제일 인기 있는 아이템</p><small>무신사 20·30대 남녀 랭킹${H.at ? " · " + esc(cpTime(H.at)) + " 확인" : ""}</small></div>
-        <div class="bf-chips"><button type="button" data-hv="-1" class="${hotView < 0 ? "active" : ""}">카테고리별 1·2위</button>${cats.map((c, i) => `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`).join("")}</div>
-        <div class="bf-grid">${list.map((p) => itemCard(p, 0)).join("")}</div>`;
+      // 순위·출처 표시 없이 카테고리를 섞어서 (1등끼리 먼저, 같은 브랜드 연속 X)
+      const mix = []; for (let r = 0; r < 2; r++) cats.forEach((c) => { if (c.items[r]) mix.push(c.items[r]); });
+      for (let i = 1; i < mix.length; i++) if (mix[i].brand && mix[i].brand === mix[i - 1].brand) { const j = mix.findIndex((x, k) => k > i && x.brand !== mix[i - 1].brand); if (j > 0) [mix[i], mix[j]] = [mix[j], mix[i]]; }
+      const list = (hotView < 0 || !cats[hotView] ? mix : cats[hotView].items.slice(0, 8)).map((p) => Object.assign({}, p, { tag: "" }));
+      const sig = (H.at || "") + hotView + list.length;
+      const fresh = box.dataset.sig !== sig; box.dataset.sig = sig;
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 제일 핫한 아이템<span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small></div>
+        <div class="hotz-bar"><i></i></div>
+        <div class="bf-chips"><button type="button" data-hv="-1" class="${hotView < 0 ? "active" : ""}">🔥 실시간 HOT</button>${cats.map((c, i) => `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`).join("")}</div>
+        <div class="bf-grid hotz-grid${fresh ? " hotz-in" : ""}">${list.map((p, i) => itemCard(p, 0).replace(/^(\s*<[a-z]+)/, `$1 style="--d:${i * 60}ms"`)).join("")}</div>`;
+      hotAgo();
+      if (!window.__hotTick) {
+        window.__hotTick = 1; let k = 0;
+        setInterval(hotAgo, 20000);
+        setInterval(() => { const cs = root.querySelectorAll("#hotz .hotz-grid > *"); if (!cs.length || document.hidden) return; cs.forEach((c) => c.classList.remove("hot-on")); cs[k++ % cs.length].classList.add("hot-on"); }, 2200);
+      }
+    }
+    function hotAgo() {
+      const el = root.querySelector("#hotz .hotz-ago"); if (!el) return;
+      const t = Date.parse(el.dataset.hotat || ""); if (!t) { el.textContent = "실시간 트래픽 반영 중"; return; }
+      const m = Math.max(0, Math.round((Date.now() - t) / 6e4));
+      el.textContent = `실시간 트래픽 반영 · ${m < 1 ? "방금" : m < 60 ? m + "분 전" : Math.floor(m / 60) + "시간 전"} 업데이트 · 매시간 바뀌어요`;
     }
     function render() {
       setTimeout(renderHot, 0);
