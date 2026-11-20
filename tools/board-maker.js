@@ -91,7 +91,7 @@ window.__bmRun = async (opts) => {
     return await new Promise((r) => c.toBlob(r, "image/jpeg", 0.84));
   }
   // ---------- 데이터 ----------
-  let P = null; for (let k = 0; k < 5 && !P; k++) { try { const r = await supabaseClient.from("site_data").select("value").eq("id", "packs").single(); P = r.data && r.data.value; } catch (e) {} if (!P) await new Promise((r) => setTimeout(r, 3000)); }
+  let P = opts.pool || null; for (let k = 0; k < 5 && !P; k++) { try { const r = await supabaseClient.from("site_data").select("value").eq("id", "packs").single(); P = r.data && r.data.value; } catch (e) {} if (!P) await new Promise((r) => setTimeout(r, 3000)); }
   if (!P) { S.st = "packs read fail"; return; }
   const cats = [];
   for (const pk of ["starter", "levelup"]) for (const sx of ["M", "F"]) for (const ag of ["10대", "20대", "30대"]) ((P[pk][sx] || {})[ag] || []).forEach((c, ci) => { if (!opts.only || opts.only(pk, sx, ag, c.cat)) cats.push({ c, key: `${pk[0]}${sx}${ag.charAt(0)}_${ci}` }); });
