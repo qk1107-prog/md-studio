@@ -986,6 +986,9 @@
   #app-root .tz-info span { font-size: 10.5px; color: #6b6380; line-height: 1.35; }
   #app-root a.tz-info { background: #6a2ff0; border-color: #6a2ff0; color: #fff; }
   #app-root a.tz-info span { color: #e6dcff; }
+  #app-root .tz-cpnote { display: block; margin: 0 0 8px; padding: 9px 11px; border-radius: 10px; background: #ff3d3f; color: #fff; font-size: 11.5px; font-weight: 700; line-height: 1.45; text-decoration: none; }
+  #app-root .tz-cpnote b { color: #E4FF1A; }
+  #app-root .bf-tease .bf-item .tg { background: #6a2ff0; color: #fff; font-weight: 900; }
   #app-root .tz-sub { margin: 10px 0 6px; font-size: 12.5px; font-weight: 800; color: #3d2a7a; }
   #app-root .bf-cartmini { margin: 2px 0 10px; padding: 8px 11px; border-radius: 10px; background: #fff1f1; border: 1px solid #ffc9ca; color: #d9262b; font-size: 12px; font-weight: 800; letter-spacing: -0.3px; }
   #app-root .bf-cart { margin: 4px 0 12px; padding: 12px 14px; border-radius: 12px; background: #ff3d3f; color: #fff; box-shadow: 0 4px 14px rgba(255,61,63,.25); }
@@ -2558,7 +2561,7 @@ async function renderPublicSite(root) {
       const info = (T.info || []).map((x) => `<${x.link ? `a href="${esc(safeUrl(x.link))}" target="_blank" rel="noopener"` : "div"} class="tz-info"><b>${esc(x.t)}</b><span>${esc(x.d || "")}</span></${x.link ? "a" : "div"}>`).join("");
       return `<div class="bf-sec bf-tease" id="bf-tease">${secHead("⚡", "프리오픈 · 티징 특가", "", "11.22(일) 19시 본편 전까지")}
         ${info ? `<div class="tz-infos">${info}</div>` : ""}
-        ${groups.length ? `<p class="tz-sub">🛍️ 지금 사도 되는 프리오픈 상품</p>${chipsGrid("tease", groups, false)}` : ""}
+        ${groups.length ? `<p class="tz-sub">🛍️ 지금 사도 되는 프리오픈 상품</p><a class="tz-cpnote" href="https://www.musinsa.com/coupon" target="_blank" rel="noopener">🎟️ 사진 위 <b>'쿠폰 N%↓'</b> 붙은 상품은 할인 0%로 보여도, <b>쿠폰함에서 프리오픈 쿠폰 받으면</b> 그만큼 더 싸져요 → 쿠폰 받으러 가기</a>${chipsGrid("tease", groups, false)}` : ""}
         ${nb.length ? `<p class="tz-sub">🆕 신규 브랜드 최대 30% 쿠폰 · 48시간 먼저 · 브랜드별 5개씩</p>${chipsGrid("tznb", nb, false)}` : ""}
       </div>`;
     }
