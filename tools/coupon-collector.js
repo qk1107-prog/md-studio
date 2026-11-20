@@ -65,7 +65,7 @@ window.__cpRun = async () => {
     const e = new Date(c.expireDateTime);
     return {
       no: c.couponNo, k: c.couponKind === "CART" ? "C" : "P", bf: bfNo.has(c.couponNo) ? 1 : 0,
-      tz: /티징|티저|TEAS/i.test(c.couponName) || (bfNo.has(c.couponNo) && e.getTime() <= new Date("2026-11-21T23:59:59+09:00").getTime()) ? 1 : 0, n: c.couponName.replace(/\s+/g, " ").trim(), v, cond, exp: e.getMonth() + 1 + "/" + e.getDate(), cnt: r.tot,
+      tz: /티징|티저|TEAS|프리오픈|프리 오픈|PRE-?OPEN/i.test(c.couponName) || (bfNo.has(c.couponNo) && e.getTime() <= new Date("2026-11-22T23:59:59+09:00").getTime()) ? 1 : 0, n: c.couponName.replace(/\s+/g, " ").trim(), v, cond, exp: e.getMonth() + 1 + "/" + e.getDate(), cnt: r.tot,
       g: r.goods.filter((g) => cache[String(g.goodsNo)]).map((g) => ({ i: String(g.thumbnail).replace("https://image.msscdn.net", ""), l: cache[String(g.goodsNo)], n: g.goodsName, b: g.brandName, s: g.price, r: g.saleRate })),
     };
   }).filter((x) => x.g.length >= 3 || ((x.tz || x.bf) && x.g.length >= 1));
