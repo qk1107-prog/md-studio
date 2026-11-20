@@ -1661,6 +1661,8 @@ async function renderPublicSite(root) {
   function renderCouponStrip() {
     const box = root.querySelector("#cpz");
     if (!box || !COUPONS || !Array.isArray(COUPONS.list) || !COUPONS.list.length) return;
+    const CP_GO = Date.UTC(2026, 10, 20, 10, 0); // 11/20 19:00 KST 공개
+    if (COUPONS.on && !CP_PV && Date.now() < CP_GO) { if (!window.__cpGoT) window.__cpGoT = setTimeout(renderCouponStrip, CP_GO - Date.now() + 1500); return; }
     if (!(COUPONS.on || CP_PV)) return;
     CP_HOT = cpHotSet();
     const L = COUPONS.list;
@@ -2005,7 +2007,7 @@ async function renderPublicSite(root) {
   })();
   // 가격 표시: 정가 취소선 + 블프 할인가. 시안은 ?mock=1(예시가) / ?mock=q(???)
   // 나이대별 브랜드 탭: 미리보기(?awards=1)이거나 관리자에서 켰을 때(main.brandsOn)만
-  const BR_ON = (() => { try { if (new URLSearchParams(location.search).get("awards") === "1") return true; } catch (e) {} return !!(ADMIN && ADMIN.brandsOn); })();
+  const BR_ON = (() => { try { if (new URLSearchParams(location.search).get("awards") === "1") return true; } catch (e) {} return !!(ADMIN && ADMIN.brandsOn) && Date.now() >= Date.UTC(2026, 10, 20, 10, 0); })();
   const AW_MOCK = (() => { try { return new URLSearchParams(location.search).get("mock") || ""; } catch (e) { return ""; } })();
   const won = (n) => Number(n).toLocaleString("ko-KR");
   function awPriceHtml(it) {
@@ -2426,7 +2428,13 @@ async function renderPublicSite(root) {
     function padSec() {
       const P = BFD.padding || {};
       const groups = (P.groups || []).map((g) => {
-        const items = (g.items || []).filter((p) => !g.disc || (p.rate || 0) >= 5);
+        let items = (g.items || []).filter((p) => !g.disc || (p.rate || 0) >= 5);
+        // 본편 오픈(11/22 19시) 뒤: 직전가보다 실제로 싸진 상품만, 빈자리는 후보(pool)에서 채움
+        if (nowFn() >= T_OPEN && (Object.keys(NOWP).length || preview)) {
+          const ok = [...(g.items || []), ...(g.pool || [])].filter((p) => { const id = gidOf(p), pre = PRE[id] ? Number(PRE[id][0]) : 0, cur = priceNow(p, id); return pre && cur && cur < pre; });
+          const seen = new Set(); const uniq = ok.filter((p) => { const id = gidOf(p); if (seen.has(id)) return false; seen.add(id); return true; });
+          if (uniq.length >= 4) items = uniq.slice(0, 30);
+        }
         return { label: g.label, items };
       });
       if (!groups.some((g) => g.items.length)) return "";
