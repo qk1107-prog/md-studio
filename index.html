@@ -3247,5 +3247,70 @@ async function renderPublicSite(root) {
 const ROOT_EL = document.getElementById("app-root");
 renderPublicSite(ROOT_EL);
 </script>
+
+<style>
+#mds-wish{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);opacity:0;transition:opacity .2s}
+#mds-wish.on{opacity:1}
+#mds-wish .w-card{width:100%;max-width:440px;background:#fff;border-radius:20px 20px 0 0;padding:22px 20px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(0,0,0,.18);transform:translateY(30px);transition:transform .25s;font-family:inherit;color:#111}
+#mds-wish.on .w-card{transform:none}
+@media(min-width:600px){#mds-wish{align-items:center}#mds-wish .w-card{border-radius:20px}}
+#mds-wish .w-x{position:absolute;right:14px;top:12px;border:0;background:none;font-size:22px;color:#999;cursor:pointer}
+#mds-wish .w-t{font-size:18px;font-weight:800;line-height:1.35;margin:0 26px 6px 0}
+#mds-wish .w-s{font-size:13px;color:#666;line-height:1.5;margin:0 0 14px}
+#mds-wish textarea,#mds-wish input{width:100%;box-sizing:border-box;border:1.5px solid #e3e3e3;border-radius:12px;padding:11px 12px;font-size:15px;font-family:inherit;margin-bottom:8px;background:#fafafa;color:#111}
+#mds-wish textarea{height:84px;resize:none}
+#mds-wish textarea:focus,#mds-wish input:focus{outline:none;border-color:#ff3d3f;background:#fff}
+#mds-wish .w-row{display:flex;gap:8px}
+#mds-wish .w-row input{flex:1}
+#mds-wish .w-btns{display:flex;gap:8px;margin-top:6px}
+#mds-wish .w-btns button{flex:1;border:0;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+#mds-wish .w-go{background:#ff3d3f;color:#fff;flex:2!important}
+#mds-wish .w-no{background:#f1f1f1;color:#555}
+#mds-wish .w-done{text-align:center;padding:18px 0 8px;font-size:16px;font-weight:700;line-height:1.5}
+</style>
+<script>
+// ---------- 블프 위시리스트 팝업 (처음 들어올 때 한 번, 바로 닫을 수 있음 · 3일 동안 다시 안 뜸) ----------
+(function(){
+  try{
+    const qs=location.search, force=/[?&]wish=1/.test(qs);
+    if(!force){
+      if(window.top!==window.self||/[?&]shot=1/.test(qs)) return;
+      if(localStorage.getItem("mds_owner")==="1") return;
+      const seen=+localStorage.getItem("mds_wish_seen")||0;
+      if(Date.now()-seen<3*864e5) return;
+    }
+    const URL_="https://cbuydjkvvzbluyohdkie.supabase.co/rest/v1/site_events";
+    const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
+    const mark=()=>{try{localStorage.setItem("mds_wish_seen",String(Date.now()));}catch(e){}};
+    setTimeout(function(){
+      const w=document.createElement("div"); w.id="mds-wish";
+      w.innerHTML='<div class="w-card" role="dialog" aria-label="블프 위시리스트" style="position:relative">'+
+        '<button class="w-x" aria-label="닫기">×</button>'+
+        '<p class="w-t">🛍️ 찾는 블프 위시리스트가 있나요?</p>'+
+        '<p class="w-s">필요한 아이템을 여기 가볍게 남겨주세요.<br>광만두가 블프 때 제일 싸게 함께 찾아드릴게요!</p>'+
+        '<textarea class="w-txt" maxlength="400" placeholder="예) 20만원 아래 검정 숏패딩, 데일리 와이드 데님"></textarea>'+
+        '<div class="w-row"><input class="w-bud" maxlength="30" placeholder="예산 (선택)"><input class="w-ig" maxlength="40" placeholder="인스타 ID (선택)"></div>'+
+        '<div class="w-btns"><button class="w-no">괜찮아요</button><button class="w-go">남기기</button></div></div>';
+      document.body.appendChild(w);
+      requestAnimationFrame(()=>w.classList.add("on"));
+      const close=()=>{mark();w.classList.remove("on");setTimeout(()=>w.remove(),220);};
+      w.addEventListener("click",e=>{if(e.target===w)close();});
+      w.querySelector(".w-x").onclick=close; w.querySelector(".w-no").onclick=close;
+      w.querySelector(".w-go").onclick=function(){
+        const t=w.querySelector(".w-txt").value.trim();
+        if(!t){w.querySelector(".w-txt").focus();w.querySelector(".w-txt").placeholder="찾는 아이템을 한 줄만 적어주세요 🙏";return;}
+        const bud=w.querySelector(".w-bud").value.trim(), ig=w.querySelector(".w-ig").value.trim().replace(/^@/,"");
+        let vid=""; try{vid=localStorage.getItem("mds_vid")||"";}catch(e){}
+        const ua=navigator.userAgent||"";
+        const device=(/Instagram/.test(ua)?"ig-":/KAKAOTALK/i.test(ua)?"kakao-":"")+(/iPhone|iPad|iPod/.test(ua)?"ios":/Android/.test(ua)?"android":"pc");
+        try{fetch(URL_,{method:"POST",keepalive:true,headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({vid,device,kind:"wish",label:t.slice(0,400),ref:("예산:"+bud+" | 인스타:"+ig).slice(0,300),tab:"wish",url:location.pathname})}).catch(()=>{});}catch(e){}
+        mark();
+        w.querySelector(".w-card").innerHTML='<div class="w-done">✅ 위시리스트 받았어요!<br><span style="font-size:13px;font-weight:500;color:#666">블프 때 찾아서 인스타에 올려드릴게요 🙌</span></div>';
+        setTimeout(close,1800);
+      };
+    },1200);
+  }catch(e){}
+})();
+</script>
 </body>
 </html>

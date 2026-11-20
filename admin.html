@@ -799,7 +799,7 @@ async function renderAdminApp(root) {
     if (statsDays === 1) { const d = kstDay(Date.now()); since.setTime(new Date(d + "T00:00:00+09:00").getTime()); } else since.setTime(Date.now() - statsDays * 864e5);
     let ev;
     try { ev = await fetchEvents(since.toISOString()); } catch (err) { main.querySelector("#st-body").innerHTML = `<p class="msg-err">⛔ ${esc(err.message || String(err))}</p>`; return; }
-    const visits = ev.filter((e) => e.kind === "visit"), clicks = ev.filter((e) => e.kind === "click");
+    const visits = ev.filter((e) => e.kind === "visit"), clicks = ev.filter((e) => e.kind === "click"), wishes = ev.filter((e) => e.kind === "wish");
     const isMs = (u) => /musinsa\.com/i.test(u || "");
     const msClicks = clicks.filter((e) => isMs(e.url));
     const uniq = (a) => new Set(a.map((e) => e.vid)).size;
@@ -818,6 +818,7 @@ async function renderAdminApp(root) {
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
         ${box(visits.length, "방문 수")}${box(uniq(visits), "방문한 사람 (중복 제외)")}${box(msClicks.length, "무신사 링크 클릭")}${box(uniq(msClicks), "링크 누른 사람 (중복 제외)")}
       </div>
+      <div class="panel"><h2>🛍️ 블프 위시리스트 (${wishes.length}개)</h2>${tbl(["시간", "찾는 아이템", "예산 · 인스타", "기기"], wishes.map((e) => `<tr><td style="white-space:nowrap;">${kstTime(e.created_at)}</td><td><b>${esc(e.label || "")}</b></td><td>${esc((e.ref || "").replace("예산: | 인스타:", "").trim())}</td><td>${esc(devName(e.device))}</td></tr>`))}</div>
       <div class="panel"><h2>날짜별</h2>${tbl(["날짜", "방문", "사람", "무신사 링크 클릭", "누른 사람"], [...days.entries()].sort((a, b) => b[0].localeCompare(a[0])).map(([d, o]) => `<tr><td>${d}</td><td>${o.v}</td><td>${o.vids.size}</td><td>${o.m}</td><td>${o.cv.size}</td></tr>`))}</div>
       <div class="panel"><h2>많이 눌린 링크 (${linkRows.length}개)</h2>${tbl(["#", "상품", "어디서", "클릭", "사람", "큐레이터 코드"], linkRows.slice(0, 200).map((o, i) => `<tr><td>${i + 1}</td><td>${esc(o.label || "")}</td><td>${esc([...o.tabs].join(", "))}</td><td><b>${o.n}</b></td><td>${o.vids.size}</td><td><a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(code(o.url) || "링크")}</a></td></tr>`))}</div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;">
