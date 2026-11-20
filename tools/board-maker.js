@@ -116,38 +116,19 @@ window.__bmRun = async (opts) => {
     if (!img) return; const [bx, by, bw, bh] = box.map((v) => v * K); const s = Math.min(bw / img.width, bh / img.height); const w = img.width * s, h = img.height * s, x = bx + (bw - w) / 2, y = by + (bh - h) / 2;
     ctx.save(); ctx.shadowColor = "rgba(0,0,0,0.22)"; ctx.shadowBlur = 14 * K; ctx.shadowOffsetX = 3 * K; ctx.shadowOffsetY = 8 * K; ctx.drawImage(img, x, y, w, h); ctx.restore();
   }
-  // 사람이 입은 것처럼: 상의 위에 아우터를 살짝 겹치고, 바지는 상의 바로 밑, 신발은 바지 밑단에 붙여서
-  const fit = (img, mw, mh) => { const k = Math.min(mw / img.width, mh / img.height); return [img.width * k, img.height * k]; };
   async function makeBoard(st) {
     const role = (r) => st.items.find((i) => i.role === r);
     const o = role("아우터"), t = role("상의"), b = role("하의"), s = role("신발");
     const [co, ct, cb, cs] = await Promise.all([o, t, b, s].map((i) => (i ? cutout(i).catch(() => null) : null)));
     if (!co || !cb) throw new Error("model photo");
     if (s && !cs) S.noshoe = (S.noshoe || 0) + 1;
-    const L = []; // [img, x, y, w, h]
-    const CX = 540;
-    let ow, oh, tw = 0, th = 0;
-    [ow, oh] = fit(co, ct ? 500 : 560, 700);
-    let ox, oy = 40, tx = 0, ty = 0;
-    if (ct) { [tw, th] = fit(ct, 460, 540); ox = CX - ow + 70; tx = CX - 40; ty = 70; }
-    else ox = CX - ow / 2 - 20;
-    const upperBottom = Math.max(oy + oh * 0.82, ct ? ty + th : 0);
-    let [bw, bh] = fit(cb, 470, 720);
-    const bx = (ct ? CX + 40 : CX + 60) - bw / 2, by = upperBottom - 60;
-    let sw = 0, sh = 0, sx = 0, sy = 0;
-    if (cs) { [sw, sh] = fit(cs, 380, 240); sx = bx + bw / 2 - sw / 2; sy = by + bh - 50; }
-    L.push([cb, bx, by, bw, bh]); if (ct) L.push([ct, tx, ty, tw, th]); L.push([co, ox, oy, ow, oh]); if (cs) L.push([cs, sx, sy, sw, sh]);
-    // 전체를 판 안에 맞추기
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    L.forEach(([, x, y, w, h]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x + w); y1 = Math.max(y1, y + h); });
-    const M = 70, sc = Math.min((1080 - 2 * M) / (x1 - x0), (1350 - 2 * M) / (y1 - y0), 1.15);
-    const offX = (1080 - (x1 - x0) * sc) / 2 - x0 * sc, offY = (1350 - (y1 - y0) * sc) / 2 - y0 * sc;
     const c = document.createElement("canvas"); c.width = W; c.height = H; const ctx = c.getContext("2d"); ctx.drawImage(bg, 0, 0);
-    for (const [img, x, y, w, h] of L) {
-      ctx.save(); ctx.shadowColor = "rgba(0,0,0,0.2)"; ctx.shadowBlur = 14 * K; ctx.shadowOffsetX = 3 * K; ctx.shadowOffsetY = 8 * K;
-      ctx.drawImage(img, (offX + x * sc) * K, (offY + y * sc) * K, w * sc * K, h * sc * K); ctx.restore();
-    }
-    return await new Promise((r) => c.toBlob(r, "image/jpeg", 0.86));
+    const box = Object.assign({}, BOX);
+    if (!ct) { box.b = [565, 120, 450, 1120]; }
+    if (!cs) { box.o = [70, 90, 450, 1150]; }
+    if (s && !cs) box.o = [70, 90, 450, 1150];
+    place(ctx, cs, box.s); place(ctx, cb, box.b); place(ctx, ct, box.t); place(ctx, co, box.o);
+    return await new Promise((r) => c.toBlob(r, "image/jpeg", 0.84));
   }
   window.__bmMake = makeBoard;
   if (opts.qonly) { S.st = "q"; return; }
