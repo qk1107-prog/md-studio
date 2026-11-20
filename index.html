@@ -1195,6 +1195,12 @@
 @media (prefers-reduced-motion: reduce) { #app-root .hotz-bar i, #app-root .hotz-in > * { animation: none; } #app-root .hotz-grid > .hot-on { transform: none; } }
 
 #app-root .cpz-hint { margin: 0 0 8px; font-size: 11.5px; font-weight: 800; color: #ff3d3f; letter-spacing: -0.2px; }
+
+#app-root #cat-sex.cat-main { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+#app-root #cat-sex.cat-main button { padding: 11px 0; font-size: 14px; font-weight: 900; border-radius: 12px; text-align: center; }
+#app-root #cat-etc { align-items: center; margin-top: 2px; }
+#app-root #cat-etc span { font-size: 11px; font-weight: 800; color: #8a847b; margin-right: 2px; }
+#app-root #cat-etc button { font-size: 11.5px; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2376,8 +2382,9 @@ async function renderPublicSite(root) {
       </section>` : ""}
 
       <section id="tab-cats" class="section">
-        <div class="sp-chips" id="cat-sex"><button type="button" data-s="" class="active">전체 인기</button><button type="button" data-s="M">브로</button><button type="button" data-s="F">시스터</button><button type="button" data-s="acc">액세서리</button><button type="button" data-s="shoe">신발</button><button type="button" data-s="bag">가방</button></div>
+        <div class="sp-chips cat-main" id="cat-sex"><button type="button" data-s="" class="active">🔥 전체 인기</button><button type="button" data-s="M">🙋‍♂️ 브로</button><button type="button" data-s="F">🙋‍♀️ 시스터</button></div>
         <div class="sp-chips" id="cat-age" hidden><button type="button" data-a="10대">10대</button><button type="button" data-a="20대" class="active">20대</button><button type="button" data-a="30대">30대</button></div>
+        <div class="sp-chips cat-etc" id="cat-etc"><span>남녀 공용</span><button type="button" data-s="acc">액세서리</button><button type="button" data-s="shoe">신발</button><button type="button" data-s="bag">가방</button></div>
         <div id="cat-list"></div>
       </section>
 
@@ -3119,14 +3126,15 @@ async function renderPublicSite(root) {
       const list = catRankList(catSex, catAge);
       cBox.innerHTML = list.length ? list.map((c) => catRow(c, `#ca=${encodeURIComponent(c.key)}`)).join("") : `<p class="ep-empty">곧 올라와요</p>`;
     };
-    const sexBox = root.querySelector("#cat-sex"), ageBox = root.querySelector("#cat-age");
+    const sexBox = root.querySelector("#cat-sex"), ageBox = root.querySelector("#cat-age"), etcBox = root.querySelector("#cat-etc");
     const drawPickList = (key, pre, suffix) => {
       const list = ((ADMIN && Array.isArray(ADMIN[key])) ? ADMIN[key] : []).filter((c) => (c.items || []).length);
       if (cBox) cBox.innerHTML = list.length ? list.map((c, i) => catRow({ cat: c.cat + suffix, title: c.title, items: c.items, thumb: c.thumb }, `#ct=${pre}${i}`)).join("") : `<p class="ep-empty">곧 올라와요</p>`;
     };
-    if (sexBox) sexBox.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    const catBtns = [...(sexBox ? sexBox.querySelectorAll("button") : []), ...(etcBox ? etcBox.querySelectorAll("button") : [])];
+    catBtns.forEach((b) => b.addEventListener("click", () => {
       catSex = b.dataset.s;
-      sexBox.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+      catBtns.forEach((x) => x.classList.toggle("active", x === b));
       ageBox.hidden = !(catSex === "M" || catSex === "F");
       if (catSex === "mood") drawPickList("moodPicks", "m", " 무드");
       else if (catSex === "acc") drawPickList("accPicks", "x", "");
