@@ -2503,8 +2503,8 @@ async function renderPublicSite(root) {
       return `<button type="button" class="bf-tile${lock ? " lock" : ""}" data-go="${id}">${count ? `<span class="n">${count}</span>` : ""}<div class="e">${e}</div><p class="t">${t}</p><p class="s">${sub}</p><p class="c">${cdHtml}</p></button>`;
     }
     function navSec(live) {
-      const L = live ? [["bf-pad", "블프 겨울 준비"], ["bf-hot", "하루특가"], ["bf-sig", "시그니처특가"], ["bf-brand", "브랜드특가"], ["bf-bday", "브랜드데이"], ["bf-xmas", "🎄 선물"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
-        : [["bf-pad", "블프 겨울 준비"], ["bf-sig", "시그니처특가"], ["bf-bday", "브랜드특가"], ["bf-xmas", "🎄 선물"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"], ["bf-live", "라이브"]];
+      const L = live ? [["bf-pad", "블프 겨울 준비"], ["bf-hot", "하루특가"], ["bf-sig", "시그니처특가"], ["bf-brand", "브랜드특가"], ["bf-bday", "브랜드데이"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
+        : [["bf-pad", "블프 겨울 준비"], ["bf-sig", "시그니처특가"], ["bf-bday", "브랜드특가"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"], ["bf-live", "라이브"]];
       return `<div class="bf-jump">${L.map(([id, t]) => `<button type="button" data-go="${id}">${t}</button>`).join("")}</div>`;
     }
 
@@ -2536,7 +2536,7 @@ async function renderPublicSite(root) {
               ${tile("bf-bday", "🏷️", "브랜드특가", "브랜드별 꿀템", cd(T_OPEN), false, (BFD.sigBrands || []).length)}
             </div>
           </div>
-          ${navSec(false)}${padSec()}${sigSec(false, {})}${brandDaySec(at(2026, 11, 22, 20))}${xmasSec()}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec("")}`;
+          ${navSec(false)}${padSec()}${sigSec(false, {})}${brandDaySec(at(2026, 11, 22, 20))}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec("")}`;
       } else {
         phase = "live";
         const day = (BFD.days && BFD.days[key]) || (preview ? (BFD.sample || {}) : {});
@@ -2566,7 +2566,7 @@ async function renderPublicSite(root) {
           <div class="bf-sec" id="bf-hot">${secHead("🔥", "오늘의 하루특가", "오늘 자정에 끝나요")}${curated("오늘 하루특가 전체 중 인기·할인 좋은 꿀템만 골랐어요")}${priceNote()}${chipsGrid("hot", hotGroups, true)}</div>
           ${sigSec(true, day)}
           <div class="bf-sec" id="bf-brand">${secHead("🏷️", "오늘의 브랜드특가", "브랜드 누르면 꿀템만")}${curated("오늘 열린 브랜드 상품 중 꿀템만 골랐어요")}${chipsGrid("brand", brands.map((b) => ({ label: b.brand, sub: b.rate ? `~${b.rate}%` : "", items: b.items || [] })), false)}</div>
-          ${brandDaySec(now)}${xmasSec()}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec(todayKey)}`;
+          ${brandDaySec(now)}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec(todayKey)}`;
       }
       const nowDay = zone.querySelector(".bf-day.now");
       if (nowDay) nowDay.parentNode.scrollLeft = Math.max(0, nowDay.offsetLeft - 50);
