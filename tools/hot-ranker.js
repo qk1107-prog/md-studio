@@ -12,18 +12,19 @@ window.__hotRun = async () => {
     ["가방", "백팩", "004001"], ["가방", "크로스백", "004002"], ["가방", "숄더백", "004003"],
     ["잡화", "머플러", "101008"], ["잡화", "모자", "120"],
   ];
-  const BANDS = ["AGE_BAND_20", "AGE_BAND_25", "AGE_BAND_30", "AGE_BAND_35"];
-  const PER = 6;
+  const BANDS = ["AGE_BAND_MINOR", "AGE_BAND_20", "AGE_BAND_25", "AGE_BAND_30", "AGE_BAND_35"];
+  const GFS = ["M", "F"];
+  const PER = 12;
   const RISE = ["002", "001", "003", "103", "004", "101", "120"];
-  const jobs = []; SUBS.forEach((s, si) => BANDS.forEach((b) => jobs.push([si, b, s[2], 199])));
-  RISE.forEach((c) => BANDS.forEach((b) => jobs.push([-1, b, c, 201])));
+  const jobs = []; SUBS.forEach((s, si) => BANDS.forEach((b) => GFS.forEach((gf) => jobs.push([si, b, s[2], 199, gf]))));
+  RISE.forEach((c) => BANDS.forEach((b) => GFS.forEach((gf) => jobs.push([-1, b, c, 201, gf]))));
   const rank = SUBS.map(() => ({})); const meta = {}; const riseSc = {};
   let done = 0;
-  await Promise.all([1, 2, 3, 4, 5, 6].map(async () => {
+  await Promise.all([1, 2, 3, 4, 5, 6, 7, 8].map(async () => {
     while (jobs.length) {
-      const [si, b, code, sec] = jobs.shift();
+      const [si, b, code, sec, gf] = jobs.shift();
       try {
-        const j = await (await fetch(`https://api.musinsa.com/api2/hm/web/v5/pans/ranking/sections/${sec}?storeCode=musinsa&categoryCode=${code}&ageBand=${b}&gf=A`, { credentials: "include" })).json();
+        const j = await (await fetch(`https://api.musinsa.com/api2/hm/web/v5/pans/ranking/sections/${sec}?storeCode=musinsa&categoryCode=${code}&ageBand=${b}&gf=${gf}`, { credentials: "include" })).json();
         let i = 0;
         for (const m of (j.data && j.data.modules) || []) for (const it of m.items || []) {
           if (it.type !== "PRODUCT_COLUMN" || !it.info) continue;
@@ -45,7 +46,7 @@ window.__hotRun = async () => {
     const ids = Object.keys(rank[si]).sort((a, b) => rank[si][b] - rank[si][a]);
     const seenName = new Set();
     for (const id of ids) {
-      if (pick[si].length >= PER + 3) break;
+      if (pick[si].length >= 22) break;
       if (used.has(id)) continue;
       const g = meta[id]; if (!g) continue;
       const nk = g.brand + "|" + String(g.name).replace(/[\[(][^\])]*[\])]/g, "").replace(/\s+/g, "").slice(0, 12); if (seenName.has(nk)) continue;
@@ -76,10 +77,14 @@ window.__hotRun = async () => {
       const price = (f && f.normalPrice) || (rate ? Math.round(sale / (1 - rate / 100) / 100) * 100 : sale);
       return { i: id, brand: g.brand, name: g.name, img: String((f && f.thumbnail) || g.img).replace("/thumbnails/images/", "/images/").replace(/_\d{3}\.(jpg|png|webp)$/i, "_500.$1"), link: "https://www.musinsa.com/curator/goods/" + cache[id], price, sale, rate, rv: (f && f.reviewCount) || 0, w: g.w.slice(0, 2) };
   };
+  // 꿀템 고르기: 인기 순위 × 할인 폭, 후기 너무 적고 할인도 없는 건 뺌
   const cats = [];
   SUBS.forEach(([grp, name], si) => {
+    const sc = (id) => { const x = info[id] || {}; const r = x.saleRate || (meta[id] || {}).rate || 0; return rank[si][id] * (1 + Math.min(r, 60) / 50) * ((x.reviewCount || 0) >= 30 ? 1.15 : 1); };
+    const ok = (id) => { const x = info[id]; if (!x) return true; return (x.reviewCount || 0) >= 10 || (x.saleRate || 0) >= 20; };
+    const ids = pick[si].filter(ok).sort((a, b) => sc(b) - sc(a));
     const items = [];
-    for (const id of pick[si]) { if (items.length >= PER) break; const x = mk(id); if (x) items.push(x); }
+    for (const id of ids) { if (items.length >= PER) break; const x = mk(id); if (x) items.push(x); }
     if (items.length >= 3) cats.push({ cat: name, grp, items });
   });
   const riseItems = []; const rb = new Set();
