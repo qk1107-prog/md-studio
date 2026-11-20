@@ -2591,6 +2591,18 @@ async function renderPublicSite(root) {
     }
 
     // ⚡ 티징 특가 (11/20 19시 ~ 11/22 19시, 티징 때만 사는 상품)
+    // 광만두 장바구니 (내가 직접 산 것) — main.bf.mycart = {on, from:"2026-11-23T09:00:00+09:00", note, items:[{brand,name,img,link,price,sale,rate,cm}]}
+    function cartSec() {
+      const C = BFD.mycart || {};
+      const items = (C.items || []).filter((p) => p && p.link);
+      if (!C.on || !items.length) return "";
+      if (C.from && nowFn() < Date.parse(C.from) && !preview) return "";
+      return `<div class="bf-sec bf-mycart" id="bf-mycart">${secHead("🛒", "광만두 장바구니", "", "제가 직접 산 것만 모았어요")}
+        <p class="tz-cpnote">${esc(C.note || "블프 때 제가 실제로 담고 결제한 리스트예요. 같이 사요 🙌")}</p>
+        ${chipsGrid("mycart", [{ label: "전체", items }], false)}
+      </div>`;
+    }
+
     function teaseSec() {
       const T = BFD.teaser || {};
       const now = nowFn();
@@ -2711,7 +2723,8 @@ async function renderPublicSite(root) {
       return `<button type="button" class="bf-tile${lock ? " lock" : ""}" data-go="${id}">${count ? `<span class="n">${count}</span>` : ""}<div class="e">${e}</div><p class="t">${t}</p><p class="s">${sub}</p><p class="c">${cdHtml}</p></button>`;
     }
     function navSec(live) {
-      const L = live ? [["bf-pad", "블프 겨울 준비"], ["bf-hot", "하루특가"], ["bf-sig", "시그니처특가"], ["bf-brand", "브랜드특가"], ["bf-bday", "브랜드데이"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
+      const MC = BFD.mycart || {}; const mcOn = MC.on && (MC.items || []).length && (!MC.from || nowFn() >= Date.parse(MC.from) || preview);
+      const L = live ? [...(mcOn ? [["bf-mycart", "🛒 광만두 장바구니"]] : []), ["bf-sig", "시그니처특가"], ["bf-pad", "블프 겨울 준비"], ["bf-hot", "하루특가"], ["bf-brand", "브랜드특가"], ["bf-bday", "브랜드데이"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
         : [["bf-tease", "⚡ 프리오픈"], ["bf-pad", "블프 겨울 준비"], ["bf-sig", "시그니처특가"], ["bf-bday", "브랜드특가"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"], ["bf-live", "라이브"]];
       return `<div class="bf-jump">${L.map(([id, t]) => `<button type="button" data-go="${id}">${t}</button>`).join("")}</div>`;
     }
@@ -2770,6 +2783,7 @@ async function renderPublicSite(root) {
           </div>
           ${alertSec()}
           ${navSec(true)}
+          ${cartSec()}
           ${sigSec(true, day)}
           ${padSec()}
           <div class="bf-sec" id="bf-hot">${secHead("🔥", "오늘의 하루특가", "오늘 자정에 끝나요")}${curated("오늘 하루특가 전체 중 인기·할인 좋은 꿀템만 골랐어요")}${cartNote("하루특가는 오늘 자정에 끝나요. 장바구니에 담고 쿠폰까지 먹이면 끝!")}${priceNote()}${chipsGrid("hot", hotGroups, true)}</div>
