@@ -66,10 +66,17 @@ window.__bmRun = async (opts) => {
   }
   const cache = new Map(); // gno -> cutout canvas (최근 것만)
   // 대표 사진이 모델 컷이면, 상세 이미지(alt) 중 흰 배경 제품 컷을 찾아 씀
+  // 사람(모델) 사진 걸러내기: 윗부분에 피부색이 많으면 모델 컷으로 봄
+  function looksPerson(c) {
+    const w = c.width, h = c.height, top = Math.max(8, Math.round(h * 0.28)), d = c.getContext("2d").getImageData(0, 0, w, top).data;
+    let op = 0, sk = 0;
+    for (let i = 0; i < d.length; i += 4) { if (d[i + 3] < 128) continue; op++; const r = d[i], g = d[i + 1], b = d[i + 2]; const cb = 128 - 0.168736 * r - 0.331264 * g + 0.5 * b, cr = 128 + 0.5 * r - 0.418688 * g - 0.081312 * b; if (cr > 138 && cr < 173 && cb > 77 && cb < 127 && r > 90 && r > g && g > b * 0.9) sk++; }
+    return op > 50 && sk / op > 0.1;
+  }
   async function tryUrl(url) {
     if (cache.has(url)) return cache.get(url);
     let r = null;
-    try { const bmp = await loadImg(url); const c = toCanvas(bmp, 520); bmp.close && bmp.close(); if (floodAlpha(c)) { S.flood++; r = crop(c); } } catch (e) {}
+    try { const bmp = await loadImg(url); const c = toCanvas(bmp, 520); bmp.close && bmp.close(); if (floodAlpha(c)) { S.flood++; r = crop(c); if (r && (looksPerson(r) || r.height / r.width > 2.6)) { r = null; S.person = (S.person || 0) + 1; } } } catch (e) {}
     cache.set(url, r); if (cache.size > 400) cache.delete(cache.keys().next().value); return r;
   }
   async function cutout(it) {
