@@ -2256,7 +2256,8 @@ async function renderPublicSite(root) {
           const pctN = Math.round((1 - cur / base) * 100);
           return `<p class="pt"><s>${esc(won(base))}</s><b class="pbf">블프가</b></p><p class="pr"><i>${pctN}%</i>${esc(won(cur))}</p><p class="preal">직전가보다 -${pct}%</p>`;
         }
-        return `<p class="pr">${esc(won(cur))}</p><p class="pt same">직전가랑 같아요</p>`;
+        if (nowFn() >= T_OPEN) return `<p class="pr">${esc(won(cur))}</p><p class="pt same">직전가랑 같아요</p>`;
+        // 티징 기간(11/20~22)엔 아직 블프가가 안 열린 상품이 많아서, 평소 표시(정가 취소선+할인가) 그대로
       }
       // 평소: 정가 취소선 + 할인율·할인가 (정가는 직전 스냅샷 → 없으면 할인율로 역산)
       if (!p.sale) return "";
