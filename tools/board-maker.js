@@ -23,7 +23,7 @@ window.__bmRun = async (opts) => {
   // ---------- 누끼 ----------
   const loadImg = async (url) => { const r = await fetch(url, { mode: "cors" }); if (!r.ok) throw new Error("img " + r.status); return await createImageBitmap(await r.blob()); };
   const toCanvas = (bmp, max) => { const s = Math.min(1, max / Math.max(bmp.width, bmp.height)); const c = document.createElement("canvas"); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s); c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height); return c; };
-  function floodAlpha(c) {
+  function floodAlpha(c, TT) {
     const w = c.width, h = c.height, ctx = c.getContext("2d"), id = ctx.getImageData(0, 0, w, h), d = id.data;
     // 테두리가 밝고 고른 배경인지
     let n = 0, ok = 0, sr = 0, sg = 0, sb = 0;
@@ -33,7 +33,7 @@ window.__bmRun = async (opts) => {
     const close = (i, t) => Math.abs(d[i] - br) + Math.abs(d[i + 1] - bgc) + Math.abs(d[i + 2] - bb) < t;
     for (let x = 0; x < w; x += 2) { if (close((0 * w + x) * 4, 40)) ok++; if (close(((h - 1) * w + x) * 4, 40)) ok++; } for (let y = 0; y < h; y += 2) { if (close((y * w) * 4, 40)) ok++; if (close((y * w + w - 1) * 4, 40)) ok++; }
     if (ok / n < 0.9 || (br + bgc + bb) / 3 < 200) return false;
-    const T = 54, seen = new Uint8Array(w * h), st = [];
+    const T = TT || 54, seen = new Uint8Array(w * h), st = [];
     for (let x = 0; x < w; x++) { st.push(x, 0, x, h - 1); } for (let y = 0; y < h; y++) { st.push(0, y, w - 1, y); }
     while (st.length) { const y = st.pop(), x = st.pop(); if (x < 0 || y < 0 || x >= w || y >= h) continue; const p = y * w + x; if (seen[p]) continue; const i = p * 4; if (!close(i, T)) continue; seen[p] = 1; d[i + 3] = 0; st.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1); }
     // 색상 점(컬러칩) 같은 작은 조각 지우기: 큰 덩어리만 남김
@@ -73,12 +73,35 @@ window.__bmRun = async (opts) => {
     for (let i = 0; i < d.length; i += 4) { if (d[i + 3] < 128) continue; op++; const r = d[i], g = d[i + 1], b = d[i + 2]; const cb = 128 - 0.168736 * r - 0.331264 * g + 0.5 * b, cr = 128 + 0.5 * r - 0.418688 * g - 0.081312 * b; if (cr > 138 && cr < 173 && cb > 77 && cb < 127 && r > 90 && r > g && g > b * 0.9) sk++; }
     return op > 50 && sk / op > 0.1;
   }
+  // 누끼 품질: 남은 부분이 너무 적거나(밝은 바지 등이 배경이랑 같이 지워짐) 구멍이 많으면 실패
+  function quality(c, full) {
+    if (!c) return { area: 0, fill: 0 };
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let op = 0;
+    for (let i = 3; i < d.length; i += 4) if (d[i] > 40) op++;
+    return { area: op / full, fill: op / (c.width * c.height) };
+  }
+  const bad = (q) => q.area < 0.07 || q.fill < 0.42;
+  async function cut1(url, T) {
+    const bmp = await loadImg(url); const c = toCanvas(bmp, 520); bmp.close && bmp.close();
+    const full = c.width * c.height;
+    if (!floodAlpha(c, T)) return { r: null, q: { area: 0, fill: 0 } };
+    const r = crop(c); return { r, q: quality(r, full) };
+  }
   async function tryUrl(url) {
     if (cache.has(url)) return cache.get(url);
     let r = null;
-    try { const bmp = await loadImg(url); const c = toCanvas(bmp, 520); bmp.close && bmp.close(); if (floodAlpha(c)) { S.flood++; r = crop(c); if (r && (looksPerson(r) || r.height / r.width > 2.6)) { r = null; S.person = (S.person || 0) + 1; } } } catch (e) {}
+    try {
+      let a = await cut1(url, 54);
+      if (a.r && bad(a.q)) { S.fix = (S.fix || 0) + 1; const b2 = await cut1(url, 20); if (b2.r && !bad(b2.q) && b2.q.area > a.q.area * 1.25) a = b2; else if (bad(a.q)) a = { r: null }; }
+      r = a.r; if (r) S.flood++;
+      if (r && (looksPerson(r) || r.height / r.width > 2.6)) { r = null; S.person = (S.person || 0) + 1; }
+    } catch (e) {}
     cache.set(url, r); if (cache.size > 400) cache.delete(cache.keys().next().value); return r;
   }
+  // 기존 보드 검사용: 원래 방식(54)으로 잘랐을 때 망가졌는지
+  async function wasBad(it) { try { const a = await cut1(it.flat || it.img, 54); return !!a.r && bad(a.q); } catch (e) { return false; } }
+  window.__bmQ = async (url) => { const a = await cut1(url, 54), b = await cut1(url, 20); return JSON.stringify({ a: a.q, b: b.q }); };
+  if (opts.qonly) { S.st = "q"; return; }
   async function cutout(it) {
     const urls = [it.img, ...((it.alt || []).filter((u) => u !== it.img))];
     for (const u of urls) { const r = await tryUrl(u); if (r && r.width > 60 && r.height > 60) { it.flat = u; return r; } }
@@ -117,7 +140,12 @@ window.__bmRun = async (opts) => {
       const { c, key } = q.shift(); const good = [];
       for (const st of c.sets) {
         if (good.length >= NEED) break;
-        if (/\/media\/packs\//.test(st.board || "") && new RegExp(key + "_" + good.length + "\\.jpg").test(st.board)) { good.push(st); continue; }
+        if (/\/media\/packs\//.test(st.board || "") && new RegExp(key + "_" + good.length + "\\.jpg").test(st.board)) {
+          let redo = false;
+          if (opts.recheck) { for (const it of st.items) if (["아우터", "상의", "하의", "신발"].includes(it.role) && (await wasBad(it))) { redo = true; break; } }
+          if (!redo) { good.push(st); continue; }
+          S.redo = (S.redo || 0) + 1; if (S.log.length < 60) S.log.push("redo " + key + "_" + good.length);
+        }
         try {
           const blob = await makeBoard(st);
           const path = `packs/${key}_${good.length}.jpg`;
