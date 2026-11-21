@@ -23,12 +23,12 @@ window.__spRun = async (brands) => {
         S.st = b + " " + c.couponName + " p" + p;
         let j; try { j = await (await fetch(`https://api.musinsa.com/api2/coupon/plp/v1/goods?gf=A&sortCode=SALE_ONE_WEEK_COUNT&couponNo=${c.couponNo}&couponKind=${c.couponKind}&size=100&caller=COUPON&page=${p}`, { credentials: "include" })).json(); } catch (e) { break; }
         const L = (j.data && (j.data.list || j.data.goods)) || []; if (!L.length) break;
-        L.forEach((g, i) => { if (g.isSoldOut || /키즈|KIDS|여성|우먼/i.test(g.goodsName) || g.genderCode === "WOMEN" || g.brandName !== b) return; const id = String(g.goodsNo); const pct = c.discountValue; const rank = (p - 1) * 100 + i; if (!goods[id] || pct > goods[id].p) goods[id] = { g, p: pct, no: c.couponNo, rank: Math.min(rank, goods[id] ? goods[id].rank : 1e9) }; else goods[id].rank = Math.min(goods[id].rank, rank); });
+        L.forEach((g, i) => { if (g.isSoldOut || /키즈|KIDS|여성|우먼/i.test(g.goodsName) || g.genderCode === "WOMEN" || g.brandName !== b) return; const id = String(g.goodsNo); const pct = c.discountValue; const rank = (p - 1) * 100 + i; const cs = (goods[id] && goods[id].cs) || []; if (!cs.includes(c.couponNo)) cs.push(c.couponNo); if (!goods[id] || pct > goods[id].p) goods[id] = { g, p: pct, no: c.couponNo, cs, rank: Math.min(rank, goods[id] ? goods[id].rank : 1e9) }; else { goods[id].rank = Math.min(goods[id].rank, rank); goods[id].cs = cs; } });
         if (L.length < 100) break;
       }
     }
     const kind = (n) => (/눕시|패딩|다운|온볼|파카|푸퍼|구스|헤비/.test(n) && !/뮬|부티|부띠|슬리퍼|슬립온|슈즈|부츠|츄카|스니커즈| 목 |베스트|장갑|모자|햇|캡|머플러|토트|백팩|버킷|숄더|크로스|파우치|멀티팩|팩 |가방|팬츠|바지/.test(n) ? 0 : /자켓|재킷|플리스|아노락|바람막이|가디건|코트/.test(n) ? 1 : 2);
-    const arr = Object.values(goods).map((x) => { const g = x.g; const nor = g.normalPrice || g.price; const cpn = Math.round(g.price * (1 - x.p / 100) / 10) * 10; return { id: String(g.goodsNo), brand: g.brandName, name: g.goodsName, img: String(g.thumbnail || "").replace("/thumbnails/images/", "/images/"), price: nor, sale: g.price, rate: g.saleRate || 0, p: x.p, cpn, tot: nor ? Math.round((1 - cpn / nor) * 100) : x.p, rv: g.reviewCount || 0, k: kind(g.goodsName), rank: x.rank, cno: x.no }; });
+    const arr = Object.values(goods).map((x) => { const g = x.g; const nor = g.normalPrice || g.price; const cpn = Math.round(g.price * (1 - x.p / 100) / 10) * 10; return { id: String(g.goodsNo), brand: g.brandName, name: g.goodsName, img: String(g.thumbnail || "").replace("/thumbnails/images/", "/images/"), price: nor, sale: g.price, rate: g.saleRate || 0, p: x.p, cpn, tot: nor ? Math.round((1 - cpn / nor) * 100) : x.p, rv: g.reviewCount || 0, k: kind(g.goodsName), rank: x.rank, cno: x.no, cs: x.cs }; });
     // 패딩 먼저(인기순), 그다음 자켓·플리스, 나머지 — 섞어서 30개
     // 쿠폰 15% 이상이거나 합쳐서 25% 이상 싸지는 것만, 인기(판매순)와 할인 폭을 같이 봄
     const good = (x) => x.p >= 15 || x.tot >= 25;
@@ -50,7 +50,7 @@ window.__spRun = async (brands) => {
     out.push({ brand: b, max: Math.max(...cps.map((c) => c.discountValue)), exp: "11/22", total: arr.length, pad: arr.filter((x) => x.k === 0).length,
       coupons: Object.values(byV).sort((a, b2) => b2.discountValue - a.discountValue).map((c) => ({ no: c.couponNo, v: c.discountValue + "%" })),
       items: pick.filter((x) => cache[x.id]).map((x) => ({ i: x.id, brand: x.brand, name: x.name, img: x.img, link: "https://www.musinsa.com/curator/goods/" + cache[x.id], price: x.price, sale: x.sale, rate: x.rate, p: x.p, cpn: x.cpn, tot: x.tot, rv: x.rv, k: x.k })),
-      all: allL.filter((x) => cache[x.id]).map((x) => ({ i: x.id, brand: x.brand, name: x.name, img: x.img, l: cache[x.id], price: x.price, sale: x.sale, p: x.p, cpn: x.cpn, tot: x.tot, k: x.k })) });
+      all: allL.filter((x) => cache[x.id]).map((x) => ({ i: x.id, brand: x.brand, name: x.name, img: x.img, l: cache[x.id], price: x.price, sale: x.sale, p: x.p, cpn: x.cpn, tot: x.tot, k: x.k, cs: x.cs })) });
   }
   localStorage.setItem("mdcpLinks", JSON.stringify(cache));
   window.__spData = JSON.stringify({ at: new Date().toISOString(), brands: out });

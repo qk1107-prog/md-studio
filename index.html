@@ -1981,8 +1981,9 @@ async function renderPublicSite(root) {
     if (!c) { history.replaceState(null, "", location.pathname + location.search); return; }
     const items = (c.g || []).map((g) => ({ brand: g.b, product_name: g.n, curator_url: curl(g.l), image_url: "https://image.msscdn.net" + g.i }));
     // 대표 브랜드 프리오픈 쿠폰이면: 그 쿠폰이 붙는 상품을 패딩부터 쿠폰 적용가로 한 번에
-    const spB = (() => { try { return (((ADMIN && ADMIN.bf && ADMIN.bf.spot) || {}).brands || []).find((o) => (o.coupons || []).some((x) => String(x.no) === String(no)) && (o.all || []).length); } catch (e) { return null; } })();
-    const spL = spB ? spB.all.filter((x) => Number(x.p) === parseFloat(c.v)) : [];
+    // 노스페이스처럼 프리오픈 칸이 있는 브랜드 쿠폰(티징 전용 쿠폰 포함)은 그 쿠폰이 실제로 붙는 상품 전체를
+    const spB = (() => { try { return (((ADMIN && ADMIN.bf && ADMIN.bf.spot) || {}).brands || []).find((o) => (o.all || []).length && ((o.coupons || []).some((x) => String(x.no) === String(no)) || o.all.some((x) => (x.cs || []).map(String).includes(String(no))) || (c.n || "").includes(o.brand))); } catch (e) { return null; } })();
+    const spL = spB ? (spB.all.some((x) => (x.cs || []).map(String).includes(String(no))) ? spB.all.filter((x) => (x.cs || []).map(String).includes(String(no))) : spB.all.filter((x) => Number(x.p) === parseFloat(c.v))) : [];
     if (spL.length >= 3) {
       const won2 = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const card = (x) => `<a class="bf-item" href="${esc(curl(x.l))}" target="_blank" rel="noopener">
@@ -2898,25 +2899,39 @@ async function renderPublicSite(root) {
     let tsOpen = false;
     function renderTs() {
       const T = BFD.ts || {}; const now = nowFn();
-      // 추천 글 대화방이 매시간 고른 픽(bf.dm, 4시간 안)을 맨 앞에, 그 뒤에 자동 수집한 타임세일
-      const DM = BFD.dm || {}; const dmFresh = DM.at && now - Date.parse(DM.at) < 4 * 36e5;
-      const seenTs = new Set();
-      // 프리오픈 쿠폰 칸에 나오는 브랜드(노스페이스 등)는 그쪽으로 몰고 타임세일엔 안 넣음
+      // 블프 보고방이 매시 정각 main.bf.dm 에 올린 목록(2시간 안)이면 그것만 순서 그대로, 아니면 bf.ts(자동 수집)로 대신
+      const DM = BFD.dm || {}; const dmFresh = !!(DM.at && (DM.items || []).length && now - Date.parse(DM.at) < 2 * 36e5);
+      const SRC = dmFresh ? DM : T;
+      // 프리오픈 쿠폰 칸에 나오는 브랜드(노스페이스 등)는 그 칸으로 몰아서 여기선 뺌 (순서는 그대로)
       const spOut = new Set(((BFD.spot || {}).brands || []).filter((o) => (o.items || []).length >= 3).map((o) => o.brand));
-      // T.merged: 이 방의 매시 작업이 추천 글 방 픽(bf.dm)까지 확인해서 합쳐 둔 것 → 그것만 사용
-      const items = [...(dmFresh && !T.merged ? DM.items || [] : []), ...(T.items || [])].filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link) || spOut.has(p.brand)) return false; seenTs.add(p.link); return true; }).slice(0, 10);
+      const seenTs = new Set();
+      const items = (SRC.items || []).filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link) || spOut.has(p.brand)) return false; seenTs.add(p.link); return true; }).slice(0, 50);
       let box = root.querySelector("#tsz");
       if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
       if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsmore]")) { tsOpen = !tsOpen; renderTs(); if (!tsOpen) box.scrollIntoView({ block: "start" }); } }); }
       if (cp) { if (cp.nextSibling !== box) cp.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
-      const endTxt = (t, p) => { if (p && p.soon) return "⚡ 품절임박"; if (!t) return (p && p.kind) || "타임세일"; const k = kp(t); const h = Math.round((t - now) / 36e5); return h < 24 ? `⏰ ${h < 1 ? "곧" : h + "시간 뒤"} 마감` : `~${k.m}/${k.d} ${k.h}시`; };
-      const cards = items.map((p) => itemCard(Object.assign({}, p, { tag: endTxt(p.end, p), comment: (p.w || []).length ? "👀 " + p.w[0] : "" }), 0)).join("");
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 <em class="ts-em">타임세일 TOP 10</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago" data-tsat="${esc(T.at || "")}"></small><button type="button" class="tsz-more" data-tsmore="1">${tsOpen ? "접기 ▲" : "전체보기 ▼"}</button></div>
+      const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
+      const endTxt = (t) => { if (!t) return "타임세일"; const k = kp(t); const h = Math.round((t - now) / 36e5); return h < 24 ? `⏰ ${h < 1 ? "곧" : h + "시간 뒤"} 마감` : `~${k.m}/${k.d} ${k.h}시`; };
+      const card = (p) => {
+        const kind = p.kind || endTxt(p.end);
+        const fire = Number(p.hot) >= 2 ? " 🔥🔥" : Number(p.hot) === 1 ? " 🔥" : "";
+        const sale = Number(p.sale) || 0, price = Number(p.price) || 0, rate = Number(p.rate) || 0;
+        const isCp = /쿠폰/.test(p.kind || "");
+        const img = safeImg(p.img);
+        return `<a class="bf-item tsc" href="${esc(safeUrl(p.link) || "#")}" target="_blank" rel="noopener">
+          <div class="im">${img ? `<img src="${esc(img)}" loading="lazy" alt="" referrerpolicy="no-referrer">` : ""}<span class="tg">${esc(kind + fire)}</span>${p.soon ? `<span class="tsc-soon">⚡품절임박</span>` : ""}</div>
+          <p class="br">${esc(p.brand)}</p><p class="nm">${esc(p.name)}</p>
+          ${price > sale ? `<p class="pt"><s>${esc(won(price))}</s></p>` : ""}
+          ${isCp ? `<p class="tsc-cp">쿠폰 적용가 <b>${esc(won(sale))}</b>${rate ? ` <i>(-${esc(rate)}%)</i>` : ""}</p>` : `<p class="pr">${rate ? `<i>${esc(rate)}%</i>` : ""}${esc(won(sale))}</p>`}
+        </a>`;
+      };
+      const shown = tsOpen ? items : items.slice(0, 20);
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 <em class="ts-em">타임세일·프리쿠폰 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago"></small>${items.length > 20 || tsOpen ? `<button type="button" class="tsz-more" data-tsmore="1">${tsOpen ? "접기 ▲" : "전체보기 ▼"}</button>` : ""}</div>
         <div class="hotz-bar"><i></i></div>
-        <div class="${tsOpen ? "bf-grid" : "tsz-scroll"}">${cards}</div>`;
-      const el = box.querySelector(".tsz-ago"), t = Date.parse(T.at || "");
-      if (el && t) { const m = Math.max(0, Math.round((Date.now() - t) / 6e4)); el.textContent = `${m < 1 ? "방금" : m < 60 ? m + "분 전" : Math.floor(m / 60) + "시간 전"} 확인 · 품절되면 끝`; }
+        <div class="${tsOpen ? "bf-grid" : "tsz-scroll"}">${shown.map(card).join("")}${!tsOpen && items.length > 20 ? `<button type="button" class="spz-endcard" data-tsmore="1"><b>+${items.length - 20}</b>전체보기 →</button>` : ""}</div>`;
+      const el = box.querySelector(".tsz-ago"), t = Date.parse(SRC.at || "");
+      if (el && t) { const k = kp(t); el.textContent = `${k.h}시 ${String(k.mi).padStart(2, "0")}분 업데이트 · 품절되면 끝`; }
     }
     let hotView = -1, hotOpen = false;
     function renderHot() {
@@ -3720,6 +3735,12 @@ renderPublicSite(ROOT_EL);
 @media (max-width: 420px) { #app-root .spz-t { font-size: 14px; letter-spacing: -0.6px; } #app-root .spz-t em { padding: 1px 5px 2px; } }
 #app-root .tsz-scroll > .spz-endcard { flex: 0 0 31%; max-width: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; aspect-ratio: 3/4; background: #f3f1ee; border-radius: 10px; font-size: 12.5px; font-weight: 800; color: #1a1a1a; text-decoration: none; }
 #app-root .spz-endcard b { font-size: 20px; color: #ff3d3f; }
+
+#app-root .tsc .tsc-soon { position: absolute; left: 4px; bottom: 4px; font-size: 9px; font-weight: 900; color: #fff; background: #ff3d3f; border-radius: 4px; padding: 2px 5px 1px; }
+#app-root .tsc .tsc-cp { margin: 2px 0 0; font-size: 10.5px; font-weight: 800; color: #ff3d3f; letter-spacing: -0.3px; line-height: 1.35; }
+#app-root .tsc .tsc-cp b { display: block; font-size: 14px; font-weight: 900; color: #141312; }
+#app-root .tsc .tsc-cp i { font-style: normal; color: #ff3d3f; }
+#app-root button.spz-endcard { border: 0; cursor: pointer; font-family: inherit; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------

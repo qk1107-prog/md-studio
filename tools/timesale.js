@@ -59,44 +59,10 @@ window.__tsRun = async () => {
     if (cache[id]) continue;
     try { const r = await fetch("https://api.one.musinsa.com/api2/affiliate/v2/link/product/" + id, { method: "POST", credentials: "include", headers: { Accept: "application/json", "Content-Type": "application/json", "X-Platform": "MUSINSA" }, body: "{}" }); const l = await r.json(); const m = String((l.data && l.data.link) || "").match(/^https:\/\/www\.musinsa\.com\/curator\/goods\/([A-Za-z0-9]+)$/); if (m) cache[id] = m[1]; } catch (e) {}
   }
-  const own = pick.filter((id) => cache[id]).slice(0, 24).map((id) => { const d = det[id], g = meta[id]; return { i: id, brand: g.brand, name: g.name, img: String(d.img || g.img).replace(/_\d{3}\.(jpg|png|webp)$/i, "_500.$1"), link: "https://www.musinsa.com/curator/goods/" + cache[id], price: d.price, sale: d.sale, rate: d.rate, rv: d.rv || 0, end: d.end || 0, w: g.w.slice(0, 2) }; });
-
-  // ---- 추천 글 방이 서버(main.bf.dm)에 올린 픽을 확인해서 같이 넣기 ----
-  // 하나하나 상품 상세로 지금 가격·품절·타임세일 마감·큐레이터 링크를 다시 확인한 것만 앞에 넣음
-  S.st = "picks";
-  const SB = "https://cbuydjkvvzbluyohdkie.supabase.co/rest/v1/site_data?id=eq.main&select=value";
-  const AK = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
-  let BF = {};
-  try { BF = ((await (await fetch(SB, { headers: { apikey: AK, Authorization: "Bearer " + AK } })).json())[0] || {}).value.bf || {}; } catch (e) {}
-  const DM = BF.dm || {};
-  const spOut = new Set(((BF.spot || {}).brands || []).filter((o) => (o.items || []).length >= 3).map((o) => o.brand));
-  const dmFresh = DM.at && now - Date.parse(DM.at) < 6 * 36e5;
-  const picks = []; const stat = { dm: dmFresh ? (DM.items || []).length : 0, ok: 0, sold: 0, link: 0, spot: 0 };
-  for (const p of dmFresh ? DM.items || [] : []) {
-    if (!p || !p.i) continue;
-    if (spOut.has(p.brand)) { stat.spot++; continue; }
-    try {
-      const d = (await (await fetch("https://goods-detail.musinsa.com/api2/goods/" + p.i, { credentials: "include" })).json()).data;
-      if (!d || d.isOutOfStock || d.goodsSaleType !== "SALE") { stat.sold++; continue; }
-      const gp = d.goodsPrice || {};
-      const end = d.isTimeSale && d.saleEndDate ? Date.parse(String(d.saleEndDate).replace(" ", "T") + (/[+Z]/.test(String(d.saleEndDate).slice(10)) ? "" : "+09:00")) : 0;
-      if (end && end < now + 20 * 60e3) { stat.sold++; continue; }
-      let code = (String(p.link || "").match(/^https:\/\/www\.musinsa\.com\/curator\/goods\/([A-Za-z0-9]+)$/) || [])[1] || cache[p.i];
-      if (!code) { try { const l = await (await fetch("https://api.one.musinsa.com/api2/affiliate/v2/link/product/" + p.i, { method: "POST", credentials: "include", headers: { Accept: "application/json", "Content-Type": "application/json", "X-Platform": "MUSINSA" }, body: "{}" })).json(); code = (String((l.data && l.data.link) || "").match(/^https:\/\/www\.musinsa\.com\/curator\/goods\/([A-Za-z0-9]+)$/) || [])[1]; if (code) cache[p.i] = code; } catch (e) {} }
-      if (!code) { stat.link++; continue; }
-      const sale = gp.salePrice || p.sale, price = gp.normalPrice || p.price;
-      picks.push({ i: String(p.i), brand: p.brand || d.brandName, name: p.name || d.goodsNm, img: p.img || ("https://image.msscdn.net" + (d.thumbnailImageUrl || "")), link: "https://www.musinsa.com/curator/goods/" + code, price, sale, rate: gp.discountRate || p.rate || (price ? Math.round((1 - sale / price) * 100) : 0), rv: (d.goodsReview || {}).totalCount || p.rv || 0, end: end || 0, kind: p.kind || "", soon: d.isSoonOutOfStock || p.soon ? 1 : 0, pick: 1 });
-      stat.ok++;
-    } catch (e) {}
-  }
   localStorage.setItem("mdcpLinks", JSON.stringify(cache));
-  // 픽 먼저(브랜드당 2개까지) → 자동 수집, 같은 상품 하나만, 같은 브랜드 연속 X
-  const seen = new Set(), perB2 = {}, merged = [];
-  for (const x of [...picks, ...own]) { if (seen.has(x.i) || spOut.has(x.brand)) continue; perB2[x.brand] = (perB2[x.brand] || 0) + 1; if (perB2[x.brand] > 2) continue; seen.add(x.i); merged.push(x); }
-  for (let i = 1; i < merged.length; i++) if (merged[i].brand === merged[i - 1].brand) { const j = merged.findIndex((x, k) => k > i && x.brand !== merged[i - 1].brand); if (j > 0) [merged[i], merged[j]] = [merged[j], merged[i]]; }
-  const items = merged.slice(0, 30);
-  window.__tsData = JSON.stringify({ at: new Date().toISOString(), merged: 1, pickAt: DM.at || "", stat, items });
-  S.st = "done " + items.length + " items (픽 확인 " + stat.ok + "/" + stat.dm + " · 품절/마감 " + stat.sold + " · 링크X " + stat.link + " · 노스페이스칸 " + stat.spot + " · 자동 " + own.length + ")";
+  const items = pick.filter((id) => cache[id]).slice(0, 24).map((id) => { const d = det[id], g = meta[id]; return { i: id, brand: g.brand, name: g.name, img: String(d.img || g.img).replace(/_\d{3}\.(jpg|png|webp)$/i, "_500.$1"), link: "https://www.musinsa.com/curator/goods/" + cache[id], price: d.price, sale: d.sale, rate: d.rate, rv: d.rv || 0, end: d.end || 0, w: g.w.slice(0, 2) }; });
+  window.__tsData = JSON.stringify({ at: new Date().toISOString(), items });
+  S.st = "done " + items.length + " items (timesale found " + Object.keys(det).length + ")";
   let b = document.getElementById("__tsb");
   if (!b) { b = document.createElement("button"); b.id = "__tsb"; b.style.cssText = "position:fixed;left:10px;top:10px;z-index:2147483647;background:#ffe14d;border:2px solid #000;font:bold 16px sans-serif;padding:14px 18px"; document.body.appendChild(b); }
   b.textContent = "COPY TS"; b.onclick = () => navigator.clipboard.writeText(window.__tsData).then(() => { b.textContent = "OK " + items.length; });
