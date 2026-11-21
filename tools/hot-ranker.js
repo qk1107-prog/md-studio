@@ -89,6 +89,22 @@ window.__hotRun = async () => {
   });
   const riseItems = []; const rb = new Set();
   for (const id of rise) { if (riseItems.length >= 30) break; const x = mk(id); if (!x) continue; const k = x.brand + x.name.slice(0, 10); if (rb.has(k)) continue; rb.add(k); riseItems.push(x); }
+  // ---- 광만두님이 고른 '요즘 폼 좋은 브랜드' (11/21, 엔스테디 '감다살 브랜드 24') — 브랜드별 인기템 2개씩, 브랜드 번갈아 ----
+  try {
+    S.st = "pick brands";
+    const PB = ["쿠어", "서피스에디션", "다이브인", "이그노타", "XLIM", "퍼스널 오브젝트", "단델", "탄산마그네슘", "더콜디스트모먼트", "999휴머니티", "마이네임이즈피터", "브라운야드", "아르반", "오퍼스0012", "노이어", "파코 서플라이", "앤더슨벨", "선데이 오프클럽", "더 녹인", "247시리즈", "씨솔트", "홀리선", "유스", "미세키서울"];
+    const nb = (x) => String(x || "").replace(/[\s()]/g, "").toLowerCase();
+    const per = {};
+    await Promise.all([1, 2, 3, 4].map(async () => { const q = PB.slice(); while (q.length) { const b = q.shift(); if (per[b]) continue; per[b] = [];
+      try { const j = await (await fetch("https://api.musinsa.com/api2/dp/v2/plp/goods?gf=M&keyword=" + encodeURIComponent(b) + "&sortCode=POPULAR&page=1&size=20&caller=SEARCH", { credentials: "include" })).json();
+        ((j.data && j.data.list) || []).filter((g) => !g.isSoldOut && (nb(g.brandName).includes(nb(b)) || nb(b).includes(nb(g.brandName))) && !/반팔|반소매|쇼츠|반바지|키즈/.test(g.goodsName || "")).slice(0, 4).forEach((g) => per[b].push(g)); } catch (e) {} } }));
+    const pg = []; for (let r = 0; r < 3; r++) PB.forEach((b) => { const g = (per[b] || [])[r]; if (g) pg.push(g); });
+    const need2 = pg.map((g) => String(g.goodsNo)).filter((id) => !cache[id]);
+    await Promise.all([1, 2, 3, 4].map(async () => { while (need2.length) { const id = need2.shift(); try { const l = await (await fetch("https://api.one.musinsa.com/api2/affiliate/v2/link/product/" + id, { method: "POST", credentials: "include", headers: { Accept: "application/json", "Content-Type": "application/json", "X-Platform": "MUSINSA" }, body: "{}" })).json(); const m = String((l.data && l.data.link) || "").match(/^https:\/\/www\.musinsa\.com\/curator\/goods\/([A-Za-z0-9]+)$/); if (m) cache[id] = m[1]; } catch (e) {} } }));
+    localStorage.setItem("mdcpLinks", JSON.stringify(cache));
+    const pitems = pg.filter((g) => cache[String(g.goodsNo)]).map((g) => { const sale = g.finalPrice || g.price || g.normalPrice; const rate = g.finalDiscount || g.saleRate || 0; return { i: String(g.goodsNo), brand: g.brandName, name: g.goodsName, img: String(g.thumbnail || "").replace("/thumbnails/images/", "/images/").replace(/_\d{3}\.(jpg|png|webp)$/i, "_500.$1"), link: "https://www.musinsa.com/curator/goods/" + cache[String(g.goodsNo)], price: g.normalPrice || sale, sale, rate, rv: g.reviewCount || 0, w: [] }; });
+    if (pitems.length >= 6) cats.unshift({ cat: "요즘 폼 좋은 브랜드", grp: "pick", items: pitems.slice(0, 60) });
+  } catch (e) {}
   window.__hotData = JSON.stringify({ at: new Date().toISOString(), cats, rise: riseItems });
   S.st = "done " + cats.length + " cats rise" + riseItems.length + " " + cats.reduce((a, c) => a + c.items.length, 0) + " items";
   let b = document.getElementById("__hpb");

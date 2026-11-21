@@ -3007,7 +3007,10 @@ async function renderPublicSite(root) {
       if (anchor && anchor.nextSibling !== box) anchor.after(box);
       else if (!cp && !box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       // 순위·출처 표시 없이 카테고리를 섞어서 (1등끼리 먼저, 같은 브랜드 연속 X)
-      const mix = []; for (let r = 0; r < 4; r++) cats.forEach((c) => { if (c.items[r]) mix.push(c.items[r]); });
+      const base = []; for (let r = 0; r < 4; r++) cats.forEach((c) => { if (c.grp !== "pick" && c.items[r]) base.push(c.items[r]); });
+      // 광만두님 픽 브랜드는 실시간 HOT에 넉넉히(두 칸에 한 번꼴로) 섞기
+      const pk = (cats.find((c) => c.grp === "pick") || {}).items || [];
+      const mix = []; let pi = 0; base.forEach((x, i) => { mix.push(x); if (i % 2 === 1 && pi < Math.min(pk.length, 24)) mix.push(pk[pi++]); });
       for (let i = 1; i < mix.length; i++) if (mix[i].brand && mix[i].brand === mix[i - 1].brand) { const j = mix.findIndex((x, k) => k > i && x.brand !== mix[i - 1].brand); if (j > 0) [mix[i], mix[j]] = [mix[j], mix[i]]; }
       // 할인 없는 상품 = 예상 할인율 (브랜드 무진장 할인율 → 없으면 같은 카테고리 할인 상품 중간값 → 전체 중간값)
       const nb = (x) => String(x || "").toLowerCase().replace(/[\s()\[\]]/g, "");
