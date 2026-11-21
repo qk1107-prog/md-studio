@@ -1836,10 +1836,10 @@ async function renderPublicSite(root) {
     const won2 = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
     const SP = (() => { try { return ((ADMIN && ADMIN.bf && ADMIN.bf.spot) || {}).brands || []; } catch (e) { return []; } })();
     const spBlocks = SP.filter((o) => (o.items || []).length >= 3).slice(0, 2).map((o) => `<div class="spz-box">
-        <p class="spz-t">🎟️ ${esc(o.brand)} <em>프리오픈 쿠폰 최대 ${esc(o.max)}%</em><span class="cpz-live"><i></i>LIVE</span>${(o.all || []).length ? `<a class="spz-allbtn" href="#spa=${encodeURIComponent(o.brand)}">전체보기 →</a>` : ""}</p>
+        <p class="spz-t">🎟️ ${esc(o.brand)} <em>프리오픈 쿠폰 최대 ${esc(o.max)}%</em><span class="cpz-live"><i></i>LIVE</span></p>
         <p class="spz-k">~${esc(o.exp || "")} 본편 전까지 · 쿠폰 적용 상품 ${Number(o.total || 0).toLocaleString("ko-KR")}개 중 패딩 ${esc(o.pad || 0)}개</p>
         <div class="hotz-bar"><i></i></div>
-        <div class="spz-chips">${(o.coupons || []).map((c) => `<a href="#cp=${esc(c.no)}"><b>${esc(c.v)}</b> 쿠폰 적용템 →</a>`).join("")}</div>
+        <div class="spz-chips">${(o.all || []).length ? `<a class="spz-chip-all" href="#spa=${encodeURIComponent(o.brand)}">전체보기 →</a>` : ""}${(o.coupons || []).map((c) => `<a href="#cp=${esc(c.no)}"><b>${esc(c.v)}</b> 쿠폰템</a>`).join("")}</div>
         <div class="tsz-scroll">${o.items.map((x) => `<a class="bf-item" href="${esc(safeUrl(x.link) || "#")}" target="_blank" rel="noopener">
           <div class="im"><img src="${esc(safeImg(x.img))}" loading="lazy" alt="" referrerpolicy="no-referrer"><span class="tg">쿠폰 ${esc(x.p)}%</span></div>
           <p class="br">${esc(x.brand)}</p><p class="nm">${esc(x.name)}</p>
@@ -3713,7 +3713,10 @@ renderPublicSite(ROOT_EL);
 @media (min-width: 760px) { #app-root .spz-grid { grid-template-columns: repeat(5, 1fr); } }
 
 #app-root .spz-allbtn { margin-left: auto; font-size: 12px; font-weight: 800; color: #1a1a1a; text-decoration: none; border: 1px solid #1a1a1a; border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
-#app-root .spz-t { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+#app-root .spz-t { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; white-space: nowrap; }
+#app-root .spz-t em { white-space: nowrap; }
+#app-root .spz-chips a.spz-chip-all { background: #141312; color: #fff; }
+@media (max-width: 420px) { #app-root .spz-t { font-size: 14px; letter-spacing: -0.6px; } #app-root .spz-t em { padding: 1px 5px 2px; } }
 #app-root .tsz-scroll > .spz-endcard { flex: 0 0 31%; max-width: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; aspect-ratio: 3/4; background: #f3f1ee; border-radius: 10px; font-size: 12.5px; font-weight: 800; color: #1a1a1a; text-decoration: none; }
 #app-root .spz-endcard b { font-size: 20px; color: #ff3d3f; }
 </style>
