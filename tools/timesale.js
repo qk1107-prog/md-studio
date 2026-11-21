@@ -41,13 +41,14 @@ window.__tsRun = async () => {
       S.st = "detail left " + q.length;
     }
   }));
-  let list = Object.keys(det).filter((id) => det[id].rate >= 15 && det[id].sale);
+  const okCat = (id) => { const t = det[id].top, n = meta[id].name; if (/스칼렛또블랙|지프/.test(meta[id].brand)) return false; if (/여성|우먼|women|삭스|양말/i.test(n)) return false; if (["아우터", "상의", "바지", "신발", "가방"].includes(t)) return true; return /머플러|목도리|비니|장갑|바라클라바/.test(n); };
+  let list = Object.keys(det).filter((id) => det[id].rate >= 15 && det[id].sale && okCat(id));
   // 후기 수
   for (let i = 0; i < list.length; i += 30) {
     try { const j = await (await fetch("https://content.musinsa.com/api2/content/magazine-misc/v1/goods?saleStates=SALE&goodsIds=" + list.slice(i, i + 30).join(",") + "&sort=RANK&tabId=default&gf=A")).json(); ((j.data && j.data.list) || []).forEach((g) => { const d = det[g.goodsNo]; if (d) { d.rv = g.reviewCount || d.rv || 0; d.sc = g.reviewScore || 0; if (g.thumbnail) d.img = String(g.thumbnail).replace("/thumbnails/images/", "/images/"); } }); } catch (e) {}
   }
   const score = (id) => { const d = det[id]; return (d.rate / 100) * (1 + Math.log10(1 + (d.rv || 0))) * (1 + Math.min(1, pop[id] * 4)) * (d.sc && d.sc < 90 ? 0.6 : 1); };
-  list = list.filter((id) => (det[id].rv || 0) >= 20).sort((a, b) => score(b) - score(a));
+  list = list.filter((id) => (det[id].rv || 0) >= 50).sort((a, b) => score(b) - score(a));
   const perB = {}, pick = [];
   for (const id of list) { const b = meta[id].brand; perB[b] = (perB[b] || 0) + 1; if (perB[b] > 2) continue; pick.push(id); if (pick.length >= 30) break; }
   // 같은 브랜드 연속 X
