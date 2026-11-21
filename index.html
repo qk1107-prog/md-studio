@@ -1830,6 +1830,41 @@ async function renderPublicSite(root) {
   }
   const cpKind = (c) => (c.k === "C" ? "장바구니" : "상품");
   const cpHotSet = () => { if (!COUPONS || !COUPONS.list) return new Set(); const L = COUPONS.list; const pct = (c) => (/%$/.test(c.v) ? parseFloat(c.v) : 0); const pool = L.slice(0, 60).filter((c) => pct(c) >= 10 || /만원|천원/.test(c.v)); const top = pool.slice().sort((a, b) => (b.bf || 0) - (a.bf || 0) || pct(b) - pct(a) || (b.cnt || 0) - (a.cnt || 0)).slice(0, 6); return new Set(top.map((c) => String(c.no))); };
+  // ---- 대표 브랜드 프리오픈 쿠폰 강조 칸 (타임세일 TOP 10 바로 아래) : 티징 쿠폰이 있는 대표 브랜드만 자동으로 ----
+  function renderSpot(L) {
+    const BR = ["노스페이스", "아디다스", "나이키", "뉴발란스", "어그", "살로몬", "아크테릭스"];
+    const won2 = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
+    const blocks = BR.map((b) => {
+      const cps = L.filter((c) => c.tz && c.n.includes(b) && !/키즈/.test(c.n) && (c.g || []).length);
+      if (!cps.length) return "";
+      const pct = (c) => (/%$/.test(c.v) ? parseFloat(c.v) : 0);
+      const byV = {}; cps.forEach((c) => { const k = c.v; if (!byV[k] || /프리오픈/.test(c.n)) byV[k] = c; });
+      const chips = Object.values(byV).sort((a, b2) => pct(b2) - pct(a));
+      const goods = {}; cps.forEach((c) => (c.g || []).forEach((g) => { const k = g.l; if (!goods[k] || pct(c) > goods[k].p) goods[k] = { g, p: pct(c), c }; }));
+      const items = Object.values(goods).sort((a, b2) => b2.p - a.p).slice(0, 12);
+      if (items.length < 3) return "";
+      const max = Math.max(...chips.map(pct));
+      const exp = chips[0].exp || "";
+      return `<div class="spz-box">
+        <p class="spz-k">무진장 프리오픈 · ~${esc(exp)} 본편 전까지</p>
+        <p class="spz-t">${esc(b)} <em>쿠폰 최대 ${max}%</em><span class="cpz-live"><i></i>LIVE</span></p>
+        <div class="hotz-bar"><i></i></div>
+        <div class="spz-chips">${chips.map((c) => `<a href="#cp=${esc(c.no)}"><b>${esc(c.v)}</b> 쿠폰 받고 전체 보기 →</a>`).join("")}</div>
+        <div class="tsz-scroll">${items.map(({ g, p }) => { const after = p ? Math.round(g.s * (1 - p / 100) / 100) * 100 : 0; return `<a class="bf-item" href="${esc(curl(g.l) || "#")}" target="_blank" rel="noopener">
+          <div class="im"><img src="${esc("https://image.msscdn.net" + g.i)}" loading="lazy" alt="" referrerpolicy="no-referrer">${p ? `<span class="tg">쿠폰 ${p}%</span>` : ""}</div>
+          <p class="br">${esc(g.b || b)}</p><p class="nm">${esc(g.n)}</p>
+          <p class="pr">${g.r ? `<i>${g.r}%</i>` : ""}${esc(won2(g.s))}</p>
+          ${after ? `<p class="spz-after">쿠폰 쓰면 약 ${esc(won2(after))}</p>` : ""}
+        </a>`; }).join("")}</div>
+      </div>`;
+    }).filter(Boolean).slice(0, 2).join("");
+    let box = root.querySelector("#spz");
+    if (!blocks) { if (box) box.remove(); return; }
+    if (!box) { box = document.createElement("section"); box.id = "spz"; box.className = "spz"; }
+    const anchor = root.querySelector("#tsz") || root.querySelector("#cpz");
+    if (anchor && anchor.nextSibling !== box) anchor.after(box);
+    box.innerHTML = blocks;
+  }
   let CP_HOT = new Set();
   const cpChip = (c) => `<a class="cpz-chip k-${esc(c.k)}${CP_HOT.has(String(c.no)) ? " is-hot" : ""}" href="#cp=${esc(c.no)}">${CP_HOT.has(String(c.no)) ? '<span class="cpz-hot">🔥 HOT</span>' : ""}<span class="cpz-k">${c.nw ? '<em class="cpz-new">NEW</em> ' : ""}${c.tz ? '<em class="cpz-bf" style="background:#6a2ff0">티징</em>' : c.bf ? '<em class="cpz-bf">무진장</em>' : cpKind(c)}</span><span class="cpz-v">${esc(c.v)}</span><span class="cpz-n">${esc(c.n)}</span><span class="cpz-m">${esc([c.cond, c.exp ? "~" + c.exp : ""].filter(Boolean).join(" · "))}</span></a>`;
   const cpTime = (iso) => { try { const d = new Date(iso); const k = new Date(d.getTime() + 9 * 3600e3); return `${k.getUTCMonth() + 1}/${k.getUTCDate()} ${String(k.getUTCHours()).padStart(2, "0")}:${String(k.getUTCMinutes()).padStart(2, "0")}`; } catch (e) { return ""; } };
@@ -1857,6 +1892,7 @@ async function renderPublicSite(root) {
       ${tz.length ? `<p class="cpz-sub">⚡ 티징 전용 쿠폰 <small>${tzDemo ? "미리보기 예시 · 19시에 실제 쿠폰으로 바뀌어요" : "11/20 19시 ~ 11/22 본편 전까지"}</small></p><div class="cpz-scroll cpz-one">${tz.map(cpChip).join("")}</div><p class="cpz-sub">🔥 지금 쓰기 좋은 쿠폰</p>` : ""}
       <div class="cpz-scroll">${[...hot, ...rest].filter((c) => !c.tz).slice(0, 40).map(cpChip).join("")}</div>`;
     box.dataset.ready = "1";
+    try { renderSpot(L); } catch (e) {}
     const t = root.querySelector("nav.tabs button.active");
     box.hidden = false;
   }
@@ -2823,7 +2859,7 @@ async function renderPublicSite(root) {
       if (!cats.length || nowFn() >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
       if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { hotOpen = !hotOpen; renderHot(); if (!hotOpen) box.scrollIntoView({ block: "start" }); return; } const b = e.target.closest("[data-hv]"); if (!b) return; hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); }); }
-      const anchor = root.querySelector("#tsz") || cp;
+      const anchor = root.querySelector("#spz") || root.querySelector("#tsz") || cp;
       if (anchor && anchor.nextSibling !== box) anchor.after(box);
       else if (!cp && !box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       // 순위·출처 표시 없이 카테고리를 섞어서 (1등끼리 먼저, 같은 브랜드 연속 X)
@@ -3589,6 +3625,24 @@ renderPublicSite(ROOT_EL);
 #app-root .tsz-scroll > .bf-item { flex: 0 0 31%; max-width: 150px; scroll-snap-align: start; }
 #app-root .tsz .bf-item .tg { background: #141312; color: #ffe14d; }
 #app-root .tsz .bf-item .cm { color: #ff3d3f; font-weight: 800; font-size: 10.5px; }
+
+/* ---- 대표 브랜드 프리오픈 쿠폰 강조 칸 ---- */
+#app-root .spz { margin: 4px 0 16px; }
+#app-root .spz-box { background: #141312; border-radius: 16px; padding: 16px 16px 14px; margin: 0 -4px 10px; color: #fff; }
+#app-root .spz-k { margin: 0 0 4px; font-size: 10.5px; font-weight: 800; letter-spacing: .3px; color: #ffe14d; }
+#app-root .spz-t { margin: 0 0 10px; font-size: 19px; font-weight: 900; letter-spacing: -0.6px; color: #fff; }
+#app-root .spz-t em { font-style: normal; color: #141312; background: #ffe14d; padding: 1px 8px 2px; border-radius: 7px; margin-left: 3px; }
+#app-root .spz .hotz-bar { background: rgba(255,255,255,.14); margin: 0 0 12px; }
+#app-root .spz-chips { display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px 12px; padding: 0 16px; scrollbar-width: none; }
+#app-root .spz-chips::-webkit-scrollbar { display: none; }
+#app-root .spz-chips a { flex: 0 0 auto; background: #ff3d3f; color: #fff; text-decoration: none; border-radius: 999px; padding: 8px 13px 7px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+#app-root .spz-chips a b { font-size: 14px; font-weight: 900; margin-right: 2px; }
+#app-root .spz .tsz-scroll { margin: 0 -16px; padding: 2px 16px 2px; }
+#app-root .spz .bf-item { color: #fff; }
+#app-root .spz .bf-item .br, #app-root .spz .bf-item .pr { color: #fff; }
+#app-root .spz .bf-item .nm { color: rgba(255,255,255,.7); }
+#app-root .spz .bf-item .tg { background: #ffe14d; color: #141312; }
+#app-root .spz-after { margin: 3px 0 0; font-size: 11px; font-weight: 900; color: #ffe14d; letter-spacing: -0.2px; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
