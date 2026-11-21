@@ -2968,7 +2968,7 @@ async function renderPublicSite(root) {
       const bdHtml = bd && (bd.list || []).length ? `<p class="plz-h">시그니처 브랜드데이 <span>${esc(bd.p.replace(/\(.\)/g, ""))}</span></p><div class="plz-brands">${bd.list.map((x) => `<button type="button" class="plz-br" data-pq="${esc(x.b)}"><b>${esc(x.b)}</b><em>${esc(short(x.t))}</em>${x.x ? '<i>단독</i>' : ""}</button>`).join("")}</div>` : "";
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🗓️ 블프 <em class="plz-em">언제 뭐 사지?</em></p><small>날짜를 누르면 그날 열리는 혜택·라이브가 나와요</small></div>
         <div class="plz-days">${chips}</div>
-        <div class="plz-card"><div class="plz-tags">${tags}</div>${liveHtml}${bdHtml}${!liveHtml && !bdHtml ? `<p class="plz-none">이날은 회차 특가·쿠폰 위주예요</p>` : ""}</div>
+        <div class="plz-card"><div class="plz-tags">${tags}</div>${liveHtml}${bdHtml}${d === "11-21" ? `<p class="plz-h">19:00 카운트다운 쿠폰 20% <span>선착순</span></p><p class="plz-none">내일 19시 본편 오픈 · 시그니처특가·하루특가 같이 열려요</p>` : !liveHtml && !bdHtml ? `<p class="plz-none">이날은 회차 특가·쿠폰 위주예요</p>` : ""}</div>
         <div class="plz-q"><input type="search" placeholder="브랜드 검색 — 언제 제일 싼지 알려드려요" aria-label="브랜드 검색" value="${esc(planQ)}"></div>
         <div class="plz-find"></div>`;
       const inp = box.querySelector(".plz-q input");
