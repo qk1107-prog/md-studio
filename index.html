@@ -2804,7 +2804,7 @@ async function renderPublicSite(root) {
       if (cp) { if (cp.nextSibling !== box) cp.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       const endTxt = (t) => { if (!t) return "타임세일"; const k = kp(t); const h = Math.round((t - now) / 36e5); return h < 24 ? `⏰ ${h < 1 ? "곧" : h + "시간 뒤"} 마감` : `~${k.m}/${k.d} ${k.h}시`; };
       const cards = items.map((p) => itemCard(Object.assign({}, p, { tag: endTxt(p.end), comment: (p.w || []).length ? "👀 " + p.w[0] : "" }), 0)).join("");
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 <em class="ts-em">타임세일 꿀템 TOP 10</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago" data-tsat="${esc(T.at || "")}"></small><button type="button" class="tsz-more" data-tsmore="1">${tsOpen ? "접기 ▲" : "전체보기 ▼"}</button></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 <em class="ts-em">타임세일 TOP 10</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago" data-tsat="${esc(T.at || "")}"></small><button type="button" class="tsz-more" data-tsmore="1">${tsOpen ? "접기 ▲" : "전체보기 ▼"}</button></div>
         <div class="hotz-bar"><i></i></div>
         <div class="${tsOpen ? "bf-grid" : "tsz-scroll"}">${cards}</div>`;
       const el = box.querySelector(".tsz-ago"), t = Date.parse(T.at || "");
