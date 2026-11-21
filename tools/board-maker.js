@@ -96,6 +96,8 @@ window.__bmRun = async (opts) => {
       // 망가진 누끼 걸러내기: 촘촘하게(20) 잘랐을 때 훨씬 많이 남으면 = 54에서 옷이 배경이랑 같이 날아갔거나, 그림자·회색 배경·모델 컷
       if (a.r) { const b2 = await cut1(url, 20); if (bad(a.q) || (b2.q.area / (a.q.area || 1e-9) > 1.4 && b2.q.fill < 0.97)) { S.reject = (S.reject || 0) + 1; a.r = null; } }
       r = a.r; if (r) S.flood++;
+      // 흰 배경이 아니면(회색 스튜디오 배경 등) AI 누끼(u2netp)로 한 번 더
+      if (!r) { try { const bmp = await loadImg(url); const c = toCanvas(bmp, 520); bmp.close && bmp.close(); const full = c.width * c.height; await mlAlpha(c); const m = crop(c); const q = quality(m, full); if (m && q.area > 0.08 && q.fill > 0.38) { r = m; S.mlok = (S.mlok || 0) + 1; } } catch (e) {} }
       // 신발은 베이지·브라운이 피부색처럼 보여서 사람 검사 안 함
       if (r && role !== "신발" && (looksPerson(r) || r.height / r.width > 2.6)) { r = null; S.person = (S.person || 0) + 1; }
     } catch (e) {}
