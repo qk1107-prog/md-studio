@@ -2853,7 +2853,10 @@ async function renderPublicSite(root) {
     let tsOpen = false;
     function renderTs() {
       const T = BFD.ts || {}; const now = nowFn();
-      const items = (T.items || []).filter((p) => p && p.link && (!p.end || p.end > now)).slice(0, 10);
+      // 추천 글 대화방이 매시간 고른 픽(bf.dm, 4시간 안)을 맨 앞에, 그 뒤에 자동 수집한 타임세일
+      const DM = BFD.dm || {}; const dmFresh = DM.at && now - Date.parse(DM.at) < 4 * 36e5;
+      const seenTs = new Set();
+      const items = [...(dmFresh ? DM.items || [] : []), ...(T.items || [])].filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link)) return false; seenTs.add(p.link); return true; }).slice(0, 10);
       let box = root.querySelector("#tsz");
       if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
