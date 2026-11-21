@@ -33,7 +33,10 @@ window.__spRun = async (brands) => {
     // 쿠폰 15% 이상이거나 합쳐서 25% 이상 싸지는 것만, 인기(판매순)와 할인 폭을 같이 봄
     const good = (x) => x.p >= 15 || x.tot >= 25;
     const sc = (x) => x.rank - x.tot * 4;
-    const by = (k, n) => arr.filter((x) => x.k === k && good(x)).sort((a, b2) => sc(a) - sc(b2)).slice(0, n);
+    // 같은 상품 색상 여러 개면 대표 1개만
+    const nkey = (n) => n.replace(/^[A-Z]{2}[A-Z0-9]{5,}\s*/, "").replace(/\((RDS|공용)\)/g, "").replace(/[\s_\-\/]+[A-Z][A-Z_\s]*$/, "").replace(/\s+/g, "");
+    const seenN = new Set();
+    const by = (k, n) => arr.filter((x) => x.k === k && good(x)).sort((a, b2) => sc(a) - sc(b2)).filter((x) => { const kk = nkey(x.name); if (seenN.has(kk)) return false; seenN.add(kk); return true; }).slice(0, n);
     const pick = [...by(0, 14), ...by(1, 10), ...by(2, 6)];
     for (const x of pick) {
       if (cache[x.id]) continue;
