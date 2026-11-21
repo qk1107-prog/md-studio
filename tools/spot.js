@@ -27,7 +27,7 @@ window.__spRun = async (brands) => {
         if (L.length < 100) break;
       }
     }
-    const kind = (n) => (/눕시|패딩|다운|온볼|파카|푸퍼|구스|헤비/.test(n) && !/뮬|부티|부띠|슬리퍼|슬립온|슈즈|부츠|츄카|스니커즈| 목 |베스트|장갑|모자|캡|머플러|토트|백팩|숄더|크로스|파우치|가방/.test(n) ? 0 : /자켓|재킷|플리스|아노락|바람막이|가디건|코트/.test(n) ? 1 : 2);
+    const kind = (n) => (/눕시|패딩|다운|온볼|파카|푸퍼|구스|헤비/.test(n) && !/뮬|부티|부띠|슬리퍼|슬립온|슈즈|부츠|츄카|스니커즈| 목 |베스트|장갑|모자|햇|캡|머플러|토트|백팩|버킷|숄더|크로스|파우치|멀티팩|팩 |가방|팬츠|바지/.test(n) ? 0 : /자켓|재킷|플리스|아노락|바람막이|가디건|코트/.test(n) ? 1 : 2);
     const arr = Object.values(goods).map((x) => { const g = x.g; const nor = g.normalPrice || g.price; const cpn = Math.round(g.price * (1 - x.p / 100) / 10) * 10; return { id: String(g.goodsNo), brand: g.brandName, name: g.goodsName, img: String(g.thumbnail || "").replace("/thumbnails/images/", "/images/"), price: nor, sale: g.price, rate: g.saleRate || 0, p: x.p, cpn, tot: nor ? Math.round((1 - cpn / nor) * 100) : x.p, rv: g.reviewCount || 0, k: kind(g.goodsName), rank: x.rank, cno: x.no }; });
     // 패딩 먼저(인기순), 그다음 자켓·플리스, 나머지 — 섞어서 30개
     // 쿠폰 15% 이상이거나 합쳐서 25% 이상 싸지는 것만, 인기(판매순)와 할인 폭을 같이 봄
