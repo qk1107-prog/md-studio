@@ -1848,7 +1848,7 @@ async function renderPublicSite(root) {
     const tzDemo = !tz.length && CP_PV && Date.now() < Date.parse("2026-11-20T10:00:00Z");
     if (tzDemo) { const b = L.find((c) => c.bf) || L[0]; tz = [Object.assign({}, b, { tz: true, nw: true, n: "[예시] 무진장 티징 전용 " + (b.k === "CART" ? "장바구니" : "상품") + " 쿠폰" })]; }
     const tickItems = [...tz, ...hot, ...nw.filter((c) => !CP_HOT.has(String(c.no))), ...rest].slice(0, 12);
-    box.innerHTML = `<div class="cpz-head"><p class="cpz-title"><span class="cpz-fire">🔥</span> 실시간 지금 쓰기 좋은 쿠폰<span class="cpz-live"><i></i>LIVE</span><small>실시간 트래킹 · ${esc(cpTime(COUPONS.at))} 확인</small></p><a class="cpz-more" href="#cps">전체보기</a></div><p class="cpz-hint">👇 쿠폰을 클릭하면 사용 가능한 제품 리스트로 넘어갑니다</p>
+    box.innerHTML = `<div class="cpz-head"><p class="cpz-title"><span class="cpz-fire">🔥</span> 실시간 지금 쓰기 좋은 쿠폰<span class="cpz-live"><i></i>LIVE</span><small>실시간 트래킹 · ${esc(cpTime(COUPONS.at))} 확인</small></p><a class="cpz-more" href="#cps">전체보기</a></div><p class="cpz-hint">👇 쿠폰을 클릭하면 사용 가능한 제품 리스트로 넘어갑니다</p><div class="hotz-bar"><i></i></div>
       <div class="cpz-tick"><div class="cpz-tick-in">${tickItems.map((c) => `<a href="#cp=${esc(c.no)}"><b>${c.nw ? "NEW" : "🔥"} ${esc(c.v)}</b>${esc(c.n)}</a>`).join("")}</div></div>
       ${tz.length ? `<p class="cpz-sub">⚡ 티징 전용 쿠폰 <small>${tzDemo ? "미리보기 예시 · 19시에 실제 쿠폰으로 바뀌어요" : "11/20 19시 ~ 11/22 본편 전까지"}</small></p><div class="cpz-scroll cpz-one">${tz.map(cpChip).join("")}</div><p class="cpz-sub">🔥 지금 쓰기 좋은 쿠폰</p>` : ""}
       <div class="cpz-scroll">${[...hot, ...rest].filter((c) => !c.tz).slice(0, 40).map(cpChip).join("")}</div>`;
@@ -2796,7 +2796,7 @@ async function renderPublicSite(root) {
     let tsOpen = false;
     function renderTs() {
       const T = BFD.ts || {}; const now = nowFn();
-      const items = (T.items || []).filter((p) => p && p.link && (!p.end || p.end > now));
+      const items = (T.items || []).filter((p) => p && p.link && (!p.end || p.end > now)).slice(0, 10);
       let box = root.querySelector("#tsz");
       if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
@@ -2804,10 +2804,11 @@ async function renderPublicSite(root) {
       if (cp) { if (cp.nextSibling !== box) cp.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       const endTxt = (t) => { if (!t) return "타임세일"; const k = kp(t); const h = Math.round((t - now) / 36e5); return h < 24 ? `⏰ ${h < 1 ? "곧" : h + "시간 뒤"} 마감` : `~${k.m}/${k.d} ${k.h}시`; };
       const cards = items.map((p) => itemCard(Object.assign({}, p, { tag: endTxt(p.end), comment: (p.w || []).length ? "👀 " + p.w[0] : "" }), 0)).join("");
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 지금 <em class="ts-em">타임세일 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago" data-tsat="${esc(T.at || "")}"></small><button type="button" class="tsz-more" data-tsmore="1">${tsOpen ? "접기 ▲" : "전체보기 ▼"}</button></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 <em class="ts-em">타임세일 꿀템 TOP 10</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago" data-tsat="${esc(T.at || "")}"></small><button type="button" class="tsz-more" data-tsmore="1">${tsOpen ? "접기 ▲" : "전체보기 ▼"}</button></div>
+        <div class="hotz-bar"><i></i></div>
         <div class="${tsOpen ? "bf-grid" : "tsz-scroll"}">${cards}</div>`;
       const el = box.querySelector(".tsz-ago"), t = Date.parse(T.at || "");
-      if (el && t) { const m = Math.max(0, Math.round((Date.now() - t) / 6e4)); el.textContent = `${m < 1 ? "방금" : m < 60 ? m + "분 전" : Math.floor(m / 60) + "시간 전"} 확인 · 1시간마다 갱신 · 품절되면 끝`; }
+      if (el && t) { const m = Math.max(0, Math.round((Date.now() - t) / 6e4)); el.textContent = `${m < 1 ? "방금" : m < 60 ? m + "분 전" : Math.floor(m / 60) + "시간 전"} 확인 · 품절되면 끝`; }
     }
     let hotView = -1, hotOpen = false;
     function renderHot() {
@@ -2852,7 +2853,7 @@ async function renderPublicSite(root) {
       const el = root.querySelector("#hotz .hotz-ago"); if (!el) return;
       const t = Date.parse(el.dataset.hotat || ""); if (!t) { el.textContent = "실시간 트래픽 반영 중"; return; }
       const m = Math.max(0, Math.round((Date.now() - t) / 6e4));
-      el.textContent = `실시간 트래픽 반영 · ${m < 1 ? "방금" : m < 60 ? m + "분 전" : Math.floor(m / 60) + "시간 전"} 업데이트 · 매시간 바뀌어요`;
+      el.textContent = `실시간 트래픽 반영 · ${m < 1 ? "방금" : m < 60 ? m + "분 전" : Math.floor(m / 60) + "시간 전"} 업데이트`;
     }
     function liftCard() {
       const card = zone.querySelector(":scope > .bf-card"), bfSec = root.querySelector("#tab-bf");
@@ -3576,6 +3577,7 @@ renderPublicSite(ROOT_EL);
 #app-root .ts-em { font-style: normal; color: #141312; background: #ffe14d; padding: 1px 7px 2px; border-radius: 6px; margin-left: 2px; }
 #app-root .tsz-more { margin-left: auto; border: 0; background: none; font: inherit; font-size: 11.5px; font-weight: 800; color: #141312; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 0; white-space: nowrap; }
 #app-root .tsz-ago { order: 3; flex-basis: 100%; }
+#app-root .tsz .hotz-bar, #app-root .cpz .hotz-bar { margin: 0 0 10px; }
 #app-root .tsz-scroll { display: flex; gap: 8px; overflow-x: auto; margin: 0 -20px; padding: 2px 20px 4px; scrollbar-width: none; scroll-snap-type: x proximity; }
 #app-root .tsz-scroll::-webkit-scrollbar { display: none; }
 #app-root .tsz-scroll > .bf-item { flex: 0 0 31%; max-width: 150px; scroll-snap-align: start; }
