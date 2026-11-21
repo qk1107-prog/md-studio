@@ -1846,15 +1846,15 @@ async function renderPublicSite(root) {
       const max = Math.max(...chips.map(pct));
       const exp = chips[0].exp || "";
       return `<div class="spz-box">
-        <p class="spz-k">무진장 프리오픈 · ~${esc(exp)} 본편 전까지</p>
-        <p class="spz-t">${esc(b)} <em>쿠폰 최대 ${max}%</em><span class="cpz-live"><i></i>LIVE</span></p>
+        <p class="spz-t">🎟️ ${esc(b)} <em>프리오픈 쿠폰 최대 ${max}%</em><span class="cpz-live"><i></i>LIVE</span></p>
+        <p class="spz-k">~${esc(exp)} 본편 전까지 · 쿠폰 누르면 적용 상품 전체보기</p>
         <div class="hotz-bar"><i></i></div>
-        <div class="spz-chips">${chips.map((c) => `<a href="#cp=${esc(c.no)}"><b>${esc(c.v)}</b> 쿠폰 받고 전체 보기 →</a>`).join("")}</div>
+        <div class="spz-chips">${chips.map((c) => `<a href="#cp=${esc(c.no)}"><b>${esc(c.v)}</b> 쿠폰 적용템 →</a>`).join("")}</div>
         <div class="tsz-scroll">${items.map(({ g, p }) => { const after = p ? Math.round(g.s * (1 - p / 100) / 100) * 100 : 0; return `<a class="bf-item" href="${esc(curl(g.l) || "#")}" target="_blank" rel="noopener">
           <div class="im"><img src="${esc("https://image.msscdn.net" + g.i)}" loading="lazy" alt="" referrerpolicy="no-referrer">${p ? `<span class="tg">쿠폰 ${p}%</span>` : ""}</div>
           <p class="br">${esc(g.b || b)}</p><p class="nm">${esc(g.n)}</p>
           <p class="pr">${g.r ? `<i>${g.r}%</i>` : ""}${esc(won2(g.s))}</p>
-          ${after ? `<p class="spz-after">쿠폰 쓰면 약 ${esc(won2(after))}</p>` : ""}
+          ${after ? `<p class="spz-after">쿠폰가 약 ${esc(won2(after))}</p>` : ""}
         </a>`; }).join("")}</div>
       </div>`;
     }).filter(Boolean).slice(0, 2).join("");
@@ -3626,23 +3626,18 @@ renderPublicSite(ROOT_EL);
 #app-root .tsz .bf-item .tg { background: #141312; color: #ffe14d; }
 #app-root .tsz .bf-item .cm { color: #ff3d3f; font-weight: 800; font-size: 10.5px; }
 
-/* ---- 대표 브랜드 프리오픈 쿠폰 강조 칸 ---- */
-#app-root .spz { margin: 4px 0 16px; }
-#app-root .spz-box { background: #141312; border-radius: 16px; padding: 16px 16px 14px; margin: 0 -4px 10px; color: #fff; }
-#app-root .spz-k { margin: 0 0 4px; font-size: 10.5px; font-weight: 800; letter-spacing: .3px; color: #ffe14d; }
-#app-root .spz-t { margin: 0 0 10px; font-size: 19px; font-weight: 900; letter-spacing: -0.6px; color: #fff; }
-#app-root .spz-t em { font-style: normal; color: #141312; background: #ffe14d; padding: 1px 8px 2px; border-radius: 7px; margin-left: 3px; }
-#app-root .spz .hotz-bar { background: rgba(255,255,255,.14); margin: 0 0 12px; }
-#app-root .spz-chips { display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px 12px; padding: 0 16px; scrollbar-width: none; }
+/* ---- 대표 브랜드 프리오픈 쿠폰 칸 (타임세일 칸처럼 가볍게) ---- */
+#app-root .spz { margin: 4px 0 14px; }
+#app-root .spz-box { margin: 0 0 12px; }
+#app-root .spz-t { margin: 0; font-size: 15px; font-weight: 900; letter-spacing: -0.4px; color: #141312; }
+#app-root .spz-t em { font-style: normal; color: #141312; background: #ffe14d; padding: 1px 7px 2px; border-radius: 6px; margin-left: 2px; }
+#app-root .spz-k { margin: 3px 0 8px; font-size: 10.5px; font-weight: 700; color: #8a847b; }
+#app-root .spz-chips { display: flex; gap: 5px; overflow-x: auto; margin: 0 -20px 8px; padding: 0 20px; scrollbar-width: none; }
 #app-root .spz-chips::-webkit-scrollbar { display: none; }
-#app-root .spz-chips a { flex: 0 0 auto; background: #ff3d3f; color: #fff; text-decoration: none; border-radius: 999px; padding: 8px 13px 7px; font-size: 12px; font-weight: 800; white-space: nowrap; }
-#app-root .spz-chips a b { font-size: 14px; font-weight: 900; margin-right: 2px; }
-#app-root .spz .tsz-scroll { margin: 0 -16px; padding: 2px 16px 2px; }
-#app-root .spz .bf-item { color: #fff; }
-#app-root .spz .bf-item .br, #app-root .spz .bf-item .pr { color: #fff; }
-#app-root .spz .bf-item .nm { color: rgba(255,255,255,.7); }
-#app-root .spz .bf-item .tg { background: #ffe14d; color: #141312; }
-#app-root .spz-after { margin: 3px 0 0; font-size: 11px; font-weight: 900; color: #ffe14d; letter-spacing: -0.2px; }
+#app-root .spz-chips a { flex: 0 0 auto; background: #fff; color: #141312; text-decoration: none; border: 1px solid #141312; border-radius: 999px; padding: 6px 11px 5px; font-size: 11.5px; font-weight: 800; white-space: nowrap; }
+#app-root .spz-chips a b { color: #ff3d3f; font-weight: 900; margin-right: 2px; }
+#app-root .spz .bf-item .tg { background: #141312; color: #ffe14d; }
+#app-root .spz-after { margin: 2px 0 0; font-size: 10.5px; font-weight: 900; color: #ff3d3f; letter-spacing: -0.2px; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
