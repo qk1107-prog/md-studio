@@ -1313,6 +1313,51 @@ function epOrder(items) {
   return EP_LABELS.map((l, i) => ({ l, k: l.key in first ? first[l.key] : 1e6 + i })).sort((a, b) => a.k - b.k).map((x) => x.l);
 }
 
+
+// ---------- 오픈 대기 화면 (main.gate = {from, until, ...}) · ?gate=1 이면 미리보기 ----------
+function mdGate(G) {
+  const PV = /[?&]gate=1/.test(location.search);
+  G = G || {}; if (!G.until && !PV) return;
+  const from = G.from ? new Date(G.from).getTime() : 0, until = G.until ? new Date(G.until).getTime() : Date.now() + 30 * 60000;
+  const now = Date.now();
+  if (!PV && !(G.on !== false && now >= from && now < until)) { if (now < from && from - now < 6 * 3600000) setTimeout(() => mdGate(G), from - now + 500); return; }
+  if (document.getElementById("md-gate")) return;
+  const e = (t) => String(t == null ? "" : t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const reel = /^https:\/\/(www\.)?instagram\.com\//.test(G.reel || "") ? G.reel : "https://www.instagram.com/k__man_do/";
+  const el = document.createElement("div"); el.id = "md-gate";
+  el.innerHTML = `<div class="gt-in">
+    <p class="gt-top">MD STUDIO · 무진장 본편</p>
+    <div class="gt-lock">🔒</div>
+    <h1 class="gt-h">${e(G.title || "본편 꿀템 AI 정리 중")}</h1>
+    <p class="gt-p">${e(G.sub || "19시 무진장 본편 오픈과 동시에 광만두가 고른 본편 꿀템이 공개돼요")}</p>
+    <p class="gt-badge">${e(G.badge || "선착순 2,000명")}</p>
+    <p class="gt-p2">${e(G.line || "본편 꿀템 정리 릴스가 먼저 올라가요. 릴스 보고 19:00 정각에 다시 들어오세요")}</p>
+    <div class="gt-cd"><small>오픈까지</small><b id="gt-t">--:--</b></div>
+    <a class="gt-btn" href="${e(reel)}" target="_blank" rel="noopener">📲 ${e(G.btn || "정리 릴스 먼저 보기")}</a>
+    <p class="gt-foot">${e(G.foot || "오픈 순간 이 화면이 자동으로 열려요 · 그대로 두셔도 돼요")}</p>
+  </div>`;
+  const st = document.createElement("style");
+  st.textContent = `#md-gate{position:fixed;inset:0;z-index:2147483000;background:#141312;color:#f6f2ec;display:flex;align-items:center;justify-content:center;padding:28px 22px;overflow:auto;font-family:inherit;text-align:center}
+#md-gate .gt-in{max-width:360px;width:100%}
+#md-gate .gt-top{font-size:11px;letter-spacing:.18em;color:#8b857c;margin:0 0 26px}
+#md-gate .gt-lock{font-size:38px;margin-bottom:10px;animation:gtp 1.6s ease-in-out infinite}
+@keyframes gtp{50%{transform:scale(1.08)}}
+#md-gate .gt-h{font-size:27px;line-height:1.25;font-weight:800;margin:0 0 12px;letter-spacing:-.02em}
+#md-gate .gt-p{font-size:14px;line-height:1.55;color:#cfc8bd;margin:0 0 18px}
+#md-gate .gt-badge{display:inline-block;background:#c6ff3d;color:#141312;font-weight:800;font-size:15px;padding:7px 16px;border-radius:999px;margin:0 0 14px}
+#md-gate .gt-p2{font-size:13px;line-height:1.55;color:#a8a196;margin:0 0 22px}
+#md-gate .gt-cd{border:1px solid #2e2b27;border-radius:16px;padding:14px 0 12px;margin:0 0 18px}
+#md-gate .gt-cd small{display:block;font-size:11px;color:#8b857c;letter-spacing:.1em;margin-bottom:4px}
+#md-gate .gt-cd b{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:#c6ff3d}
+#md-gate .gt-btn{display:block;background:#f6f2ec;color:#141312;text-decoration:none;font-weight:800;font-size:15px;padding:15px 0;border-radius:14px;margin:0 0 14px}
+#md-gate .gt-foot{font-size:11.5px;color:#6f6a62;margin:0}`;
+  document.head.appendChild(st); document.body.appendChild(el);
+  try { document.documentElement.style.overflow = "hidden"; } catch (x) {}
+  const pad = (n) => String(n).padStart(2, "0");
+  const tick = () => { const left = until - Date.now(); if (left <= 0) { el.remove(); document.documentElement.style.overflow = ""; clearInterval(iv); return; } const m = Math.floor(left / 60000), sec = Math.floor(left / 1000) % 60, h = Math.floor(m / 60); document.getElementById("gt-t").textContent = (h ? h + ":" + pad(m % 60) : pad(m)) + ":" + pad(sec); };
+  const iv = setInterval(tick, 1000); tick();
+}
+
 async function renderPublicSite(root) {
   // ---------- UI 상태 저장/복원 (무신사 갔다 돌아와도 같은 화면) ----------
   const UI_KEY = "md-ui-state";
@@ -1349,6 +1394,7 @@ async function renderPublicSite(root) {
   const [siteRes, epRes] = await Promise.allSettled([loadSiteDataFromSupabase(), loadEpisodesFromSupabase()]);
   if (siteRes.status === "fulfilled") ADMIN = siteRes.value;
   if (epRes.status === "fulfilled") EPISODES = epRes.value;
+  try { mdGate(ADMIN && ADMIN.gate); } catch (e) {}
 
   const STICKER_POPS = { "NEW": "#ff3d3f", "HOT": "#ff5a2e", "NEW DROP": "#ff5a2e", "COLLAB": "#c6ff3d", "LIMITED": "#2ee6d6", "SOLD OUT": "#ff3d9a" };
 
@@ -2951,6 +2997,8 @@ async function renderPublicSite(root) {
       }
       const anchor = root.querySelector("#hotz") || root.querySelector("#spz") || root.querySelector("#tsz") || root.querySelector("#cpz");
       if (anchor) { if (anchor.nextSibling !== box) anchor.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
+      // 프리오픈·티징 특가 칸은 본편 전까지 중간(실시간 HOT 바로 아래)으로 올리기
+      { const tzs = [...root.querySelectorAll("#bf-tease")]; const fresh = tzs.find((e) => !e.classList.contains("mv")) || tzs[0]; tzs.forEach((e) => { if (e !== fresh) e.remove(); }); if (fresh && box.parentNode) { fresh.classList.add("mv"); if (box.previousElementSibling !== fresh) box.before(fresh); } }
       const md = (t) => { const k = kp(t); return pad(k.m) + "-" + pad(k.d); };
       const DAYS = ["11-21", "11-22", "11-23", "11-24", "11-25", "11-26", "11-27", "11-28", "11-29", "11-30", "12-01", "12-02"];
       const today = md(now);
@@ -2966,8 +3014,13 @@ async function renderPublicSite(root) {
       const d = planDay; const bd = bdOf(d); const LV = livesOf(d);
       const tags = [theme(d) ? `<span class="plz-tag">${esc(theme(d))}</span>` : "", HOT.includes(d) ? `<span class="plz-tag r">하루특가 · 자정까지</span>` : "", CPN.includes(d) ? `<span class="plz-tag g">새 회차 쿠폰</span>` : ""].join("");
       const fmtT = (t) => { const k = kp(t); return pad(k.h) + ":" + pad(k.mi); };
-      const liveHtml = LV.length ? `<p class="plz-h">라이브 <span>${LV.length}</span></p>${LV.map((l) => `<a class="plz-live" href="https://www.musinsa.com${esc(String(l.h || "").replace(/^https?:\/\/www\.musinsa\.com/, ""))}" target="_blank" rel="noopener"><span class="plz-time">${fmtT(l.t)}</span><span class="plz-lb"><b>${esc(l.b)}</b><em>${esc(short(l.d))}</em></span><span class="plz-go">알림 →</span></a>`).join("")}` : "";
-      const bdHtml = bd && (bd.list || []).length ? `<p class="plz-h">시그니처 브랜드데이 <span>${esc(bd.p.replace(/\(.\)/g, ""))}</span></p><div class="plz-brands">${bd.list.map((x) => `<button type="button" class="plz-br" data-pq="${esc(x.b)}"><b>${esc(x.b)}</b><em>${esc(short(x.t))}</em>${x.x ? '<i>단독</i>' : ""}</button>`).join("")}</div>` : "";
+      // 라이브·브랜드데이 브랜드의 쿠폰이 쿠폰함에 열리면 → 그 쿠폰으로 살 수 있는 상품(큐레이터 링크) 바로 보기
+      if (!COUPONS && !window.__plCp) { window.__plCp = 1; loadCoupons().then(() => { if (COUPONS) renderPlan(); }); }
+      const nb = (x) => String(x || "").replace(/[\s()\[\]]/g, "").toLowerCase();
+      const cpOf = (b) => { const L = (COUPONS && COUPONS.list) || []; const k = nb(b); if (k.length < 2) return null; return L.filter((c) => nb(c.n).includes(k) && (c.g || []).length >= 3).sort((x, y) => (parseFloat(y.v) || 0) - (parseFloat(x.v) || 0))[0] || null; };
+      const cpChip = (b) => { const c = cpOf(b); return c ? `<a class="plz-cpn" href="#cp=${esc(c.no)}">🎟 <b>${esc(c.v)}</b> 쿠폰으로 살 수 있는 ${esc(b)} 상품 보기 →</a>` : ""; };
+      const liveHtml = LV.length ? `<p class="plz-h">라이브 <span>${LV.length}</span></p>${LV.map((l) => `<a class="plz-live" href="https://www.musinsa.com${esc(String(l.h || "").replace(/^https?:\/\/www\.musinsa\.com/, ""))}" target="_blank" rel="noopener"><span class="plz-time">${fmtT(l.t)}</span><span class="plz-lb"><b>${esc(l.b)}</b><em>${esc(short(l.d))}</em></span><span class="plz-go">알림 →</span></a>${cpChip(l.b)}`).join("")}` : "";
+      const bdHtml = bd && (bd.list || []).length ? `<p class="plz-h">시그니처 브랜드데이 <span>${esc(bd.p.replace(/\(.\)/g, ""))}</span></p><div class="plz-brands">${bd.list.map((x) => `<button type="button" class="plz-br" data-pq="${esc(x.b)}"><b>${esc(x.b)}</b><em>${esc(short(x.t))}</em>${x.x ? '<i>단독</i>' : ""}</button>`).join("")}</div>${bd.list.map((x) => cpChip(x.b)).join("")}` : "";
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🗓️ 블프 <em class="plz-em">언제 뭐 사지?</em></p><small>날짜를 누르면 그날 열리는 혜택·라이브가 나와요</small></div>
         <div class="plz-days">${chips}</div>
         <div class="plz-card"><div class="plz-tags">${tags}</div>${liveHtml}${bdHtml}${d === "11-21" ? `<p class="plz-h">19:00 카운트다운 쿠폰 20% <span>선착순</span></p><p class="plz-none">내일 19시 본편 오픈 · 시그니처특가·하루특가 같이 열려요</p>` : !liveHtml && !bdHtml ? `<p class="plz-none">이날은 회차 특가·쿠폰 위주예요</p>` : ""}</div>
@@ -3852,6 +3905,10 @@ renderPublicSite(ROOT_EL);
 
 #app-root .tab-fresh { display: inline-flex; align-items: center; gap: 6px; margin: -2px 0 10px; font-size: 11px; font-weight: 800; color: #141312; background: #f1ede7; border-radius: 999px; padding: 4px 10px 3px; }
 #app-root .tab-fresh i { width: 6px; height: 6px; border-radius: 50%; background: #a8d400; box-shadow: 0 0 0 3px rgba(168, 212, 0, 0.25); }
+#app-root .plz-cpn { display: block; margin: 2px 0 8px 58px; padding: 8px 12px; border-radius: 10px; background: #f3ffd9; color: #141312; font-size: 12.5px; text-decoration: none; border: 1px solid #d6f59a; }
+#app-root .plz-brands + .plz-cpn, #app-root .plz-cpn + .plz-cpn { margin-left: 0; }
+#app-root .plz-cpn b { font-weight: 800; }
+#app-root .bf-tease.mv { margin: 8px 16px 28px; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------

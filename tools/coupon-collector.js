@@ -25,9 +25,13 @@ window.__cpRun = async () => {
   // 유명 브랜드 쿠폰(노스페이스·아디다스 등)은 개수 제한에 걸려 빠지지 않게 맨 앞으로
   const FAM = /노스페이스|아디다스|나이키|뉴발란스|어그|살로몬|아크테릭스|푸마|컨버스|반스|닥터마틴|파타고니아|디스커버리|내셔널지오그래픽|컬럼비아|코오롱|아이더|케이투|리바이스|폴로|라코스테|챔피온|커버낫|스파오|무신사 스탠다드|칼하트|디키즈|스투시|아식스|미즈노|오니츠카|팀버랜드|크록스|잔스포츠|이스트팩|캉골|엠엘비|후아유|지오다노|탑텐|에잇세컨즈|마인드브릿지|드로우핏|수아레|토피|쿠어|인사일런스|예일|마리떼|마뗑킴|디스이즈네버댓|노매뉴얼|락피쉬|몽벨|네파|블랙야크|스노우피크|데상트|르꼬끄|휠라|리복|언더아머|유니클로|자라|캘빈클라인|타미|게스|랭글러/;
   const T_OPEN_MS = new Date("2026-11-22T19:00:00+09:00").getTime();
+  // 블프 일정(라이브·시그니처 브랜드데이) 브랜드 쿠폰은 앞으로 + 사용 가능 상품까지 채움
+  let PB = [];
+  try { const K = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI"; const mv = (await (await fetch("https://cbuydjkvvzbluyohdkie.supabase.co/rest/v1/site_data?id=eq.main&select=value", { headers: { apikey: K, Authorization: "Bearer " + K } })).json())[0].value; const pl = (mv.bf && mv.bf.plan) || {}; PB = [...new Set([...(pl.lives || []).map((l) => l.b), ...(pl.bd || []).flatMap((x) => (x.list || []).map((y) => y.b))].filter(Boolean).map((b) => String(b).replace(/[\s()\[\]]/g, "").toLowerCase()).filter((b) => b.length >= 2))]; } catch (e) {}
+  const planHit = (x) => { const n = String(x.couponName || "").replace(/[\s()\[\]]/g, "").toLowerCase(); return PB.some((b) => n.includes(b)); };
   // 티징 쿠폰(프리오픈 이름 또는 본편 오픈 시각에 끝나는 쿠폰) 중 많이 받아간 것(1천 장 이상)도 앞으로
   const tzLike = (x) => /프리오픈|티징/.test(x.couponName) || Math.abs(new Date(x.expireDateTime).getTime() - T_OPEN_MS) < 6e4;
-  const pri = (x) => (FAM.test(x.couponName) && !EX.test(x.couponName) ? 4 : 0) + (tzLike(x) && (x.totalIssuedCount || 0) >= 1000 ? 2 : 0) + (bfNo.has(x.couponNo) ? 1 : 0);
+  const pri = (x) => (FAM.test(x.couponName) && !EX.test(x.couponName) ? 4 : 0) + (tzLike(x) && (x.totalIssuedCount || 0) >= 1000 ? 2 : 0) + (bfNo.has(x.couponNo) ? 1 : 0) + (planHit(x) ? 3 : 0);
   all.sort((a, b) => pri(b) - pri(a) || (tzLike(b) ? b.totalIssuedCount || 0 : 0) - (tzLike(a) ? a.totalIssuedCount || 0 : 0));
   const seen = new Set(), pick = [];
   for (const x of all) {
@@ -53,7 +57,7 @@ window.__cpRun = async () => {
   res.sort((a, b) => pick.indexOf(a.c) - pick.indexOf(b.c));
   const top = res.slice(0, 250);
   // 사이트에 보이는 쿠폰(앞쪽 70개 + 티징 전용·무진장 쿠폰 전부)은 '쿠폰 사용 가능 상품'을 30개까지 매시간 새로 채움
-  const rich = top.filter((r, i) => i < 40 || ((tzLike(r.c) || /티징|티저|TEAS/i.test(r.c.couponName)) && (r.c.totalIssuedCount || 0) >= 300)).slice(0, 70);
+  const rich = top.filter((r, i) => i < 40 || ((tzLike(r.c) || /티징|티저|TEAS/i.test(r.c.couponName)) && (r.c.totalIssuedCount || 0) >= 300) || planHit(r.c)).slice(0, 90);
   for (let i = 0; i < rich.length; i += 8) {
     await Promise.all(rich.slice(i, i + 8).map(async (r) => {
       try {
