@@ -2930,7 +2930,7 @@ async function renderPublicSite(root) {
         </a>`;
       };
       const shown = tsOpen ? items : items.slice(0, 20);
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 <em class="ts-em">타임세일·프리쿠폰 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago"></small>${items.length > 20 || tsOpen ? `<button type="button" class="tsz-more" data-tsmore="1">${tsOpen ? "접기 ▲" : "전체보기 ▼"}</button>` : ""}</div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 <em class="ts-em">타임세일 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago"></small>${items.length > 20 || tsOpen ? `<button type="button" class="tsz-more" data-tsmore="1">${tsOpen ? "접기 ▲" : "전체보기 ▼"}</button>` : ""}</div>
         <div class="hotz-bar"><i></i></div>
         <div class="${tsOpen ? "bf-grid" : "tsz-scroll"}">${shown.map(card).join("")}${!tsOpen && items.length > 20 ? `<button type="button" class="spz-endcard" data-tsmore="1"><b>+${items.length - 20}</b>전체보기 →</button>` : ""}</div>`;
       const el = box.querySelector(".tsz-ago"), t = Date.parse(SRC.at || "");
