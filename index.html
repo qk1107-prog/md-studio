@@ -1956,6 +1956,26 @@ async function renderPublicSite(root) {
     const c = C && (C.list || []).find((x) => String(x.no) === String(no));
     if (!c) { history.replaceState(null, "", location.pathname + location.search); return; }
     const items = (c.g || []).map((g) => ({ brand: g.b, product_name: g.n, curator_url: curl(g.l), image_url: "https://image.msscdn.net" + g.i }));
+    // 대표 브랜드 프리오픈 쿠폰이면: 그 쿠폰이 붙는 상품을 패딩부터 쿠폰 적용가로 한 번에
+    const spB = (() => { try { return (((ADMIN && ADMIN.bf && ADMIN.bf.spot) || {}).brands || []).find((o) => (o.coupons || []).some((x) => String(x.no) === String(no)) && (o.all || []).length); } catch (e) { return null; } })();
+    const spL = spB ? spB.all.filter((x) => Number(x.p) === parseFloat(c.v)) : [];
+    if (spL.length >= 3) {
+      const won2 = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
+      const card = (x) => `<a class="bf-item" href="${esc(curl(x.l))}" target="_blank" rel="noopener">
+          <div class="im"><img src="${esc(safeImg(x.img))}" loading="lazy" alt="" referrerpolicy="no-referrer"><span class="tg">쿠폰 ${esc(x.p)}%</span></div>
+          <p class="br">${esc(x.brand)}</p><p class="nm">${esc(x.name)}</p>
+          <p class="pt"><s>${esc(won2(x.price))}</s></p>
+          <p class="pr"><i>${esc(x.tot)}%</i>${esc(won2(x.cpn))}</p>
+          <p class="spz-after">쿠폰 적용가 · 지금 ${esc(won2(x.sale))}</p>
+        </a>`;
+      const secs = [["🧥 패딩", 0], ["🧶 자켓 · 플리스", 1], ["👕 그 외", 2]].map(([t, k]) => { const L2 = spL.filter((x) => x.k === k); return L2.length ? `<div class="ep-brand-row"><p class="ep-brand-name" style="margin:0 16px 8px">${t}</p><div class="spz-grid">${L2.map(card).join("")}</div></div>` : ""; }).join("");
+      cpOverlay("cp" + c.no, c.n, `
+      <div class="cpz-hero k-${esc(c.k)}"><b>${esc(c.v)}</b><p>${esc(c.n)}</p><small>${esc([cpKind(c) + " 쿠폰", c.cond, c.exp ? c.exp + "까지" : "", c.cnt ? "적용 상품 " + Number(c.cnt).toLocaleString("ko-KR") + "개" : ""].filter(Boolean).join(" · "))}</small></div>
+      <div class="spz-tabs">${(spB.coupons || []).map((x) => `<a href="#cp=${esc(x.no)}" class="${String(x.no) === String(no) ? "on" : ""}"><b>${esc(x.v)}</b> 쿠폰</a>`).join("")}</div>
+      <div id="ep-sections">${secs}</div>
+      <p class="ep-note">상품 페이지에서 '쿠폰 받기'를 누르면 바로 적용돼요. 쿠폰 적용가는 지금 판매가 기준으로 계산한 값이에요.</p>`);
+      return;
+    }
     cpOverlay("cp" + c.no, c.n, `
       <div class="cpz-hero k-${esc(c.k)}"><b>${esc(c.v)}</b><p>${esc(c.n)}</p><small>${esc([cpKind(c) + " 쿠폰", c.cond, c.exp ? c.exp + "까지" : "", c.cnt ? "적용 상품 " + Number(c.cnt).toLocaleString("ko-KR") + "개" : ""].filter(Boolean).join(" · "))}</small></div>
       <div id="ep-sections"><div class="ep-brand-row"><p class="ep-brand-name" style="margin:0 16px 8px">이 쿠폰으로 제일 많이 사는 상품</p><div class="ep-prod-grid">${items.map(productCardHtml).join("")}</div></div></div>
@@ -3656,6 +3676,14 @@ renderPublicSite(ROOT_EL);
 #app-root .spz-chips a b { color: #ff3d3f; font-weight: 900; margin-right: 2px; }
 #app-root .spz .bf-item .tg { background: #141312; color: #ffe14d; }
 #app-root .spz-after { margin: 2px 0 0; font-size: 10.5px; font-weight: 900; color: #ff3d3f; letter-spacing: -0.2px; }
+
+#app-root .spz-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 8px; padding: 0 16px; }
+#app-root .spz-tabs { display: flex; gap: 6px; padding: 12px 16px 14px; }
+#app-root .spz-tabs a { flex: 1; text-align: center; padding: 9px 0; border: 1px solid #1a1a1a; border-radius: 999px; font-size: 12.5px; font-weight: 800; color: #1a1a1a; text-decoration: none; }
+#app-root .spz-tabs a b { color: #ff3d3f; }
+#app-root .spz-tabs a.on { background: #1a1a1a; color: #fff; }
+#app-root .spz-tabs a.on b { color: #ffd84d; }
+@media (min-width: 760px) { #app-root .spz-grid { grid-template-columns: repeat(5, 1fr); } }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------

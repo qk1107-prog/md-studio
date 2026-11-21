@@ -38,14 +38,19 @@ window.__spRun = async (brands) => {
     const seenN = new Set();
     const by = (k, n) => arr.filter((x) => x.k === k && good(x)).sort((a, b2) => sc(a) - sc(b2)).filter((x) => { const kk = nkey(x.name); if (seenN.has(kk)) return false; seenN.add(kk); return true; }).slice(0, n);
     const pick = [...by(0, 14), ...by(1, 10), ...by(2, 6)];
-    for (const x of pick) {
+    // 쿠폰별 전체보기용: 그 쿠폰이 붙는 상품을 패딩 → 자켓·플리스 → 나머지 순으로 각 36개까지 (색상 중복 제외)
+    const tiers = [...new Set(arr.map((x) => x.p))].sort((x, y) => y - x);
+    const allL = [];
+    tiers.forEach((t) => { const sn = new Set(); arr.filter((x) => x.p === t).sort((a, b2) => a.k - b2.k || sc(a) - sc(b2)).filter((x) => { const kk = nkey(x.name); if (sn.has(kk)) return false; sn.add(kk); return true; }).slice(0, 36).forEach((x) => allL.push(x)); });
+    for (const x of [...pick, ...allL]) {
       if (cache[x.id]) continue;
       try { const r = await fetch("https://api.one.musinsa.com/api2/affiliate/v2/link/product/" + x.id, { method: "POST", credentials: "include", headers: { Accept: "application/json", "Content-Type": "application/json", "X-Platform": "MUSINSA" }, body: "{}" }); const l = await r.json(); const m = String((l.data && l.data.link) || "").match(/^https:\/\/www\.musinsa\.com\/curator\/goods\/([A-Za-z0-9]+)$/); if (m) cache[x.id] = m[1]; } catch (e) {}
     }
     const byV = {}; cps.forEach((c) => { const k = c.discountValue; if (!byV[k] || /프리오픈/.test(c.couponName)) byV[k] = c; });
     out.push({ brand: b, max: Math.max(...cps.map((c) => c.discountValue)), exp: "11/22", total: arr.length, pad: arr.filter((x) => x.k === 0).length,
       coupons: Object.values(byV).sort((a, b2) => b2.discountValue - a.discountValue).map((c) => ({ no: c.couponNo, v: c.discountValue + "%" })),
-      items: pick.filter((x) => cache[x.id]).map((x) => ({ i: x.id, brand: x.brand, name: x.name, img: x.img, link: "https://www.musinsa.com/curator/goods/" + cache[x.id], price: x.price, sale: x.sale, rate: x.rate, p: x.p, cpn: x.cpn, tot: x.tot, rv: x.rv, k: x.k })) });
+      items: pick.filter((x) => cache[x.id]).map((x) => ({ i: x.id, brand: x.brand, name: x.name, img: x.img, link: "https://www.musinsa.com/curator/goods/" + cache[x.id], price: x.price, sale: x.sale, rate: x.rate, p: x.p, cpn: x.cpn, tot: x.tot, rv: x.rv, k: x.k })),
+      all: allL.filter((x) => cache[x.id]).map((x) => ({ i: x.id, brand: x.brand, name: x.name, img: x.img, l: cache[x.id], price: x.price, sale: x.sale, p: x.p, cpn: x.cpn, tot: x.tot, k: x.k })) });
   }
   localStorage.setItem("mdcpLinks", JSON.stringify(cache));
   window.__spData = JSON.stringify({ at: new Date().toISOString(), brands: out });
