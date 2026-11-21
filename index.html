@@ -1846,7 +1846,7 @@ async function renderPublicSite(root) {
           <p class="pt"><s>${esc(won2(x.price))}</s></p>
           <p class="pr"><i>${esc(x.tot)}%</i>${esc(won2(x.cpn))}</p>
           <p class="spz-after">쿠폰 적용가 · 지금 ${esc(won2(x.sale))}</p>
-        </a>`).join("")}${(o.all || []).length ? `<a class="spz-endcard" href="#spa=${encodeURIComponent(o.brand)}"><b>${esc(o.all.length)}개</b>전체보기 →</a>` : ""}</div>
+        </a>`).join("")}${(o.all || []).length ? `<a class="spz-endcard" href="#spa=${encodeURIComponent(o.brand)}"><b>전체</b>보기 →</a>` : ""}</div>
       </div>`).join("");
     const spHave = new Set(SP.filter((o) => (o.items || []).length >= 3).map((o) => o.brand));
     const blocks = spBlocks + BR.filter((b) => !spHave.has(b)).map((b) => {
@@ -1962,7 +1962,12 @@ async function renderPublicSite(root) {
           <p class="pr"><i>${esc(x.tot)}%</i>${esc(won2(x.cpn))}</p>
           <p class="spz-after">쿠폰 적용가 · 지금 ${esc(won2(x.sale))}</p>
         </a>`;
-    const secs = [["🧥 패딩", 0], ["🧶 자켓 · 플리스", 1], ["👕 그 외", 2]].map(([t, k]) => { const L2 = o.all.filter((x) => x.k === k).sort((a, b2) => b2.tot - a.tot); return L2.length ? `<div class="ep-brand-row"><p class="ep-brand-name" style="margin:0 16px 8px">${t} <small style="color:#999;font-weight:700">${L2.length}</small></p><div class="spz-grid">${L2.map(card).join("")}</div></div>` : ""; }).join("");
+    // 같은 제품 다른 색은 하나만(할인 큰 쪽), 신발·가방은 '그 외'로
+    const nk = (n) => String(n).replace(/^[A-Z]{2}[A-Z0-9]{5,}\s*/, "").replace(/\((RDS|공용)\)/g, "").replace(/[\s_\-\/]+[A-Z][A-Z_\s]*$/, "").replace(/\s+/g, "");
+    const GOODS = /츄카|뮬|부티|부츠|슬리퍼|슬립온|슈즈|스니커즈|백팩|토트|숄더|크로스|가방|파우치|장갑|머플러|비니|모자|캡/;
+    const seen = new Set();
+    const ALL = o.all.map((x) => (GOODS.test(x.name) ? Object.assign({}, x, { k: 2 }) : x)).sort((a, b2) => b2.tot - a.tot).filter((x) => { const kk = nk(x.name); if (seen.has(kk)) return false; seen.add(kk); return true; });
+    const secs = [["🧥 패딩", 0], ["🧶 자켓 · 플리스", 1], ["👕 그 외 (신발·가방 등)", 2]].map(([t, k]) => { const L2 = ALL.filter((x) => x.k === k); return L2.length ? `<div class="ep-brand-row"><p class="ep-brand-name" style="margin:0 16px 8px">${t} <small style="color:#999;font-weight:700">${L2.length}</small></p><div class="spz-grid">${L2.map(card).join("")}</div></div>` : ""; }).join("");
     cpOverlay("spa" + brand, brand + " 프리오픈 쿠폰템", `
       <div class="cpz-hero"><b>최대 ${esc(o.max)}%</b><p>${esc(brand)} 무진장 프리오픈 쿠폰템 전체</p><small>~${esc(o.exp || "")} 본편 전까지 · 할인 큰 순 · 같은 제품 다른 색은 하나만</small></div>
       <div class="spz-tabs">${(o.coupons || []).map((x) => `<a href="#cp=${esc(x.no)}"><b>${esc(x.v)}</b> 쿠폰만</a>`).join("")}</div>
