@@ -25,8 +25,10 @@ window.__cpRun = async () => {
   // 유명 브랜드 쿠폰(노스페이스·아디다스 등)은 개수 제한에 걸려 빠지지 않게 맨 앞으로
   const FAM = /노스페이스|아디다스|나이키|뉴발란스|어그|살로몬|아크테릭스|푸마|컨버스|반스|닥터마틴|파타고니아|디스커버리|내셔널지오그래픽|컬럼비아|코오롱|아이더|케이투|리바이스|폴로|라코스테|챔피온|커버낫|스파오|무신사 스탠다드|칼하트|디키즈|스투시|아식스|미즈노|오니츠카|팀버랜드|크록스|잔스포츠|이스트팩|캉골|엠엘비|후아유|지오다노|탑텐|에잇세컨즈|마인드브릿지|드로우핏|수아레|토피|쿠어|인사일런스|예일|마리떼|마뗑킴|디스이즈네버댓|노매뉴얼|락피쉬|몽벨|네파|블랙야크|스노우피크|데상트|르꼬끄|휠라|리복|언더아머|유니클로|자라|캘빈클라인|타미|게스|랭글러/;
   const T_OPEN_MS = new Date("2026-11-22T19:00:00+09:00").getTime();
-  const pri = (x) => (FAM.test(x.couponName) && !EX.test(x.couponName) ? 2 : 0) + (bfNo.has(x.couponNo) ? 1 : 0);
-  all.sort((a, b) => pri(b) - pri(a));
+  // 티징 쿠폰(프리오픈 이름 또는 본편 오픈 시각에 끝나는 쿠폰) 중 많이 받아간 것(1천 장 이상)도 앞으로
+  const tzLike = (x) => /프리오픈|티징/.test(x.couponName) || Math.abs(new Date(x.expireDateTime).getTime() - T_OPEN_MS) < 6e4;
+  const pri = (x) => (FAM.test(x.couponName) && !EX.test(x.couponName) ? 4 : 0) + (tzLike(x) && (x.totalIssuedCount || 0) >= 1000 ? 2 : 0) + (bfNo.has(x.couponNo) ? 1 : 0);
+  all.sort((a, b) => pri(b) - pri(a) || (tzLike(b) ? b.totalIssuedCount || 0 : 0) - (tzLike(a) ? a.totalIssuedCount || 0 : 0));
   const seen = new Set(), pick = [];
   for (const x of all) {
     if (x.couponChannel !== "ONLINE" || EX.test(x.couponName) || new Date(x.expireDateTime) < new Date()) continue;
