@@ -2903,14 +2903,15 @@ async function renderPublicSite(root) {
       const seenTs = new Set();
       // 프리오픈 쿠폰 칸에 나오는 브랜드(노스페이스 등)는 그쪽으로 몰고 타임세일엔 안 넣음
       const spOut = new Set(((BFD.spot || {}).brands || []).filter((o) => (o.items || []).length >= 3).map((o) => o.brand));
-      const items = [...(dmFresh ? DM.items || [] : []), ...(T.items || [])].filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link) || spOut.has(p.brand)) return false; seenTs.add(p.link); return true; }).slice(0, 10);
+      // T.merged: 이 방의 매시 작업이 추천 글 방 픽(bf.dm)까지 확인해서 합쳐 둔 것 → 그것만 사용
+      const items = [...(dmFresh && !T.merged ? DM.items || [] : []), ...(T.items || [])].filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link) || spOut.has(p.brand)) return false; seenTs.add(p.link); return true; }).slice(0, 10);
       let box = root.querySelector("#tsz");
       if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
       if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsmore]")) { tsOpen = !tsOpen; renderTs(); if (!tsOpen) box.scrollIntoView({ block: "start" }); } }); }
       if (cp) { if (cp.nextSibling !== box) cp.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
-      const endTxt = (t) => { if (!t) return "타임세일"; const k = kp(t); const h = Math.round((t - now) / 36e5); return h < 24 ? `⏰ ${h < 1 ? "곧" : h + "시간 뒤"} 마감` : `~${k.m}/${k.d} ${k.h}시`; };
-      const cards = items.map((p) => itemCard(Object.assign({}, p, { tag: endTxt(p.end), comment: (p.w || []).length ? "👀 " + p.w[0] : "" }), 0)).join("");
+      const endTxt = (t, p) => { if (p && p.soon) return "⚡ 품절임박"; if (!t) return (p && p.kind) || "타임세일"; const k = kp(t); const h = Math.round((t - now) / 36e5); return h < 24 ? `⏰ ${h < 1 ? "곧" : h + "시간 뒤"} 마감` : `~${k.m}/${k.d} ${k.h}시`; };
+      const cards = items.map((p) => itemCard(Object.assign({}, p, { tag: endTxt(p.end, p), comment: (p.w || []).length ? "👀 " + p.w[0] : "" }), 0)).join("");
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 <em class="ts-em">타임세일 TOP 10</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago" data-tsat="${esc(T.at || "")}"></small><button type="button" class="tsz-more" data-tsmore="1">${tsOpen ? "접기 ▲" : "전체보기 ▼"}</button></div>
         <div class="hotz-bar"><i></i></div>
         <div class="${tsOpen ? "bf-grid" : "tsz-scroll"}">${cards}</div>`;
