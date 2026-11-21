@@ -1587,15 +1587,7 @@ async function renderPublicSite(root) {
       return `
         <section class="ep-sec${isPick ? " is-pick" : ""}" data-label="${esc(key)}">
           <div class="ep-sec-head"><span class="ep-sec-emoji">${emoji}</span><h2>${esc(key)}</h2></div>
-          ${key === "루키" ? `
-            <div class="ep-onepick">
-              <span class="ep-onepick-badge">광만두가 발굴한 신생 브랜드</span>
-            </div>` : ""}
-          ${isPick ? `
-            <div class="ep-onepick">
-              <span class="ep-onepick-badge">광만두 원픽</span>
-              ${ep.pick_comment ? `<p class="ep-onepick-comment">${esc(ep.pick_comment)}</p>` : ""}
-            </div>` : ""}
+          ${isPick && ep.pick_comment ? `<div class="ep-onepick"><p class="ep-onepick-comment">${esc(ep.pick_comment)}</p></div>` : ""}
           ${groupByBrand(list).map((g) => `
             <div class="ep-brand-row">
               <p class="ep-brand-name">${esc(g.brand)}</p>
@@ -2293,7 +2285,7 @@ async function renderPublicSite(root) {
     const show = (key) => {
       chips.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.label === key));
       const list = items.filter((it) => it.label === key);
-      scroll.innerHTML = list.length ? list.map(recProdHtml).join("") : `<p class="rec-pick-empty">광만두 원픽, 곧 공개돼요</p>`;
+      scroll.innerHTML = list.length ? list.map(recProdHtml).join("") : `<p class="rec-pick-empty">곧 공개돼요</p>`;
       scroll.scrollLeft = 0;
     };
     chips.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => show(b.dataset.label)));
@@ -2944,6 +2936,64 @@ async function renderPublicSite(root) {
       const el = box.querySelector(".tsz-ago"), t = Date.parse(SRC.at || "");
       if (el && t) { const k = kp(t); el.textContent = `${k.h}시 ${String(k.mi).padStart(2, "0")}분 업데이트 · 꼭 쿠폰 받고 구매하세요`; }
     }
+    // ---- 블프 플래너: 날짜별 혜택·라이브·시그니처 브랜드데이 + 브랜드 검색 (main.bf.plan) ----
+    let planDay = null, planQ = "";
+    function renderPlan() {
+      const PL = BFD.plan || {}; const lives = (PL.lives || []).filter((l) => l && l.t); const bds = PL.bd || [];
+      let box = root.querySelector("#plz");
+      const now = nowFn();
+      if ((!lives.length && !bds.length) || now >= T_END) { if (box) box.remove(); return; }
+      if (!box) {
+        box = document.createElement("section"); box.id = "plz"; box.className = "plz";
+        box.addEventListener("click", (e) => { const d = e.target.closest("[data-pday]"); if (d) { planDay = d.dataset.pday; planQ = ""; renderPlan(); } const c = e.target.closest("[data-pq]"); if (c) { planQ = c.dataset.pq; const inp = box.querySelector(".plz-q input"); if (inp) inp.value = planQ; drawFind(); } });
+      }
+      const anchor = root.querySelector("#hotz") || root.querySelector("#spz") || root.querySelector("#tsz") || root.querySelector("#cpz");
+      if (anchor) { if (anchor.nextSibling !== box) anchor.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
+      const md = (t) => { const k = kp(t); return pad(k.m) + "-" + pad(k.d); };
+      const DAYS = ["11-21", "11-22", "11-23", "11-24", "11-25", "11-26", "11-27", "11-28", "11-29", "11-30", "12-01", "12-02"];
+      const today = md(now);
+      if (!planDay || !DAYS.includes(planDay)) planDay = DAYS.includes(today) ? today : "11-22";
+      const HOT = ["11-22", "11-27", "12-02"], CPN = ["11-22", "11-25", "11-28", "11-30", "12-02"];
+      const rng = (p) => { const m = String(p).match(/(\d{2})\.(\d{2})[^-]*(?:-\s*(\d{2})\.(\d{2}))?/); if (!m) return null; return [m[1] + "-" + m[2], m[3] ? m[3] + "-" + m[4] : m[1] + "-" + m[2]]; };
+      const bdOf = (d) => bds.find((x) => { const r = rng(x.p); return r && d >= r[0] && d <= r[1]; });
+      const short = (t) => String(t || "").replace(/최대 (\d+)% 할인/, "~$1%").replace(/\s*\+\s*최대 (\d+)% 쿠폰/, " + 쿠폰 $1%").replace(/\s*\+\s*/g, " + ");
+      const livesOf = (d) => lives.filter((l) => md(l.t) === d).sort((a, b) => a.t - b.t);
+      const wk = (d) => { const [m, dd] = d.split("-").map(Number); return "일월화수목금토"[new Date(Date.UTC(2026, m - 1, dd)).getUTCDay()]; };
+      const theme = (d) => { const r = (SCHEDULE.find((x) => x[0] === d) || [])[1] || ""; return r; };
+      const chips = DAYS.map((d) => { const L = livesOf(d).length; return `<button type="button" class="plz-day${d === planDay ? " on" : ""}${d < today ? " past" : ""}" data-pday="${d}"><small>${d === today ? "오늘" : wk(d)}</small><b>${Number(d.slice(3))}</b><i>${HOT.includes(d) ? '<u class="r"></u>' : ""}${CPN.includes(d) ? '<u class="g"></u>' : ""}${L ? '<u class="k"></u>' : ""}</i></button>`; }).join("");
+      const d = planDay; const bd = bdOf(d); const LV = livesOf(d);
+      const tags = [theme(d) ? `<span class="plz-tag">${esc(theme(d))}</span>` : "", HOT.includes(d) ? `<span class="plz-tag r">하루특가 · 자정까지</span>` : "", CPN.includes(d) ? `<span class="plz-tag g">새 회차 쿠폰</span>` : ""].join("");
+      const fmtT = (t) => { const k = kp(t); return pad(k.h) + ":" + pad(k.mi); };
+      const liveHtml = LV.length ? `<p class="plz-h">라이브 <span>${LV.length}</span></p>${LV.map((l) => `<a class="plz-live" href="https://www.musinsa.com${esc(String(l.h || "").replace(/^https?:\/\/www\.musinsa\.com/, ""))}" target="_blank" rel="noopener"><span class="plz-time">${fmtT(l.t)}</span><span class="plz-lb"><b>${esc(l.b)}</b><em>${esc(short(l.d))}</em></span><span class="plz-go">알림 →</span></a>`).join("")}` : "";
+      const bdHtml = bd && (bd.list || []).length ? `<p class="plz-h">시그니처 브랜드데이 <span>${esc(bd.p.replace(/\(.\)/g, ""))}</span></p><div class="plz-brands">${bd.list.map((x) => `<button type="button" class="plz-br" data-pq="${esc(x.b)}"><b>${esc(x.b)}</b><em>${esc(short(x.t))}</em>${x.x ? '<i>단독</i>' : ""}</button>`).join("")}</div>` : "";
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🗓️ 블프 <em class="plz-em">언제 뭐 사지?</em></p><small>날짜를 누르면 그날 열리는 혜택·라이브가 나와요</small></div>
+        <div class="plz-days">${chips}</div>
+        <div class="plz-card"><div class="plz-tags">${tags}</div>${liveHtml}${bdHtml}${!liveHtml && !bdHtml ? `<p class="plz-none">이날은 회차 특가·쿠폰 위주예요</p>` : ""}</div>
+        <div class="plz-q"><input type="search" placeholder="브랜드 검색 — 언제 제일 싼지 알려드려요" aria-label="브랜드 검색" value="${esc(planQ)}"></div>
+        <div class="plz-find"></div>`;
+      const inp = box.querySelector(".plz-q input");
+      inp.addEventListener("input", (e) => { planQ = e.target.value.trim(); drawFind(); });
+      function drawFind() {
+        const out = box.querySelector(".plz-find"); const q = planQ.replace(/\s/g, "").toLowerCase();
+        if (!q) { out.innerHTML = ""; return; }
+        const hit = (b) => String(b || "").replace(/\s/g, "").toLowerCase().includes(q);
+        const ev = [];
+        bds.forEach((x) => (x.list || []).forEach((y) => { if (hit(y.b)) ev.push({ k: (rng(x.p) || [""])[0], h: `<span class="plz-tag g">브랜드데이</span><b>${esc(x.p.replace(/\(.\)/g, ""))}</b> ${esc(y.b)} · ${esc(short(y.t))}${y.x ? " · 단독" : ""}` }); }));
+        lives.forEach((l) => { if (hit(l.b)) { const k = kp(l.t); ev.push({ k: md(l.t), h: `<span class="plz-tag k">라이브</span><b>${k.m}.${k.d}(${k.w}) ${fmtT(l.t)}</b> ${esc(l.b)} · ${esc(short(l.d))}` }); } });
+        ev.sort((a, b) => (a.k < b.k ? -1 : 1));
+        // 우리 사이트에 있는 그 브랜드 제품(전부 큐레이터 링크)
+        const pool = []; const seen = new Set();
+        const add = (p) => { if (!p || !p.link || !hit(p.brand) || seen.has(p.link)) return; seen.add(p.link); pool.push(p); };
+        ((BFD.dm || {}).items || []).forEach(add); ((BFD.ts || {}).items || []).forEach(add);
+        ((BFD.hot || {}).cats || []).forEach((c) => (c.items || []).forEach(add)); ((BFD.hot || {}).rise || []).forEach(add);
+        ((BFD.spot || {}).brands || []).forEach((o) => (o.items || []).forEach(add));
+        try { ((ADMIN.awards || {}).items || []).forEach((x) => add({ brand: x.brand, name: x.name || x.product_name, img: x.img || x.image_url, link: x.link || x.curator_url, price: x.price, sale: x.sale })); } catch (e) {}
+        const cards = pool.slice(0, 9).map((p) => itemCard(Object.assign({}, p, { tag: "" }), 0)).join("");
+        out.innerHTML = ev.length || cards ? `${ev.length ? `<div class="plz-ev">${ev.map((x) => `<p>${x.h}</p>`).join("")}</div>` : `<p class="plz-none">이 브랜드는 아직 브랜드데이·라이브 일정이 없어요 · 회차 쿠폰은 매 회차 받을 수 있어요</p>`}${cards ? `<p class="plz-h">지금 볼 수 있는 제품</p><div class="tsz-scroll">${cards}</div>` : ""}` : `<p class="plz-none">찾는 브랜드가 아직 일정에 없어요</p>`;
+      }
+      drawFind();
+      const on = box.querySelector(".plz-day.on"); if (on && on.scrollIntoView && box.dataset.sc !== planDay) { box.dataset.sc = planDay; const sc = box.querySelector(".plz-days"); sc.scrollLeft = Math.max(0, on.offsetLeft - sc.offsetWidth / 2 + on.offsetWidth / 2); }
+    }
     let hotView = -1, hotOpen = false;
     function renderHot() {
       const H = BFD.hot || {}; const cats = (H.cats || []).filter((c) => c && (c.items || []).length);
@@ -2998,11 +3048,11 @@ async function renderPublicSite(root) {
       top.replaceChildren(card);
     }
     function render() {
-      setTimeout(() => { renderTs(); renderHot(); }, 0);
+      setTimeout(() => { renderTs(); renderHot(); try { renderPlan(); } catch (e) {} }, 0);
       // 페이지를 열어둔 채로 있어도 보고방(매시 정각)·이 방(매시 25분) 업데이트가 바로 보이게 3분마다 다시 받기
       if (!window.__tsPoll) window.__tsPoll = setInterval(() => {
         if (document.hidden) return;
-        sdFetch("main").then((v) => { if (!v || !v.bf) return; const o = BFD.dm && BFD.dm.at, t = BFD.ts && BFD.ts.at; ["dm", "ts", "spot", "hot"].forEach((k) => { if (v.bf[k]) BFD[k] = v.bf[k]; }); if ((BFD.dm && BFD.dm.at) !== o || (BFD.ts && BFD.ts.at) !== t) { renderTs(); renderHot(); } }).catch(() => {});
+        sdFetch("main").then((v) => { if (!v || !v.bf) return; const o = BFD.dm && BFD.dm.at, t = BFD.ts && BFD.ts.at; ["dm", "ts", "spot", "hot"].forEach((k) => { if (v.bf[k]) BFD[k] = v.bf[k]; }); if ((BFD.dm && BFD.dm.at) !== o || (BFD.ts && BFD.ts.at) !== t) { renderTs(); renderHot(); try { renderPlan(); } catch (e) {} } }).catch(() => {});
       }, 180000);
       const now = nowFn();
       if (now >= T_END) { phase = "end"; zone.innerHTML = `<p class="bf-empty">이번 무진장은 끝났어요. 다음 블프 때 다시 정리할게요!</p>`; return; }
@@ -3757,6 +3807,43 @@ renderPublicSite(ROOT_EL);
 #app-root .tsc .tsc-cp b { display: block; font-size: 14px; font-weight: 900; color: #141312; }
 #app-root .tsc .tsc-cp i { font-style: normal; color: #ff3d3f; }
 #app-root button.spz-endcard { border: 0; cursor: pointer; font-family: inherit; }
+
+#app-root .plz { margin: 4px 0 18px; }
+#app-root .plz-em { background: #141312 !important; color: #d8ff3c !important; }
+#app-root .plz-days { display: flex; gap: 6px; overflow-x: auto; margin: 2px -20px 10px; padding: 2px 20px 4px; scrollbar-width: none; }
+#app-root .plz-days::-webkit-scrollbar { display: none; }
+#app-root .plz-day { flex: 0 0 46px; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 0 6px; border: 1px solid #e6e1da; border-radius: 14px; background: #fff; color: #141312; font-family: inherit; cursor: pointer; }
+#app-root .plz-day small { font-size: 9.5px; font-weight: 800; color: #8a847b; }
+#app-root .plz-day b { font-size: 16px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.1; }
+#app-root .plz-day i { display: flex; gap: 2px; height: 5px; }
+#app-root .plz-day u { display: block; width: 5px; height: 5px; border-radius: 50%; }
+#app-root .plz-day u.r { background: #ff3d3f; } #app-root .plz-day u.g { background: #a8d400; } #app-root .plz-day u.k { background: #141312; }
+#app-root .plz-day.past { opacity: 0.45; }
+#app-root .plz-day.on { background: #141312; border-color: #141312; color: #fff; }
+#app-root .plz-day.on small { color: #d8ff3c; } #app-root .plz-day.on u.k { background: #fff; }
+#app-root .plz-card { border: 1px solid #ece7e0; border-radius: 16px; padding: 12px 12px 10px; background: #fff; }
+#app-root .plz-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 4px; }
+#app-root .plz-tag { display: inline-block; font-size: 10.5px; font-weight: 800; padding: 3px 8px 2px; border-radius: 999px; background: #f1ede7; color: #141312; margin-right: 4px; }
+#app-root .plz-tag.r { background: #ff3d3f; color: #fff; } #app-root .plz-tag.g { background: #d8ff3c; color: #141312; } #app-root .plz-tag.k { background: #141312; color: #fff; }
+#app-root .plz-h { margin: 10px 0 6px; font-size: 12px; font-weight: 900; color: #141312; letter-spacing: -0.3px; }
+#app-root .plz-h span { color: #8a847b; font-weight: 700; margin-left: 4px; }
+#app-root .plz-live { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px dashed #ece7e0; text-decoration: none; color: #141312; }
+#app-root .plz-time { flex: 0 0 auto; font-size: 12px; font-weight: 900; background: #141312; color: #fff; border-radius: 8px; padding: 4px 7px 3px; }
+#app-root .plz-lb { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+#app-root .plz-lb b { font-size: 12.5px; font-weight: 900; }
+#app-root .plz-lb em { font-style: normal; font-size: 10.5px; color: #8a847b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#app-root .plz-go { font-size: 10.5px; font-weight: 800; color: #ff3d3f; white-space: nowrap; }
+#app-root .plz-brands { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+#app-root .plz-br { position: relative; text-align: left; border: 1px solid #ece7e0; background: #faf8f5; border-radius: 12px; padding: 8px 9px 7px; font-family: inherit; cursor: pointer; color: #141312; }
+#app-root .plz-br b { display: block; font-size: 12px; font-weight: 900; }
+#app-root .plz-br em { display: block; font-style: normal; font-size: 10.5px; font-weight: 700; color: #ff3d3f; margin-top: 1px; }
+#app-root .plz-br i { position: absolute; right: 6px; top: 6px; font-style: normal; font-size: 9px; font-weight: 900; background: #141312; color: #d8ff3c; border-radius: 5px; padding: 1px 4px; }
+#app-root .plz-q { margin: 10px 0 0; }
+#app-root .plz-q input { width: 100%; box-sizing: border-box; border: 1.5px solid #141312; border-radius: 999px; padding: 10px 14px; font-size: 13px; font-family: inherit; background: #fff; }
+#app-root .plz-ev { margin: 10px 0 0; }
+#app-root .plz-ev p { margin: 0; padding: 7px 0; border-top: 1px dashed #ece7e0; font-size: 12px; color: #141312; line-height: 1.5; }
+#app-root .plz-ev b { margin-right: 4px; }
+#app-root .plz-none { margin: 8px 0 2px; font-size: 11.5px; color: #8a847b; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
