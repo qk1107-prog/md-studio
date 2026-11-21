@@ -2792,6 +2792,23 @@ async function renderPublicSite(root) {
 
     let phase = "";
     // ---- 실시간 제일 인기 있는 아이템 (쿠폰 줄 바로 아래, main.bf.hot = {at, cats:[{cat, items}]}) ----
+    // ---- 실시간 지금 타임세일 중 꿀템 (쿠폰 줄 바로 아래 한 줄, main.bf.ts = {at, items}) ----
+    let tsOpen = false;
+    function renderTs() {
+      const T = BFD.ts || {}; const now = nowFn();
+      const items = (T.items || []).filter((p) => p && p.link && (!p.end || p.end > now));
+      let box = root.querySelector("#tsz");
+      if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
+      const cp = root.querySelector("#cpz");
+      if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsmore]")) { tsOpen = !tsOpen; renderTs(); if (!tsOpen) box.scrollIntoView({ block: "start" }); } }); }
+      if (cp) { if (cp.nextSibling !== box) cp.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
+      const endTxt = (t) => { if (!t) return "타임세일"; const k = kp(t); const h = Math.round((t - now) / 36e5); return h < 24 ? `⏰ ${h < 1 ? "곧" : h + "시간 뒤"} 마감` : `~${k.m}/${k.d} ${k.h}시`; };
+      const cards = items.map((p) => itemCard(Object.assign({}, p, { tag: endTxt(p.end), comment: (p.w || []).length ? "👀 " + p.w[0] : "" }), 0)).join("");
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 지금 <em class="ts-em">타임세일 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago" data-tsat="${esc(T.at || "")}"></small><button type="button" class="tsz-more" data-tsmore="1">${tsOpen ? "접기 ▲" : "전체보기 ▼"}</button></div>
+        <div class="${tsOpen ? "bf-grid" : "tsz-scroll"}">${cards}</div>`;
+      const el = box.querySelector(".tsz-ago"), t = Date.parse(T.at || "");
+      if (el && t) { const m = Math.max(0, Math.round((Date.now() - t) / 6e4)); el.textContent = `${m < 1 ? "방금" : m < 60 ? m + "분 전" : Math.floor(m / 60) + "시간 전"} 확인 · 1시간마다 갱신 · 품절되면 끝`; }
+    }
     let hotView = -1, hotOpen = false;
     function renderHot() {
       const H = BFD.hot || {}; const cats = (H.cats || []).filter((c) => c && (c.items || []).length);
@@ -2799,7 +2816,8 @@ async function renderPublicSite(root) {
       if (!cats.length || nowFn() >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
       if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { hotOpen = !hotOpen; renderHot(); if (!hotOpen) box.scrollIntoView({ block: "start" }); return; } const b = e.target.closest("[data-hv]"); if (!b) return; hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); }); }
-      if (cp && cp.nextSibling !== box) cp.after(box);
+      const anchor = root.querySelector("#tsz") || cp;
+      if (anchor && anchor.nextSibling !== box) anchor.after(box);
       else if (!cp && !box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       // 순위·출처 표시 없이 카테고리를 섞어서 (1등끼리 먼저, 같은 브랜드 연속 X)
       const mix = []; for (let r = 0; r < 4; r++) cats.forEach((c) => { if (c.items[r]) mix.push(c.items[r]); });
@@ -2845,7 +2863,7 @@ async function renderPublicSite(root) {
       top.replaceChildren(card);
     }
     function render() {
-      setTimeout(renderHot, 0);
+      setTimeout(() => { renderTs(); renderHot(); }, 0);
       const now = nowFn();
       if (now >= T_END) { phase = "end"; zone.innerHTML = `<p class="bf-empty">이번 무진장은 끝났어요. 다음 블프 때 다시 정리할게요!</p>`; return; }
       const flag = preview ? `<p class="bf-preview-flag">● 시안 미리보기 (${preview === "pre" ? "오픈 전" : "오픈 후"})</p>` : "";
@@ -3551,6 +3569,18 @@ renderPublicSite(ROOT_EL);
 #app-root .bf-short button::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255, 61, 63, .16), transparent); animation: shSweep 2.8s ease-in-out infinite; }
 @keyframes shSweep { 0%, 55% { left: -60%; } 100% { left: 130%; } }
 @media (prefers-reduced-motion: reduce) { #app-root nav.tabs button.active, #app-root .nv-dot::after, #app-root .subbar-in, #app-root .tab-slider > .section.tab-in, #app-root .bf-short button::after { animation: none; } #app-root .subbar-in .thumb { transition: none; } }
+
+/* ---- 실시간 타임세일 중 꿀템 ---- */
+#app-root .tsz { margin: 4px 0 14px; }
+#app-root .tsz .hotz-head { align-items: center; }
+#app-root .ts-em { font-style: normal; color: #141312; background: #ffe14d; padding: 1px 7px 2px; border-radius: 6px; margin-left: 2px; }
+#app-root .tsz-more { margin-left: auto; border: 0; background: none; font: inherit; font-size: 11.5px; font-weight: 800; color: #141312; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 0; white-space: nowrap; }
+#app-root .tsz-ago { order: 3; flex-basis: 100%; }
+#app-root .tsz-scroll { display: flex; gap: 8px; overflow-x: auto; margin: 0 -20px; padding: 2px 20px 4px; scrollbar-width: none; scroll-snap-type: x proximity; }
+#app-root .tsz-scroll::-webkit-scrollbar { display: none; }
+#app-root .tsz-scroll > .bf-item { flex: 0 0 31%; max-width: 150px; scroll-snap-align: start; }
+#app-root .tsz .bf-item .tg { background: #141312; color: #ffe14d; }
+#app-root .tsz .bf-item .cm { color: #ff3d3f; font-weight: 800; font-size: 10.5px; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
