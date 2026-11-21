@@ -22,7 +22,11 @@ window.__cpRun = async () => {
       if (bpm) { (d.productCoupons.items || []).forEach((x) => bfNo.add(x.couponNo)); bpm = d.productCoupons.hasNext; bp++; }
     }
   } catch (e) {}
-  all.sort((a, b) => (bfNo.has(b.couponNo) ? 1 : 0) - (bfNo.has(a.couponNo) ? 1 : 0));
+  // 유명 브랜드 쿠폰(노스페이스·아디다스 등)은 개수 제한에 걸려 빠지지 않게 맨 앞으로
+  const FAM = /노스페이스|아디다스|나이키|뉴발란스|어그|살로몬|아크테릭스|푸마|컨버스|반스|닥터마틴|파타고니아|디스커버리|내셔널지오그래픽|컬럼비아|코오롱|아이더|케이투|리바이스|폴로|라코스테|챔피온|커버낫|스파오|무신사 스탠다드|칼하트|디키즈|스투시|아식스|미즈노|오니츠카|팀버랜드|크록스|잔스포츠|이스트팩|캉골|엠엘비|후아유|지오다노|탑텐|에잇세컨즈|마인드브릿지|드로우핏|수아레|토피|쿠어|인사일런스|예일|마리떼|마뗑킴|디스이즈네버댓|노매뉴얼|락피쉬|몽벨|네파|블랙야크|스노우피크|데상트|르꼬끄|휠라|리복|언더아머|유니클로|자라|캘빈클라인|타미|게스|리|랭글러/;
+  const T_OPEN_MS = new Date("2026-11-22T19:00:00+09:00").getTime();
+  const pri = (x) => (FAM.test(x.couponName) && !EX.test(x.couponName) ? 2 : 0) + (bfNo.has(x.couponNo) ? 1 : 0);
+  all.sort((a, b) => pri(b) - pri(a));
   const seen = new Set(), pick = [];
   for (const x of all) {
     if (x.couponChannel !== "ONLINE" || EX.test(x.couponName) || new Date(x.expireDateTime) < new Date()) continue;
@@ -67,7 +71,7 @@ window.__cpRun = async () => {
     const e = new Date(c.expireDateTime);
     return {
       no: c.couponNo, k: c.couponKind === "CART" ? "C" : "P", bf: bfNo.has(c.couponNo) ? 1 : 0,
-      tz: /티징|티저|TEAS|프리오픈|프리 오픈|PRE-?OPEN/i.test(c.couponName) || (bfNo.has(c.couponNo) && e.getTime() <= new Date("2026-11-22T23:59:59+09:00").getTime()) ? 1 : 0, n: c.couponName.replace(/\s+/g, " ").trim(), v, cond, exp: e.getMonth() + 1 + "/" + e.getDate(), cnt: r.tot,
+      tz: /티징|티저|TEAS|프리오픈|프리 오픈|PRE-?OPEN/i.test(c.couponName) || (bfNo.has(c.couponNo) && e.getTime() <= new Date("2026-11-22T23:59:59+09:00").getTime()) || Math.abs(e.getTime() - T_OPEN_MS) < 6e4 ? 1 : 0, n: c.couponName.replace(/\s+/g, " ").trim(), v, cond, exp: e.getMonth() + 1 + "/" + e.getDate(), cnt: r.tot,
       g: r.goods.filter((g) => cache[String(g.goodsNo)]).map((g) => ({ i: String(g.thumbnail).replace("https://image.msscdn.net", ""), l: cache[String(g.goodsNo)], n: g.goodsName, b: g.brandName, s: g.price, r: g.saleRate })),
     };
   }).filter((x) => x.g.length >= 3 || ((x.tz || x.bf) && x.g.length >= 1));
