@@ -81,7 +81,7 @@ window.__pfRun = async ({ P, flagged = [], target = 12, skip = [], deep = 1, add
     cand.sort((a, b) => a.total - b.total);
     const tiers = [[], [], [], [], [], []]; cand.forEach((s, i) => tiers[Math.min(5, Math.floor((i * 6) / cand.length))].push(s));
     for (const c of n.cells) {
-      const got = []; const extra = add > 0 ? c.d + 4 : Math.ceil(c.d * 1.5) + 2; // 누끼 실패 여유분 (AI 누끼 보완 후 실패 적음)
+      const got = []; const extra = add > 0 ? (sx === "F" ? c.d * 2 : c.d + 6) : Math.ceil(c.d * 2) + 3; // 누끼 실패 여유분 (AI 누끼 보완 후 실패 적음)
       const order = [c.t, c.t + 1, c.t - 1, c.t + 2, c.t - 2, c.t + 3, c.t - 3].filter((t) => t >= 0 && t < 6);
       for (const t of order) { while (tiers[t].length && got.length < extra) got.push(tiers[t].shift()); if (got.length >= extra) break; }
       out.push({ pk: c.pk, sx, ag: c.ag, cat, replace: c.replace, sets: got });
