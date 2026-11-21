@@ -1306,6 +1306,13 @@ const EP_LABELS = [
   { key: "루키", emoji: "🌱" },
 ];
 
+// 편마다 섹션 순서: 그 편 제품에서 먼저 나오는(sort_order 작은) 라벨이 앞으로 (예: 협찬 브랜드가 있는 힙함을 맨 앞에)
+function epOrder(items) {
+  const first = {};
+  (items || []).forEach((it, i) => { const o = it.sort_order != null ? Number(it.sort_order) : i; if (!(it.label in first) || o < first[it.label]) first[it.label] = o; });
+  return EP_LABELS.map((l, i) => ({ l, k: l.key in first ? first[l.key] : 1e6 + i })).sort((a, b) => a.k - b.k).map((x) => x.l);
+}
+
 async function renderPublicSite(root) {
   // ---------- UI 상태 저장/복원 (무신사 갔다 돌아와도 같은 화면) ----------
   const UI_KEY = "md-ui-state";
@@ -1573,7 +1580,7 @@ async function renderPublicSite(root) {
   }
 
   function sectionsHtml(ep, items) {
-    return EP_LABELS.map(({ key, emoji }) => {
+    return epOrder(items).map(({ key, emoji }) => {
       const list = items.filter((it) => it.label === key);
       if (!list.length) return "";
       const isPick = key === "옷쟁이";
@@ -1657,6 +1664,7 @@ async function renderPublicSite(root) {
     if (!backdrop.isConnected) return;
     const box = backdrop.querySelector("#ep-sections");
     box.innerHTML = items.length ? sectionsHtml(ep, items) : `<p class="ep-loading">아직 등록된 제품이 없어요.</p>`;
+    { const bar = backdrop.querySelector(".ep-labelbar"); if (bar) epOrder(items).forEach((l) => { const b = bar.querySelector(`button[data-jump="${l.key}"]`); if (b) bar.appendChild(b); }); }
     setupLabelBar(backdrop);
 
     // 무신사 갔다가 돌아왔을 때 보던 위치로
@@ -2277,7 +2285,7 @@ async function renderPublicSite(root) {
       try { items = await loadEpisodeItemsFromSupabase(ep.id); itemsCache.set(ep.id, items); }
       catch (e) { row.querySelector(".rec-scroll").innerHTML = `<p class="rec-loading">제품을 불러오지 못했어요.</p>`; return; }
     }
-    const labels = EP_LABELS.filter((l) => l.key === "옷쟁이" || items.some((it) => it.label === l.key));
+    const labels = epOrder(items).filter((l) => l.key === "옷쟁이" || items.some((it) => it.label === l.key));
     const chips = row.querySelector(".rec-chips");
     const scroll = row.querySelector(".rec-scroll");
     if (!items.length) { scroll.innerHTML = `<p class="rec-loading">아직 등록된 제품이 없어요.</p>`; return; }
