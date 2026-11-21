@@ -23,14 +23,17 @@ window.__spRun = async (brands) => {
         S.st = b + " " + c.couponName + " p" + p;
         let j; try { j = await (await fetch(`https://api.musinsa.com/api2/coupon/plp/v1/goods?gf=A&sortCode=SALE_ONE_WEEK_COUNT&couponNo=${c.couponNo}&couponKind=${c.couponKind}&size=100&caller=COUPON&page=${p}`, { credentials: "include" })).json(); } catch (e) { break; }
         const L = (j.data && (j.data.list || j.data.goods)) || []; if (!L.length) break;
-        L.forEach((g, i) => { if (g.isSoldOut || /키즈|KIDS/i.test(g.goodsName) || g.brandName !== b) return; const id = String(g.goodsNo); const pct = c.discountValue; const rank = (p - 1) * 100 + i; if (!goods[id] || pct > goods[id].p) goods[id] = { g, p: pct, no: c.couponNo, rank: Math.min(rank, goods[id] ? goods[id].rank : 1e9) }; else goods[id].rank = Math.min(goods[id].rank, rank); });
+        L.forEach((g, i) => { if (g.isSoldOut || /키즈|KIDS|여성|우먼/i.test(g.goodsName) || g.genderCode === "WOMEN" || g.brandName !== b) return; const id = String(g.goodsNo); const pct = c.discountValue; const rank = (p - 1) * 100 + i; if (!goods[id] || pct > goods[id].p) goods[id] = { g, p: pct, no: c.couponNo, rank: Math.min(rank, goods[id] ? goods[id].rank : 1e9) }; else goods[id].rank = Math.min(goods[id].rank, rank); });
         if (L.length < 100) break;
       }
     }
-    const kind = (n) => (/눕시|패딩|다운|온볼|파카|푸퍼|구스|헤비/.test(n) && !/뮬|부티|슬리퍼|슈즈|베스트/.test(n) ? 0 : /자켓|재킷|플리스|아노락|바람막이|가디건|코트/.test(n) ? 1 : 2);
+    const kind = (n) => (/눕시|패딩|다운|온볼|파카|푸퍼|구스|헤비/.test(n) && !/뮬|부티|부띠|슬리퍼|슬립온|슈즈|부츠| 목 |베스트|장갑|모자|캡|머플러/.test(n) ? 0 : /자켓|재킷|플리스|아노락|바람막이|가디건|코트/.test(n) ? 1 : 2);
     const arr = Object.values(goods).map((x) => { const g = x.g; const nor = g.normalPrice || g.price; const cpn = Math.round(g.price * (1 - x.p / 100) / 10) * 10; return { id: String(g.goodsNo), brand: g.brandName, name: g.goodsName, img: String(g.thumbnail || "").replace("/thumbnails/images/", "/images/"), price: nor, sale: g.price, rate: g.saleRate || 0, p: x.p, cpn, tot: nor ? Math.round((1 - cpn / nor) * 100) : x.p, rv: g.reviewCount || 0, k: kind(g.goodsName), rank: x.rank, cno: x.no }; });
     // 패딩 먼저(인기순), 그다음 자켓·플리스, 나머지 — 섞어서 30개
-    const by = (k, n) => arr.filter((x) => x.k === k).sort((a, b2) => a.rank - b2.rank).slice(0, n);
+    // 쿠폰 15% 이상이거나 합쳐서 25% 이상 싸지는 것만, 인기(판매순)와 할인 폭을 같이 봄
+    const good = (x) => x.p >= 15 || x.tot >= 25;
+    const sc = (x) => x.rank - x.tot * 4;
+    const by = (k, n) => arr.filter((x) => x.k === k && good(x)).sort((a, b2) => sc(a) - sc(b2)).slice(0, n);
     const pick = [...by(0, 14), ...by(1, 10), ...by(2, 6)];
     for (const x of pick) {
       if (cache[x.id]) continue;
