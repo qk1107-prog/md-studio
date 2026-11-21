@@ -1951,9 +1951,10 @@ async function renderPublicSite(root) {
     bd.querySelector("#cpz-all").addEventListener("click", (e) => { if (e.target.closest('a[href^="#cp="]')) cpFromList = true; });
     draw();
   }
-  async function openSpotAll(brand) {
+  async function openSpotAll(brand, tries) {
+    tries = tries || 0;
     const o = (() => { try { return (((ADMIN && ADMIN.bf && ADMIN.bf.spot) || {}).brands || []).find((x) => x.brand === brand); } catch (e) { return null; } })();
-    if (!o || !(o.all || []).length) { history.replaceState(null, "", location.pathname + location.search); return; }
+    if (!o || !(o.all || []).length) { if (tries < 16 && location.hash.startsWith("#spa=")) { setTimeout(() => openSpotAll(brand, tries + 1), 500); return; } history.replaceState(null, "", location.pathname + location.search); return; }
     const won2 = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
     const card = (x) => `<a class="bf-item" href="${esc(curl(x.l))}" target="_blank" rel="noopener">
           <div class="im"><img src="${esc(safeImg(x.img))}" loading="lazy" alt="" referrerpolicy="no-referrer"><span class="tg">쿠폰 ${esc(x.p)}%</span></div>
