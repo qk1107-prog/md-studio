@@ -2905,7 +2905,10 @@ async function renderPublicSite(root) {
       // 프리오픈 쿠폰 칸에 나오는 브랜드(노스페이스 등)는 그 칸으로 몰아서 여기선 뺌 (순서는 그대로)
       const spOut = new Set(((BFD.spot || {}).brands || []).filter((o) => (o.items || []).length >= 3).map((o) => o.brand));
       const seenTs = new Set();
-      const items = (SRC.items || []).filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link) || spOut.has(p.brand)) return false; seenTs.add(p.link); return true; }).slice(0, 50);
+      // 보고방이 카톡방에 보고한 TOP 10(top: 1~10)은 보고 순서대로 맨 앞, 나머지는 올린 순서 그대로 뒤에
+      const RAW = SRC.items || [];
+      const ORD = [...RAW.filter((p) => p && Number(p.top) > 0).sort((a, b) => Number(a.top) - Number(b.top)), ...RAW.filter((p) => p && !(Number(p.top) > 0))];
+      const items = ORD.filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link) || spOut.has(p.brand)) return false; seenTs.add(p.link); return true; }).slice(0, 50);
       let box = root.querySelector("#tsz");
       if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
@@ -2915,7 +2918,7 @@ async function renderPublicSite(root) {
       const endTxt = (t) => { if (!t) return "타임세일"; const k = kp(t); const h = Math.round((t - now) / 36e5); return h < 24 ? `⏰ ${h < 1 ? "곧" : h + "시간 뒤"} 마감` : `~${k.m}/${k.d} ${k.h}시`; };
       const card = (p) => {
         const kind = p.kind || endTxt(p.end);
-        const fire = Number(p.hot) >= 2 ? " 🔥🔥" : Number(p.hot) === 1 ? " 🔥" : "";
+        const fire = "";
         const sale = Number(p.sale) || 0, price = Number(p.price) || 0, rate = Number(p.rate) || 0;
         const isCp = /쿠폰/.test(p.kind || "");
         const img = safeImg(p.img);
@@ -2988,6 +2991,11 @@ async function renderPublicSite(root) {
     }
     function render() {
       setTimeout(() => { renderTs(); renderHot(); }, 0);
+      // 페이지를 열어둔 채로 있어도 보고방(매시 정각)·이 방(매시 25분) 업데이트가 바로 보이게 3분마다 다시 받기
+      if (!window.__tsPoll) window.__tsPoll = setInterval(() => {
+        if (document.hidden) return;
+        sdFetch("main").then((v) => { if (!v || !v.bf) return; const o = BFD.dm && BFD.dm.at, t = BFD.ts && BFD.ts.at; ["dm", "ts", "spot", "hot"].forEach((k) => { if (v.bf[k]) BFD[k] = v.bf[k]; }); if ((BFD.dm && BFD.dm.at) !== o || (BFD.ts && BFD.ts.at) !== t) { renderTs(); renderHot(); } }).catch(() => {});
+      }, 180000);
       const now = nowFn();
       if (now >= T_END) { phase = "end"; zone.innerHTML = `<p class="bf-empty">이번 무진장은 끝났어요. 다음 블프 때 다시 정리할게요!</p>`; return; }
       const flag = preview ? `<p class="bf-preview-flag">● 시안 미리보기 (${preview === "pre" ? "오픈 전" : "오픈 후"})</p>` : "";
