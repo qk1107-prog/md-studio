@@ -2446,11 +2446,13 @@ async function renderPublicSite(root) {
     // ---- 블프 직전가 비교 ----
     const gidOf = (p) => { const m = String((p && p.img) || "").match(/\/(\d{5,9})\/(?:detail_)?\d{5,9}_/); return m ? m[1] : (p && p.id ? String(p.id) : ""); };
     const PRE_SNAPS = (BFD.pre && BFD.pre.snaps) || {};
-    const PRE_KEY = Object.keys(PRE_SNAPS).filter((k) => k <= "2026-11-20").sort().pop() || "";
+    // 본편(11/22 19시) 뒤에는 11/21까지 적어둔 가격도 직전가로 써요 (꿀템·타임세일 상품까지 비교되게)
+    const PRE_CUT = Date.now() >= Date.UTC(2026, 10, 22, 10, 0) ? "2026-11-21" : "2026-11-20";
+    const PRE_KEY = Object.keys(PRE_SNAPS).filter((k) => k <= PRE_CUT).sort().pop() || "";
     // 블프 직전가: 11/20 이전 스냅샷들 중 상품별 가장 낮은 값 (블프 직전에 가격 올린 걸 걸러내요)
     const PRE = (() => {
       const o = {};
-      Object.keys(PRE_SNAPS).filter((k) => k <= "2026-11-20").forEach((k) => {
+      Object.keys(PRE_SNAPS).filter((k) => k <= PRE_CUT).forEach((k) => {
         const s = PRE_SNAPS[k] || {};
         Object.keys(s).forEach((id) => { const v = s[id]; if (!v || !v[0]) return; if (!o[id] || Number(v[0]) < Number(o[id][0])) o[id] = [v[0], Math.max(Number(v[1] || 0), Number((o[id] && o[id][1]) || 0))]; });
       });
@@ -2833,7 +2835,7 @@ async function renderPublicSite(root) {
       const rise = (H.rise || []).filter((x) => x && x.link);
       if (hotView === -2 && !rise.length) hotView = -1;
       const full = (hotView === -2 ? rise : hotView < 0 || !cats[hotView] ? mix : cats[hotView].items);
-      const LIM = hotView >= 0 ? 6 : 8, list = (hotOpen ? full : full.slice(0, LIM)).map((p) => { const r = Number(p.rate) || 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
+      const LIM = hotView >= 0 ? 6 : 8, list = (hotOpen ? full : full.slice(0, LIM)).map((p) => { const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
       const sig = (H.at || "") + hotView + list.length;
       const fresh = box.dataset.sig !== sig; box.dataset.sig = sig;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 가장 핫한 <em>아이템 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small></div>
