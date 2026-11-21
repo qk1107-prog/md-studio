@@ -1834,7 +1834,22 @@ async function renderPublicSite(root) {
   function renderSpot(L) {
     const BR = ["노스페이스", "아디다스", "나이키", "뉴발란스", "어그", "살로몬", "아크테릭스"];
     const won2 = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
-    const blocks = BR.map((b) => {
+    const SP = (() => { try { return ((ADMIN && ADMIN.bf && ADMIN.bf.spot) || {}).brands || []; } catch (e) { return []; } })();
+    const spBlocks = SP.filter((o) => (o.items || []).length >= 3).slice(0, 2).map((o) => `<div class="spz-box">
+        <p class="spz-t">🎟️ ${esc(o.brand)} <em>프리오픈 쿠폰 최대 ${esc(o.max)}%</em><span class="cpz-live"><i></i>LIVE</span></p>
+        <p class="spz-k">~${esc(o.exp || "")} 본편 전까지 · 쿠폰 적용 상품 ${Number(o.total || 0).toLocaleString("ko-KR")}개 중 패딩 ${esc(o.pad || 0)}개</p>
+        <div class="hotz-bar"><i></i></div>
+        <div class="spz-chips">${(o.coupons || []).map((c) => `<a href="#cp=${esc(c.no)}"><b>${esc(c.v)}</b> 쿠폰 적용템 →</a>`).join("")}</div>
+        <div class="tsz-scroll">${o.items.map((x) => `<a class="bf-item" href="${esc(safeUrl(x.link) || "#")}" target="_blank" rel="noopener">
+          <div class="im"><img src="${esc(safeImg(x.img))}" loading="lazy" alt="" referrerpolicy="no-referrer"><span class="tg">쿠폰 ${esc(x.p)}%</span></div>
+          <p class="br">${esc(x.brand)}</p><p class="nm">${esc(x.name)}</p>
+          <p class="pt"><s>${esc(won2(x.price))}</s></p>
+          <p class="pr"><i>${esc(x.tot)}%</i>${esc(won2(x.cpn))}</p>
+          <p class="spz-after">쿠폰 적용가 · 지금 ${esc(won2(x.sale))}</p>
+        </a>`).join("")}</div>
+      </div>`).join("");
+    const spHave = new Set(SP.filter((o) => (o.items || []).length >= 3).map((o) => o.brand));
+    const blocks = spBlocks + BR.filter((b) => !spHave.has(b)).map((b) => {
       const cps = L.filter((c) => c.tz && c.n.includes(b) && !/키즈/.test(c.n) && (c.g || []).length);
       if (!cps.length) return "";
       const pct = (c) => (/%$/.test(c.v) ? parseFloat(c.v) : 0);
