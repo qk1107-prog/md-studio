@@ -1,7 +1,7 @@
 // 스타터팩·레벨업 팩 빈칸 채우기 (www.musinsa.com 탭에서 실행)
 // 입력: window.__pfRun({ P: packs 값, flagged: [gno...], target: 12 })
 // 결과: window.__pfData (JSON 문자열: { cells:[{pk,sx,ag,cat,replace,sets}], alts:{gno:[url]} }), 노란 COPY 버튼(id __pfb)
-window.__pfRun = async ({ P, flagged = [], target = 12, skip = [], deep = 1, add = 0 }) => {
+window.__pfRun = async ({ P, flagged = [], target = 12, skip = [], deep = 1, add = 0, only = null }) => {
   // add > 0 이면 모든 칸에 코디를 add개씩 더 (매일 추가용), 아니면 target 개 미만인 칸만 채움
   const S = (window.__pf = { st: "start", log: [] });
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -23,6 +23,7 @@ window.__pfRun = async ({ P, flagged = [], target = 12, skip = [], deep = 1, add
   }
   const cats = { M: ["코트", "패딩", "자켓", "MA-1", "캐주얼", "스트릿", "미니멀", "시크", "포멀"], F: ["코트", "패딩", "자켓", "MA-1", "캐주얼", "스트릿", "미니멀", "걸리시", "시크"] };
   for (const sx of ["M", "F"]) for (const cat of cats[sx]) {
+    if (only && only !== sx) continue; // only: "M" 또는 "F" 한쪽만
     const replace = false;
     const cells = [];
     PKS.forEach((pk, pi) => AGES.forEach((ag, ai) => { const c = (((P[pk][sx] || {})[ag]) || []).find((x) => x.cat === cat); const have = c ? c.sets.length : 0; if (add > 0) cells.push({ pk, sx, ag, cat, t: pi * 3 + ai, d: add, replace }); else if (have < target) cells.push({ pk, sx, ag, cat, t: pi * 3 + ai, d: target - have, replace }); }));
