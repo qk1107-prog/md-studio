@@ -2908,7 +2908,7 @@ async function renderPublicSite(root) {
       // 보고방이 카톡방에 보고한 TOP 10(top: 1~10)은 보고 순서대로 맨 앞, 나머지는 올린 순서 그대로 뒤에
       const RAW = SRC.items || [];
       const ORD = [...RAW.filter((p) => p && Number(p.top) > 0).sort((a, b) => Number(a.top) - Number(b.top)), ...RAW.filter((p) => p && !(Number(p.top) > 0))];
-      const items = ORD.filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link) || spOut.has(p.brand)) return false; seenTs.add(p.link); return true; }).slice(0, 50);
+      const items = ORD.filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link) || (spOut.has(p.brand) && !(Number(p.top) > 0))) return false; seenTs.add(p.link); return true; }).slice(0, 50);
       let box = root.querySelector("#tsz");
       if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
