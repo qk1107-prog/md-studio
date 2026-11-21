@@ -3515,7 +3515,7 @@ async function renderPublicSite(root) {
     }
   } catch (e) {}
   window.addEventListener("hashchange", routeFromHash);
-  if (/^#(ep|st|ct|ca|br|sp|lp|look|looks|cp)=/.test(location.hash) || location.hash === "#bp" || location.hash === "#lf" || location.hash === "#lu" || location.hash === "#cps") routeFromHash();
+  if (/^#(ep|st|ct|ca|br|sp|lp|look|looks|cp|spa)=/.test(location.hash) || location.hash === "#bp" || location.hash === "#lf" || location.hash === "#lu" || location.hash === "#cps") routeFromHash();
   loadCoupons().then(renderCouponStrip);
   finishIntro();
 
