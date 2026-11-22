@@ -3094,7 +3094,7 @@ async function renderPublicSite(root) {
       const day = (BFD.days && BFD.days[key]) || {};
       const R = BFD.r1 || {};
       const hot = (day.hot || [...(day.hotA || []), ...(day.hotB || [])]).filter((p) => !noDeal(p));
-      const br = []; const bl = (day.brands || []).map((b) => (b.items || []).slice()); for (let r = 0; r < 8; r++) bl.forEach((L) => { if (L[r]) br.push(L[r]); });
+      const br = []; const bl = (day.brands || []).map((b) => (b.items || []).slice()); for (let r = 0; r < 12; r++) bl.forEach((L) => { if (L[r]) br.push(L[r]); });
       const sg = []; const sl = (BFD.sigPreview || []).map((g) => (g.items || []).filter((p) => !noDeal(p))); for (let r = 0; r < 80; r++) sl.forEach((L) => { if (L[r] && !(sg.length && sg[sg.length - 1].brand === L[r].brand)) sg.push(L[r]); else if (L[r]) sg.push(L[r]); });
       const T = [["sig", "💎 시그니처특가", sg, "역대급 무진장 시그니처특가"], ["hot", "🔥 하루특가", hot, "오늘 자정까지"], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), "오늘의 브랜드"], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"]].filter((t) => t[2].length);
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
