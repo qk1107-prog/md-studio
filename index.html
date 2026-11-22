@@ -1336,10 +1336,10 @@ function mdGate(G) {
 @keyframes gtb{50%{opacity:.25}}
 #tab-bf .gt-card .gt-cd{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;margin:0 0 4px}
 #tab-bf .gt-card small{display:block;font-size:11px;color:#a39d93}
-#tab-bf .gt-card .gt-yt{display:inline-block;margin-top:12px;font-size:12px;color:#6f6a62;text-decoration:none;border-bottom:1px solid #d9d3c9;padding-bottom:1px}`;
+#tab-bf .gt-card .gt-yt{display:inline-block;margin-top:10px;font-size:11px;color:#6f6a62;text-decoration:none;border-bottom:1px solid #d9d3c9;padding-bottom:1px}`;
   document.head.appendChild(st);
   const card = document.createElement("div"); card.className = "gt-card";
-  card.innerHTML = `<div class="gt-lk">🔒</div><h3>${e(G.title || "본편 꿀템 AI 정리 중")}</h3><p>${e(G.sub || "19시 무진장 본편 오픈과 동시에 광만두가 고른 본편 꿀템이 공개돼요")}</p><span class="gt-bd">${e(G.badge || "선착순 2,000명")}</span>${G.busy ? `<p class="gt-busy"><i></i>${e(G.busy)}</p>` : ""}<div class="gt-cd" id="gt-t">--:--</div><small>${e(G.foot || "실착·릴스 꿀템 등 다른 탭은 지금도 볼 수 있어요")}</small>${/^https:\/\/(youtu\.be|www\.youtube\.com)\//.test(G.yt || "") ? `<a class="gt-yt" href="${e(G.yt)}" target="_blank" rel="noopener">▶ 유튜브 롱폼은 미리 올려놨어요 →</a>` : ""}`;
+  card.innerHTML = `<div class="gt-lk">🔒</div><h3>${e(G.title || "본편 꿀템 AI 정리 중")}</h3><p>${e(G.sub || "19시 무진장 본편 오픈과 동시에 광만두가 고른 본편 꿀템이 공개돼요")}</p><span class="gt-bd">${e(G.badge || "선착순 2,000명")}</span>${G.busy ? `<p class="gt-busy"><i></i>${e(G.busy)}</p>` : ""}<div class="gt-cd" id="gt-t">--:--</div><small>${e(G.foot || "실착·릴스 꿀템 등 다른 탭은 지금도 볼 수 있어요")}</small>${G.yt ? `<a class="gt-yt" href="#lf2">▶ 유튜브 롱폼은 상단에 미리 올려놨어요</a>` : ""}`;
   const pad = (n) => String(n).padStart(2, "0");
   let iv = 0;
   const attach = () => { const tb = document.getElementById("tab-bf"); if (!tb) return false; if (!tb.contains(card)) tb.prepend(card); tb.classList.add("gt-lock"); return true; };
