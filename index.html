@@ -3127,7 +3127,7 @@ async function renderPublicSite(root) {
       const tab = root.querySelector("#tab-bf"); if (!tab) return;
       const top = root.querySelector("#bf-topcard");
       let ref = top && top.parentNode === tab ? top : null;
-      [root.querySelector("section.aw"), root.querySelector("#cpz"), root.querySelector("#tsz"), root.querySelector("#hotz"), root.querySelector("#opz"), root.querySelector("#bf-pad")].forEach((el) => {
+      [root.querySelector("section.aw"), root.querySelector("#cpz"), root.querySelector("#tsz"), root.querySelector("#hotz"), root.querySelector("#opz"), root.querySelector("#bf-pad"), root.querySelector("#plz")].forEach((el) => {
         if (!el) return;
         if (ref) { if (ref.nextSibling !== el) ref.after(el); } else if (tab.firstChild !== el) tab.prepend(el);
         ref = el;
