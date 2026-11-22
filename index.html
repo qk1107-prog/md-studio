@@ -3127,13 +3127,17 @@ async function renderPublicSite(root) {
       const tab = root.querySelector("#tab-bf"); if (!tab) return;
       const top = root.querySelector("#bf-topcard");
       let ref = top && top.parentNode === tab ? top : null;
-      [root.querySelector("section.aw"), root.querySelector("#cpz"), root.querySelector("#tsz"), root.querySelector("#hotz"), root.querySelector("#opz"), root.querySelector("#bf-pad"), root.querySelector("#plz")].forEach((el) => {
+      const q = (x) => root.querySelector(x);
+      // 블프 칸이 다시 그려지면 새로 생긴 것만 남기고 예전에 옮겨둔 건 지움
+      const one = (sel) => { const L = [...root.querySelectorAll("#tab-bf " + sel)]; if (L.length < 2) return L[0] || null; const z = L.find((x) => x.closest(".bf-zone")) || L[L.length - 1]; L.forEach((x) => { if (x !== z) x.remove(); }); return z; };
+      [q("section.aw"), q("#cpz"), q("#tsz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), q("#opz"), one("#bf-pad"), one("#bf-best"), q("#plz")].forEach((el) => {
         if (!el) return;
+        // 원래 블프 칸 안에서 클릭을 받던 칸은 옮긴 뒤에도 클릭되게
+        if (window.__bfZoneClick && !el.__bound && el.id !== "opz" && el.id !== "cpz" && el.id !== "tsz" && el.id !== "hotz" && el.id !== "plz" && !el.classList.contains("aw")) { el.__bound = true; el.addEventListener("click", window.__bfZoneClick); }
         if (ref) { if (ref.nextSibling !== el) ref.after(el); } else if (tab.firstChild !== el) tab.prepend(el);
         ref = el;
       });
       const pad = root.querySelector("#bf-pad");
-      if (pad && window.__bfZoneClick && !pad.__bound) { pad.__bound = true; pad.addEventListener("click", window.__bfZoneClick); }
       if (pad && !pad.querySelector("[data-padall]")) { const b = document.createElement("button"); b.type = "button"; b.className = "pad-all"; b.dataset.padall = "1"; b.textContent = "전체보기 →"; pad.prepend(b); }
       if (root.querySelector("#opz")) ["bf-sig", "bf-hot", "bf-brand", "bf-bday"].forEach((id) => { const el = root.querySelector("#" + id); if (el) el.style.display = "none"; });
     }
@@ -3307,6 +3311,8 @@ async function renderPublicSite(root) {
       if (lm) { liveMode = lm.dataset.m; lm.parentNode.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === lm)); const c = kp(nowFn()); zone.querySelector("#bf-live-list").innerHTML = liveList(`${c.m}/${c.d}`); return; }
       if (e.target.closest("#bf-live-all")) { liveAll = true; const c = kp(nowFn()); zone.querySelector("#bf-live-list").innerHTML = liveList(`${c.m}/${c.d}`); return; }
       const go = e.target.closest("[data-go]");
+      const MAPT = { "bf-sig": "sig", "bf-hot": "hot", "bf-brand": "brand", "bf-bday": "brand" };
+      if (go && MAPT[go.dataset.go] && root.querySelector("#opz")) { const t = root.querySelector(`#opz [data-r1="${MAPT[go.dataset.go]}"]`); if (t) t.click(); root.querySelector("#opz").scrollIntoView({ behavior: "smooth", block: "start" }); return; }
       if (go) { const el = root.querySelector("#" + go.dataset.go); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
     };
     zone.addEventListener("click", zoneClick);
@@ -4056,6 +4062,7 @@ renderPublicSite(ROOT_EL);
 #app-root .opz-grid .bf-item .pr { font-size: 12px; }
 #app-root .opz-grid .bf-item .pt, #app-root .opz-grid .bf-item .rv, #app-root .opz-grid .bf-item .cm, #app-root .opz-grid .bf-item .preal { font-size: 9.5px; }
 #app-root #bf-pad { position: relative; }
+#app-root .bf-hub .bf-stamp { display: none; }
 #app-root #bf-pad .pad-all { position: absolute; right: 0; top: 2px; z-index: 2; border: 0; background: none; font-size: 12px; font-weight: 800; color: #111; padding: 6px 2px; cursor: pointer; }
 #app-root .opz-grid .bf-item { width: auto; }
 #app-root .opz-more { display: block; width: 100%; margin: 12px 0 0; padding: 12px 0; border: 1.5px solid #141312; border-radius: 12px; background: #fff; font-weight: 800; font-size: 14px; color: #141312; }
