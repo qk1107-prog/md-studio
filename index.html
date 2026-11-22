@@ -1316,9 +1316,9 @@ function epOrder(items) {
 
 // ---------- 오픈 대기 화면 (main.gate = {from, until, ...}) · ?gate=1 이면 미리보기 ----------
 function mdGate(G) {
-  const PV = /[?&]gate=1/.test(location.search);
+  const PV = /[?&]gate=(1|demo)/.test(location.search);
   G = G || {}; if (!G.until && !PV) return;
-  const from = G.from ? new Date(G.from).getTime() : 0, until = G.until ? new Date(G.until).getTime() : Date.now() + 30 * 60000;
+  const from = G.from ? new Date(G.from).getTime() : 0, until = /[?&]gate=demo/.test(location.search) ? Date.now() + 29 * 60000 + 41000 : G.until ? new Date(G.until).getTime() : Date.now() + 30 * 60000;
   const now = Date.now();
   if (!PV && !(G.on !== false && now >= from && now < until)) { if (now < from && from - now < 6 * 3600000) setTimeout(() => mdGate(G), from - now + 500); return; }
   if (document.getElementById("md-gate")) return;
@@ -2421,11 +2421,11 @@ async function renderPublicSite(root) {
   const LF2 = (ADMIN && ADMIN.longform2) || {};
   const LF2_ITEMS = Array.isArray(LF2.items) ? LF2.items : [];
   const LF2_ON = LF_PV || (LF2.on !== false && safeUrl(LF2.url || "") && (!LF2.from || Date.now() >= Date.parse(LF2.from)));
-  const lfCard = (href, th, label, title, n) => `<a class="lf-card" href="${href}"><span class="lf-th"><img src="${esc(th)}" alt="" loading="lazy"><i>▶</i></span><span class="lf-tx"><b>${label}</b><strong>${esc(title)}</strong><em>${n ? `영상 + 나온 제품 ${n}개 보기 →` : "보러가기 →"}</em></span></a>`;
+  const lfCard = (href, th, label, title, n) => `<a class="lf-card" href="${href}"><span class="lf-th"><img src="${esc(th)}" alt="" loading="lazy"><i>▶</i></span><span class="lf-tx"><b>${label}</b><strong>${esc(title)}</strong><em>${n ? `제품 ${n}개 보기 →` : "보러가기 →"}</em></span></a>`;
   const LF1_ON = ((LF_URL || LF_ITEMS.length) && (LF.on !== false)) || LF_PV;
   const LF_HTML = LF1_ON || LF2_ON
     ? (LF2_ON && LF1_ON
-      ? `<div class="lf-bar two">${lfCard("#lf2", safeImg(LF2.thumbWide || "") || "/img/longform2-thumb-wide.jpg", "NEW 영상 · 2편", LF2.title || "MZ 겨울 패딩", LF2_ITEMS.length)}${lfCard("#lf", safeImg(LF.thumbWide || "") || "/img/longform-thumb-wide.jpg", "1편", LF.title || "무신사 블프 총정리", LF_ITEMS.length)}</div>`
+      ? `<div class="lf-bar two">${lfCard("#lf2", safeImg(LF2.thumb || "") || "/img/longform2-thumb.jpg", "NEW · 2편", LF2.title || "MZ 겨울 패딩", LF2_ITEMS.length)}${lfCard("#lf", safeImg(LF.thumb || "") || "/img/longform-thumb.jpg", "1편", LF.title || "무신사 블프 총정리", LF_ITEMS.length)}</div>`
       : `<div class="lf-bar">${LF2_ON ? lfCard("#lf2", safeImg(LF2.thumb || "") || "/img/longform2-thumb.jpg", "NEW 영상 · 2편", LF2.title || "MZ 겨울 패딩", LF2_ITEMS.length) : ""}${LF1_ON ? lfCard("#lf", safeImg(LF.thumb || "") || "/img/longform-thumb.jpg", "NEW 영상", LF.title || "무신사 블프 총정리", LF_ITEMS.length) : ""}</div>`)
     : "";
   const BF_LOCKED = BF_ON && !BF_PREVIEW && !(((ADMIN && ADMIN.bf) || {}).on) && Date.now() < BF_UNLOCK_AT;
@@ -3950,10 +3950,11 @@ renderPublicSite(ROOT_EL);
 #app-root .plz-exp b { color: #ff3d3f; font-weight: 800; }
 #app-root .plz-exp small { display: block; color: #8b857c; font-size: 11px; margin-top: 2px; }
 #app-root .lf-bar.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-#app-root .lf-bar.two .lf-card { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 6px 6px 8px; min-width: 0; }
-#app-root .lf-bar.two .lf-th { width: 100%; height: auto; aspect-ratio: 16 / 9; }
-#app-root .lf-bar.two .lf-tx { padding: 0 3px; }
-#app-root .lf-bar.two .lf-tx strong { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 12px; line-height: 1.3; }
+#app-root .lf-bar.two .lf-card { display: flex; align-items: center; gap: 7px; padding: 5px 8px 5px 5px; min-width: 0; }
+#app-root .lf-bar.two .lf-th { width: 44px; height: 44px; }
+#app-root .lf-bar.two .lf-th i { width: 15px; height: 15px; font-size: 7px; right: 3px; bottom: 3px; }
+#app-root .lf-bar.two .lf-tx em { font-size: 9.5px; }
+#app-root .lf-bar.two .lf-tx strong { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 11px; line-height: 1.28; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
