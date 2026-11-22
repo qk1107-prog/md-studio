@@ -2978,7 +2978,7 @@ async function renderPublicSite(root) {
       if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
       if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsmore]")) { tsOpen = !tsOpen; renderTs(); if (!tsOpen) box.scrollIntoView({ block: "start" }); } }); }
-      const opA = root.querySelector("#opz") || cp;
+      const mv = root.querySelectorAll(".mvup"); const opA = (mv.length ? mv[mv.length - 1] : null) || root.querySelector("#opz") || cp;
       if (opA) { if (opA.nextSibling !== box) opA.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const endTxt = (t) => { if (!t) return "타임세일"; const k = kp(t); const h = Math.round((t - now) / 36e5); return h < 24 ? `⏰ ${h < 1 ? "곧" : h + "시간 뒤"} 마감` : `~${k.m}/${k.d} ${k.h}시`; };
@@ -3113,6 +3113,9 @@ async function renderPublicSite(root) {
         <div class="${showAll ? "opz-grid" : "tsz-scroll"}">${cards}</div>
         ${cur[2].length > 20 ? `<button type="button" class="opz-more" data-r1all="${r1Tab}">${esc(cur[1].replace(/^\S+\s/, ""))} 전체보기 → <b>${cur[2].length}개</b></button>` : ""}`;
       window.__r1T = T;
+      // 블프 겨울 준비·하루특가·브랜드특가를 꿀템 정리 바로 밑으로
+      let ref = box; ["bf-pad", "bf-hot", "bf-brand"].forEach((id) => { const el = root.querySelector("#" + id); if (el) { el.classList.add("mvup"); if (ref.nextSibling !== el) ref.after(el); ref = el; } });
+      const ts = root.querySelector("#tsz"); if (ts && ref !== box && ref.nextSibling !== ts) ref.after(ts);
     }
     // 전체보기: 코디처럼 따로 열리는 페이지(종류별 칩 + 2칸 그리드)
     function openR1(key) {
@@ -3257,7 +3260,7 @@ async function renderPublicSite(root) {
           ${cartSec()}
           ${sigSec(true, day)}
           ${padSec()}
-          <div class="bf-sec" id="bf-hot">${secHead("🔥", "오늘의 하루특가", "오늘 자정에 끝나요")}${curated("오늘 하루특가 전체 중 인기·할인 좋은 꿀템만 골랐어요")}${cartNote("하루특가는 오늘 자정에 끝나요. 장바구니에 담고 쿠폰까지 먹이면 끝!")}${priceNote()}${chipsGrid("hot", hotGroups, true)}</div>
+          <div class="bf-sec" id="bf-hot">${secHead("🔥", "오늘의 하루특가", "오늘 자정에 끝나요")}${curated("오늘 하루특가 전체 중 인기·할인 좋은 꿀템만 골랐어요")}${cartNote("하루특가는 오늘 자정에 끝나요. 장바구니에 담고 쿠폰까지 먹이면 끝!")}${priceNote()}${chipsGrid("hot", hotGroups, false)}</div>
           <div class="bf-sec" id="bf-brand">${secHead("🏷️", "오늘의 브랜드특가", "브랜드 누르면 꿀템만")}${curated("오늘 열린 브랜드 상품 중 꿀템만 골랐어요")}${cartNote()}${chipsGrid("brand", brands.map((b) => ({ label: b.brand, sub: b.rate ? `~${b.rate}%` : "", items: b.items || [] })), false)}</div>
           ${brandDaySec(now)}${benefitSec(now)}${bestSec()}${tipsSec()}${liveSec(todayKey)}`;
       }
