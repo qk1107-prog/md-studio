@@ -2620,6 +2620,13 @@ async function renderPublicSite(root) {
     };
     const cd = (until) => `<span data-cd="${until}"></span>`;
 
+    // 본편 오픈 후 직전가랑 같은데 쿠폰도 없는 상품은 추천 칸에서 뺌
+    function noDeal(p) {
+      if (nowFn() < T_OPEN) return false;
+      const id = gidOf(p), pre = PRE[id] ? Number(PRE[id][0]) : 0; const cur = priceNow(p, id);
+      if (!pre || !cur || cur < pre) return false;
+      const c = Number(p.cpn) || 0; return !(c && c < cur);
+    }
     function priceHtml(p) {
       const id = gidOf(p), pre = PRE[id] ? Number(PRE[id][0]) : 0;
       const live = nowFn() >= T_TEASE;
@@ -2633,7 +2640,7 @@ async function renderPublicSite(root) {
           const pctN = Math.round((1 - cur / base) * 100);
           return `<p class="pt"><s>${esc(won(base))}</s><b class="pbf">블프가</b></p><p class="pr"><i>${pctN}%</i>${esc(won(cur))}</p><p class="preal">직전가보다 -${pct}%</p>`;
         }
-        if (nowFn() >= T_OPEN) return `<p class="pr">${esc(won(cur))}</p><p class="pt same">직전가랑 같아요</p>`;
+        if (nowFn() >= T_OPEN) { const c = Number(p.cpn) || 0; if (c && c < cur) return `<p class="pt"><s>${esc(won(cur))}</s><b class="pbf">쿠폰가</b></p><p class="pr"><i>${Math.round((1 - c / cur) * 100)}%</i>${esc(won(c))}</p>`; return `<p class="pr">${esc(won(cur))}</p>`; }
         // 티징 기간(11/20~22)엔 아직 블프가가 안 열린 상품이 많아서, 평소 표시(정가 취소선+할인가) 그대로
       }
       // 평소: 정가 취소선 + 할인율·할인가 (정가는 직전 스냅샷 → 없으면 할인율로 역산)
@@ -2954,7 +2961,7 @@ async function renderPublicSite(root) {
       // 보고방이 카톡방에 보고한 TOP 10(top: 1~10)은 보고 순서대로 맨 앞, 나머지는 올린 순서 그대로 뒤에
       const RAW = SRC.items || [];
       const ORD = [...RAW.filter((p) => p && Number(p.top) > 0).sort((a, b) => Number(a.top) - Number(b.top)), ...RAW.filter((p) => p && !(Number(p.top) > 0))];
-      const items = ORD.filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link) || (spOut.has(p.brand) && !(Number(p.top) > 0))) return false; seenTs.add(p.link); return true; }).slice(0, 50);
+      const items = ORD.filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link) || (spOut.has(p.brand) && !(Number(p.top) > 0))) return false; if (now >= T_OPEN && !(Number(p.rate) > 0) && !(Number(p.price) > Number(p.sale)) && !/쿠폰/.test(p.kind || "") && !(Number(p.cpn) > 0)) return false; seenTs.add(p.link); return true; }).slice(0, 50);
       let box = root.querySelector("#tsz");
       if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
@@ -3073,9 +3080,9 @@ async function renderPublicSite(root) {
       const key = (() => { const k = kp(now); return "2026-" + pad(k.m) + "-" + pad(k.d); })();
       const day = (BFD.days && BFD.days[key]) || {};
       const R = BFD.r1 || {};
-      const hot = day.hot || [...(day.hotA || []), ...(day.hotB || [])];
+      const hot = (day.hot || [...(day.hotA || []), ...(day.hotB || [])]).filter((p) => !noDeal(p));
       const br = []; const bl = (day.brands || []).map((b) => (b.items || []).slice()); for (let r = 0; r < 8; r++) bl.forEach((L) => { if (L[r]) br.push(L[r]); });
-      const T = [["hot", "🔥 하루특가", hot, "오늘 자정까지"], ["brand", "🏷️ 브랜드특가", br, "오늘의 브랜드"], ["outer", "🧥 아우터", R.outer || [], "1회차 · 11.22~24"], ["kicks", "👟 킥스", R.kicks || [], "1회차 · 11.22~24"]].filter((t) => t[2].length);
+      const T = [["hot", "🔥 하루특가", hot, "오늘 자정까지"], ["brand", "🏷️ 브랜드특가", br.filter((p) => !noDeal(p)), "오늘의 브랜드"], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"]].filter((t) => t[2].length);
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
       const cp = root.querySelector("#cpz");
