@@ -3055,12 +3055,13 @@ async function renderPublicSite(root) {
         const txts = []; bds.forEach((x) => (x.list || []).forEach((y) => { if (hit(y.b)) txts.push(String(y.t || "")); })); lives.forEach((l) => { if (hit(l.b)) txts.push(String(l.d || "")); });
         let mx = 0, cx = 0; txts.forEach((t) => { (t.match(/(\d{1,2})%/g) || []).forEach(() => {}); const a = t.match(/최대\s*(\d{1,2})%\s*할인|~\s*(\d{1,2})%/); if (a) mx = Math.max(mx, Number(a[1] || a[2])); const c = t.match(/(?:쿠폰\s*(?:최대\s*)?(\d{1,2})%|(\d{1,2})%\s*쿠폰)/); if (c) cx = Math.max(cx, Number(c[1] || c[2])); });
         const wonK = (n) => "약 " + (Math.round(n / 100) * 100).toLocaleString("ko-KR") + "원";
+        const evNote = mx ? `<p class="plz-exp">💸 ${esc(planQ)} 블프 예상 할인: <b>최대 ${mx}%${cx ? ` + 쿠폰 ${cx}%` : ""}</b> <small>(브랜드 전체 기준 · 상품마다 달라요)</small></p>` : "";
         const cards = pool.slice(0, 9).map((p) => { const base = Number(p.price) || Number(p.sale) || 0; const cur = Number(p.rate) || (p.price && p.sale ? Math.round((1 - p.sale / p.price) * 100) : 0);
           let tag = "", cm = "";
-          if (mx) { tag = `블프 최대 ${mx}%${cx ? "+쿠폰" : ""}`; if (base) { const est = base * (1 - mx / 100) * (1 - cx / 100); if (!p.sale || est < p.sale) cm = `최대 혜택 시 ${wonK(est)}`; } }
+          if (mx) { tag = `최대 ${mx}%${cx ? "+쿠폰" : ""}`; cm = cur >= 5 ? `지금 -${cur}% · 브랜드데이에 더 내려갈 수 있어요` : "브랜드데이 때 할인 예정"; }
           else if (cur >= 5) tag = `지금 -${cur}%`;
           return itemCard(Object.assign({}, p, { tag, comment: cm }), 0); }).join("");
-        out.innerHTML = ev.length || cards ? `${ev.length ? `<div class="plz-ev">${ev.map((x) => `<p>${x.h}</p>`).join("")}</div>` : `<p class="plz-none">이 브랜드는 아직 브랜드데이·라이브 일정이 없어요 · 회차 쿠폰은 매 회차 받을 수 있어요</p>`}${cards ? `<p class="plz-h">지금 볼 수 있는 제품</p><div class="tsz-scroll">${cards}</div>` : ""}` : `<p class="plz-none">찾는 브랜드가 아직 일정에 없어요</p>`;
+        out.innerHTML = ev.length || cards ? `${ev.length ? `<div class="plz-ev">${ev.map((x) => `<p>${x.h}</p>`).join("")}</div>` : `<p class="plz-none">이 브랜드는 아직 브랜드데이·라이브 일정이 없어요 · 회차 쿠폰은 매 회차 받을 수 있어요</p>`}${evNote}${cards ? `<p class="plz-h">지금 볼 수 있는 제품</p><div class="tsz-scroll">${cards}</div>` : ""}` : `<p class="plz-none">찾는 브랜드가 아직 일정에 없어요</p>`;
       }
       drawFind();
       const on = box.querySelector(".plz-day.on"); if (on && on.scrollIntoView && box.dataset.sc !== planDay) { box.dataset.sc = planDay; const sc = box.querySelector(".plz-days"); sc.scrollLeft = Math.max(0, on.offsetLeft - sc.offsetWidth / 2 + on.offsetWidth / 2); }
@@ -3936,6 +3937,9 @@ renderPublicSite(ROOT_EL);
 #app-root .plz-qc button { flex: none; border: 1px solid #3a3631; background: #1f1d1a; color: #f6f2ec; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700; }
 #app-root .plz-qc button.on { background: #c6ff3d; color: #141312; border-color: #c6ff3d; }
 #app-root .plz-qbox .plz-find:not(:empty) { background: #fff; color: #141312; border-radius: 14px; padding: 10px 10px 4px; margin-top: 12px; }
+#app-root .plz-exp { margin: 8px 0 2px; padding: 9px 11px; background: #fff1f1; border-radius: 10px; font-size: 13px; color: #141312; }
+#app-root .plz-exp b { color: #ff3d3f; font-weight: 800; }
+#app-root .plz-exp small { display: block; color: #8b857c; font-size: 11px; margin-top: 2px; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
