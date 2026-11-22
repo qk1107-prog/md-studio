@@ -3079,7 +3079,7 @@ async function renderPublicSite(root) {
       if (!T.find((t) => t[0] === r1Tab)) r1Tab = T[0][0];
       const cur = T.find((t) => t[0] === r1Tab);
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
-      const cards = cur[2].slice(0, 30).map((p) => itemCard(Object.assign({}, p, { tag: p.cpn ? "쿠폰가" : p.mj ? "무진장" : (p.tag || ""), comment: p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
+      const cards = cur[2].slice(0, 50).map((p) => itemCard(Object.assign({}, p, { tag: p.cpn ? "쿠폰가" : p.mj ? "무진장" : (p.tag || ""), comment: p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em></p><small>인기·후기·할인 좋은 순 · 쿠폰까지 적용${k ? ` · ${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>

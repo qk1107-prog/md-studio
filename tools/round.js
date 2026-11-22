@@ -9,13 +9,17 @@ window.__r1Run = async (opt) => {
   const out = { at: new Date().toISOString() };
   const ids = async (code) => {
     const set = [];
-    for (const sec of ["199", "201"]) {
+    // 전체 + 10·20·30대 랭킹을 번갈아 섞어서 '요즘 제일 잘 나가는' 순서로
+    const lists = [];
+    await Promise.all(["199", "201"].flatMap((sec) => ["", "AGE_BAND_20", "AGE_BAND_25", "AGE_BAND_30"].map(async (ab) => {
       try {
-        const t = await (await fetch(`https://api.musinsa.com/api2/hm/web/v5/pans/ranking/sections/${sec}?storeCode=musinsa&categoryCode=${code}&gf=M`, { credentials: "include" })).text();
-        (t.match(/"(?:goodsNo|id)":"?(\d{6,8})"?/g) || []).forEach((m) => { const id = m.match(/(\d{6,8})/)[1]; if (!set.includes(id)) set.push(id); });
+        const t = await (await fetch(`https://api.musinsa.com/api2/hm/web/v5/pans/ranking/sections/${sec}?storeCode=musinsa&categoryCode=${code}&gf=M${ab ? "&ageBand=" + ab : ""}`, { credentials: "include" })).text();
+        const L = []; (t.match(/"(?:goodsNo|id)":"?(\d{6,8})"?/g) || []).forEach((m) => { const id = m.match(/(\d{6,8})/)[1]; if (!L.includes(id)) L.push(id); });
+        lists.push(L);
       } catch (e) {}
-    }
-    return set.slice(0, 140);
+    })));
+    for (let r = 0; r < 120; r++) lists.forEach((L) => { if (L[r] && !set.includes(L[r])) set.push(L[r]); });
+    return set.slice(0, 220);
   };
   for (const [key, codes] of CATS) {
     S.st = "rank " + key;
@@ -41,8 +45,9 @@ window.__r1Run = async (opt) => {
         } catch (e) {}
       }
     }));
-    const sc = (x) => x.rate * (1 + Math.log10(x.rv + 10)) + (x.rk < 30 ? 25 : x.rk < 60 ? 12 : 0) + (x.cpn ? 8 : 0) + (x.mj ? 10 : 0);
-    let pick = det.filter((x) => x.rate >= 10 || x.rk < 20).sort((a, b) => sc(b) - sc(a)).slice(0, 48);
+    // 트렌드(랭킹) 우선 + 후기 + 할인 + 쿠폰·무진장
+    const sc = (x) => Math.max(0, 60 - x.rk * 0.5) + x.rate * 0.6 + Math.log10(x.rv + 10) * 8 + (x.cpn ? 8 : 0) + (x.mj ? 10 : 0);
+    let pick = det.filter((x) => (x.rv >= 20 || x.rk < 15) && (x.rate >= 5 || x.rk < 30)).sort((a, b) => sc(b) - sc(a)).slice(0, opt.n || 60);
     // 같은 브랜드 연속 금지
     const arr = [];
     while (pick.length) { const j = pick.findIndex((x) => !arr.length || x.brand !== arr[arr.length - 1].brand); arr.push(pick.splice(j < 0 ? 0 : j, 1)[0]); }
@@ -58,7 +63,7 @@ window.__r1Run = async (opt) => {
         } catch (e) {}
       }
     }));
-    out[key] = arr.filter((x) => cache[x.i]).slice(0, 40).map((x) => ({ i: x.i, brand: x.brand, name: x.name, img: x.img, link: "https://www.musinsa.com/curator/goods/" + cache[x.i], price: x.price, sale: x.sale, cpn: x.cpn, rate: x.rate, rv: x.rv, mj: x.mj }));
+    out[key] = arr.filter((x) => cache[x.i]).slice(0, opt.n || 60).map((x) => ({ i: x.i, brand: x.brand, name: x.name, img: x.img, link: "https://www.musinsa.com/curator/goods/" + cache[x.i], price: x.price, sale: x.sale, cpn: x.cpn, rate: x.rate, rv: x.rv, mj: x.mj }));
   }
   localStorage.setItem("mdcpLinks", JSON.stringify(cache));
   window.__r1Data = JSON.stringify(out);
