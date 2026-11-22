@@ -7,19 +7,20 @@ window.__r1Run = async (opt) => {
   const EX = /여성|우먼|WOMEN|키즈|KIDS|아동|주니어|양말|삭스|인솔|슈케어|끈/i;
   const cache = JSON.parse(localStorage.getItem("mdcpLinks") || "{}");
   const out = { at: new Date().toISOString() };
+  const FREQ = {}, BEST = {};
   const ids = async (code) => {
     const set = [];
     // 전체 + 10·20·30대 랭킹을 번갈아 섞어서 '요즘 제일 잘 나가는' 순서로
     const lists = [];
-    await Promise.all(["199", "201"].flatMap((sec) => ["", "AGE_BAND_20", "AGE_BAND_25", "AGE_BAND_30"].map(async (ab) => {
+    await Promise.all(["199", "200", "201"].flatMap((sec) => ["", "AGE_BAND_MINOR", "AGE_BAND_20", "AGE_BAND_25", "AGE_BAND_30", "AGE_BAND_35"].map(async (ab) => {
       try {
         const t = await (await fetch(`https://api.musinsa.com/api2/hm/web/v5/pans/ranking/sections/${sec}?storeCode=musinsa&categoryCode=${code}&gf=M${ab ? "&ageBand=" + ab : ""}`, { credentials: "include" })).text();
         const L = []; (t.match(/"(?:goodsNo|id)":"?(\d{6,8})"?/g) || []).forEach((m) => { const id = m.match(/(\d{6,8})/)[1]; if (!L.includes(id)) L.push(id); });
-        lists.push(L);
+        lists.push(L); L.forEach((id, k) => { FREQ[id] = (FREQ[id] || 0) + 1; BEST[id] = Math.min(BEST[id] ?? 999, k); });
       } catch (e) {}
     })));
-    for (let r = 0; r < 120; r++) lists.forEach((L) => { if (L[r] && !set.includes(L[r])) set.push(L[r]); });
-    return set.slice(0, 220);
+    for (let r = 0; r < 150; r++) lists.forEach((L) => { if (L[r] && !set.includes(L[r])) set.push(L[r]); });
+    return set.slice(0, 320);
   };
   for (const [key, codes] of CATS) {
     S.st = "rank " + key;
@@ -46,8 +47,9 @@ window.__r1Run = async (opt) => {
       }
     }));
     // 트렌드(랭킹) 우선 + 후기 + 할인 + 쿠폰·무진장
-    const sc = (x) => Math.max(0, 60 - x.rk * 0.5) + x.rate * 0.6 + Math.log10(x.rv + 10) * 8 + (x.cpn ? 8 : 0) + (x.mj ? 10 : 0);
-    let pick = det.filter((x) => (x.rv >= 20 || x.rk < 15) && (x.rate >= 5 || x.rk < 30)).sort((a, b) => sc(b) - sc(a)).slice(0, opt.n || 60);
+    // 하입 점수: 여러 나이대·랭킹에 계속 들어가 있는 정도(FREQ) + 최고 순위 + 후기 + 할인·쿠폰
+    const sc = (x) => (FREQ[x.i] || 0) * 9 + Math.max(0, 40 - (BEST[x.i] ?? 99) * 0.6) + Math.log10(x.rv + 10) * 9 + x.rate * 0.4 + (x.cpn ? 6 : 0) + (x.mj ? 8 : 0);
+    let pick = det.filter((x) => (FREQ[x.i] || 0) >= 2 || x.rv >= 300 || (BEST[x.i] ?? 99) < 10).sort((a, b) => sc(b) - sc(a)).slice(0, opt.n || 100);
     // 같은 브랜드 연속 금지
     const arr = [];
     while (pick.length) { const j = pick.findIndex((x) => !arr.length || x.brand !== arr[arr.length - 1].brand); arr.push(pick.splice(j < 0 ? 0 : j, 1)[0]); }
@@ -63,7 +65,7 @@ window.__r1Run = async (opt) => {
         } catch (e) {}
       }
     }));
-    out[key] = arr.filter((x) => cache[x.i]).slice(0, opt.n || 60).map((x) => ({ i: x.i, brand: x.brand, name: x.name, img: x.img, link: "https://www.musinsa.com/curator/goods/" + cache[x.i], price: x.price, sale: x.sale, cpn: x.cpn, rate: x.rate, rv: x.rv, mj: x.mj }));
+    out[key] = arr.filter((x) => cache[x.i]).slice(0, opt.n || 100).map((x) => ({ i: x.i, brand: x.brand, name: x.name, img: x.img, link: "https://www.musinsa.com/curator/goods/" + cache[x.i], price: x.price, sale: x.sale, cpn: x.cpn, rate: x.rate, rv: x.rv, mj: x.mj }));
   }
   localStorage.setItem("mdcpLinks", JSON.stringify(cache));
   window.__r1Data = JSON.stringify(out);

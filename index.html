@@ -3073,18 +3073,20 @@ async function renderPublicSite(root) {
       const br = []; const bl = (day.brands || []).map((b) => (b.items || []).slice()); for (let r = 0; r < 8; r++) bl.forEach((L) => { if (L[r]) br.push(L[r]); });
       const T = [["hot", "🔥 하루특가", hot, "오늘 자정까지"], ["brand", "🏷️ 브랜드특가", br, "오늘의 브랜드"], ["outer", "🧥 아우터", R.outer || [], "1회차 · 11.22~24"], ["kicks", "👟 킥스", R.kicks || [], "1회차 · 11.22~24"]].filter((t) => t[2].length);
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
-      if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; renderR1(); } }); }
+      if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) { window.__r1All = window.__r1All === m.dataset.r1all ? "" : m.dataset.r1all; renderR1(); if (!window.__r1All) box.scrollIntoView({ block: "start" }); } }); }
       const cp = root.querySelector("#cpz");
       if (cp) { if (cp.nextSibling !== box) cp.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       if (!T.find((t) => t[0] === r1Tab)) r1Tab = T[0][0];
       const cur = T.find((t) => t[0] === r1Tab);
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
-      const cards = cur[2].slice(0, 50).map((p) => itemCard(Object.assign({}, p, { tag: p.cpn ? "쿠폰가" : p.mj ? "무진장" : (p.tag || ""), comment: p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
+      const showAll = window.__r1All === r1Tab;
+      const cards = cur[2].slice(0, showAll ? 100 : 20).map((p) => itemCard(Object.assign({}, p, { tag: p.cpn ? "쿠폰가" : p.mj ? "무진장" : (p.tag || ""), comment: p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em></p><small>인기·후기·할인 좋은 순 · 쿠폰까지 적용${k ? ` · ${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
         <p class="opz-sub">${esc(cur[3])}</p>
-        <div class="tsz-scroll">${cards}</div>`;
+        <div class="${showAll ? "opz-grid" : "tsz-scroll"}">${cards}</div>
+        ${cur[2].length > 20 ? `<button type="button" class="opz-more" data-r1all="${r1Tab}">${showAll ? "접기 ▲" : `전체보기 ▼ <b>${cur[2].length}개</b>`}</button>` : ""}`;
     }
     let hotView = -1, hotOpen = false;
     function renderHot() {
@@ -3972,6 +3974,10 @@ renderPublicSite(ROOT_EL);
 #app-root .opz-tabs button.on { background: #141312; color: #fff; }
 #app-root .opz-tabs button i { font-style: normal; font-size: 11px; margin-left: 4px; color: #ff3d3f; }
 #app-root .opz-sub { margin: 0 0 8px; font-size: 12px; color: #8b857c; }
+#app-root .opz-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+#app-root .opz-grid .bf-item { width: auto; }
+#app-root .opz-more { display: block; width: 100%; margin: 12px 0 0; padding: 12px 0; border: 1.5px solid #141312; border-radius: 12px; background: #fff; font-weight: 800; font-size: 14px; color: #141312; }
+#app-root .opz-more b { color: #ff3d3f; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
