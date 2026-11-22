@@ -1314,48 +1314,33 @@ function epOrder(items) {
 }
 
 
-// ---------- 오픈 대기 화면 (main.gate = {from, until, ...}) · ?gate=1 이면 미리보기 ----------
+// ---------- 오픈 대기 화면 (main.gate = {from, until, ...}) · 무진장 블프 탭만 흐림 잠금 · ?gate=1 / ?gate=demo 미리보기 ----------
 function mdGate(G) {
   const PV = /[?&]gate=(1|demo)/.test(location.search);
   G = G || {}; if (!G.until && !PV) return;
   const from = G.from ? new Date(G.from).getTime() : 0, until = /[?&]gate=demo/.test(location.search) ? Date.now() + 29 * 60000 + 41000 : G.until ? new Date(G.until).getTime() : Date.now() + 30 * 60000;
   const now = Date.now();
   if (!PV && !(G.on !== false && now >= from && now < until)) { if (now < from && from - now < 6 * 3600000) setTimeout(() => mdGate(G), from - now + 500); return; }
-  if (document.getElementById("md-gate")) return;
+  if (window.__gtOn) return; window.__gtOn = 1;
   const e = (t) => String(t == null ? "" : t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const reel = /^https:\/\/(www\.)?instagram\.com\//.test(G.reel || "") ? G.reel : "https://www.instagram.com/k__man_do/";
-  const el = document.createElement("div"); el.id = "md-gate";
-  el.innerHTML = `<div class="gt-in">
-    <p class="gt-top">MD STUDIO · 무진장 본편</p>
-    <div class="gt-lock">🔒</div>
-    <h1 class="gt-h">${e(G.title || "본편 꿀템 AI 정리 중")}</h1>
-    <p class="gt-p">${e(G.sub || "19시 무진장 본편 오픈과 동시에 광만두가 고른 본편 꿀템이 공개돼요")}</p>
-    <p class="gt-badge">${e(G.badge || "선착순 2,000명")}</p>
-    <p class="gt-p2">${e(G.line || "본편 꿀템 정리 릴스가 먼저 올라가요. 릴스 보고 19:00 정각에 다시 들어오세요")}</p>
-    <div class="gt-cd"><small>오픈까지</small><b id="gt-t">--:--</b></div>
-    <a class="gt-btn" href="${e(reel)}" target="_blank" rel="noopener">📲 ${e(G.btn || "정리 릴스 먼저 보기")}</a>
-    <p class="gt-foot">${e(G.foot || "오픈 순간 이 화면이 자동으로 열려요 · 그대로 두셔도 돼요")}</p>
-  </div>`;
   const st = document.createElement("style");
-  st.textContent = `#md-gate{position:fixed;inset:0;z-index:2147483000;background:#141312;color:#f6f2ec;display:flex;align-items:center;justify-content:center;padding:28px 22px;overflow:auto;font-family:inherit;text-align:center}
-#md-gate .gt-in{max-width:360px;width:100%}
-#md-gate .gt-top{font-size:11px;letter-spacing:.18em;color:#8b857c;margin:0 0 26px}
-#md-gate .gt-lock{font-size:38px;margin-bottom:10px;animation:gtp 1.6s ease-in-out infinite}
-@keyframes gtp{50%{transform:scale(1.08)}}
-#md-gate .gt-h{font-size:27px;line-height:1.25;font-weight:800;margin:0 0 12px;letter-spacing:-.02em}
-#md-gate .gt-p{font-size:14px;line-height:1.55;color:#cfc8bd;margin:0 0 18px}
-#md-gate .gt-badge{display:inline-block;background:#c6ff3d;color:#141312;font-weight:800;font-size:15px;padding:7px 16px;border-radius:999px;margin:0 0 14px}
-#md-gate .gt-p2{font-size:13px;line-height:1.55;color:#a8a196;margin:0 0 22px}
-#md-gate .gt-cd{border:1px solid #2e2b27;border-radius:16px;padding:14px 0 12px;margin:0 0 18px}
-#md-gate .gt-cd small{display:block;font-size:11px;color:#8b857c;letter-spacing:.1em;margin-bottom:4px}
-#md-gate .gt-cd b{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:#c6ff3d}
-#md-gate .gt-btn{display:block;background:#f6f2ec;color:#141312;text-decoration:none;font-weight:800;font-size:15px;padding:15px 0;border-radius:14px;margin:0 0 14px}
-#md-gate .gt-foot{font-size:11.5px;color:#6f6a62;margin:0}`;
-  document.head.appendChild(st); document.body.appendChild(el);
-  try { document.documentElement.style.overflow = "hidden"; } catch (x) {}
+  st.textContent = `#tab-bf.gt-lock{position:relative}
+#tab-bf.gt-lock > *:not(.gt-card){filter:blur(9px);pointer-events:none;user-select:none}
+#tab-bf .gt-card{position:sticky;top:90px;z-index:50;margin:14px 20px -330px;background:rgba(255,255,255,.94);border:1px solid #ece7e0;border-radius:20px;box-shadow:0 12px 40px rgba(20,19,18,.12);padding:24px 20px 20px;text-align:center;color:#141312;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#tab-bf .gt-card .gt-lk{font-size:26px;margin-bottom:6px}
+#tab-bf .gt-card h3{margin:0 0 8px;font-size:21px;font-weight:800;letter-spacing:-.02em}
+#tab-bf .gt-card p{margin:0 0 12px;font-size:13px;line-height:1.55;color:#6f6a62}
+#tab-bf .gt-card .gt-bd{display:inline-block;background:#141312;color:#c6ff3d;font-weight:800;font-size:13px;padding:6px 14px;border-radius:999px;margin:0 0 14px}
+#tab-bf .gt-card .gt-cd{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;margin:0 0 4px}
+#tab-bf .gt-card small{display:block;font-size:11px;color:#a39d93}`;
+  document.head.appendChild(st);
+  const card = document.createElement("div"); card.className = "gt-card";
+  card.innerHTML = `<div class="gt-lk">🔒</div><h3>${e(G.title || "본편 꿀템 AI 정리 중")}</h3><p>${e(G.sub || "19시 무진장 본편 오픈과 동시에 광만두가 고른 본편 꿀템이 공개돼요")}</p><span class="gt-bd">${e(G.badge || "선착순 2,000명")}</span><div class="gt-cd" id="gt-t">--:--</div><small>${e(G.foot || "실착·릴스 꿀템 등 다른 탭은 지금도 볼 수 있어요")}</small>`;
   const pad = (n) => String(n).padStart(2, "0");
-  const tick = () => { const left = until - Date.now(); if (left <= 0) { el.remove(); document.documentElement.style.overflow = ""; clearInterval(iv); return; } const m = Math.floor(left / 60000), sec = Math.floor(left / 1000) % 60, h = Math.floor(m / 60); document.getElementById("gt-t").textContent = (h ? h + ":" + pad(m % 60) : pad(m)) + ":" + pad(sec); };
-  const iv = setInterval(tick, 1000); tick();
+  let iv = 0;
+  const attach = () => { const tb = document.getElementById("tab-bf"); if (!tb) return false; if (!tb.contains(card)) tb.prepend(card); tb.classList.add("gt-lock"); return true; };
+  const tick = () => { const left = until - Date.now(); attach(); if (left <= 0) { clearInterval(iv); card.remove(); const tb = document.getElementById("tab-bf"); if (tb) tb.classList.remove("gt-lock"); window.__gtOn = 0; return; } const m = Math.floor(left / 60000), sec = Math.floor(left / 1000) % 60, h = Math.floor(m / 60); const el = card.querySelector("#gt-t"); if (el) el.textContent = (h ? h + ":" + pad(m % 60) : pad(m)) + ":" + pad(sec); };
+  iv = setInterval(tick, 1000); tick();
 }
 
 async function renderPublicSite(root) {
