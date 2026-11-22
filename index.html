@@ -3132,6 +3132,9 @@ async function renderPublicSite(root) {
         if (ref) { if (ref.nextSibling !== el) ref.after(el); } else if (tab.firstChild !== el) tab.prepend(el);
         ref = el;
       });
+      const pad = root.querySelector("#bf-pad");
+      if (pad && window.__bfZoneClick && !pad.__bound) { pad.__bound = true; pad.addEventListener("click", window.__bfZoneClick); }
+      if (pad && !pad.querySelector("[data-padall]")) { const b = document.createElement("button"); b.type = "button"; b.className = "pad-all"; b.dataset.padall = "1"; b.textContent = "전체보기 →"; pad.prepend(b); }
       if (root.querySelector("#opz")) ["bf-sig", "bf-hot", "bf-brand", "bf-bday"].forEach((id) => { const el = root.querySelector("#" + id); if (el) el.style.display = "none"; });
     }
     // 전체보기: 코디처럼 따로 열리는 페이지(종류별 칩 + 2칸 그리드)
@@ -3286,7 +3289,9 @@ async function renderPublicSite(root) {
       if (nowDay) nowDay.parentNode.scrollLeft = Math.max(0, nowDay.offsetLeft - 50);
       tick();
     }
-    zone.addEventListener("click", (e) => {
+    const zoneClick = (e) => {
+      const pa = e.target.closest("[data-padall]");
+      if (pa) { const sec = pa.closest(".bf-sec"); const x = sec && sec.querySelector("[data-expand]"); if (x) x.click(); else if (sec) sec.querySelector("[data-grid]")?.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
       const ex = e.target.closest("[data-expand]");
       if (ex) { const g = GRIDS[ex.dataset.expand]; const wrap = ex.closest("[data-grid]"); if (g && wrap) wrap.outerHTML = gridBlock(ex.dataset.expand, g.arr, g.rank, true); return; }
       const chip = e.target.closest("[data-chips] button");
@@ -3294,7 +3299,7 @@ async function renderPublicSite(root) {
         const box = chip.closest("[data-chips]"); const gid = box.dataset.chips;
         box.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === chip));
         const groups = CHIP_DATA[gid] || []; const g = groups[+chip.dataset.i];
-        const grid = zone.querySelector(`[data-chipgrid="${gid}"]`);
+        const grid = root.querySelector(`[data-chipgrid="${gid}"]`);
         if (g && grid) grid.innerHTML = gridBlock(gid, g.items, CHIP_RANK[gid]);
         return;
       }
@@ -3302,8 +3307,10 @@ async function renderPublicSite(root) {
       if (lm) { liveMode = lm.dataset.m; lm.parentNode.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === lm)); const c = kp(nowFn()); zone.querySelector("#bf-live-list").innerHTML = liveList(`${c.m}/${c.d}`); return; }
       if (e.target.closest("#bf-live-all")) { liveAll = true; const c = kp(nowFn()); zone.querySelector("#bf-live-list").innerHTML = liveList(`${c.m}/${c.d}`); return; }
       const go = e.target.closest("[data-go]");
-      if (go) { const el = zone.querySelector("#" + go.dataset.go); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
-    });
+      if (go) { const el = root.querySelector("#" + go.dataset.go); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
+    };
+    zone.addEventListener("click", zoneClick);
+    window.__bfZoneClick = zoneClick;
     function tick() {
       const now = nowFn();
       [zone, root.querySelector("#bf-topcard")].forEach((z) => z && z.querySelectorAll("[data-cd]").forEach((el) => { el.innerHTML = fmtLeft(+el.dataset.cd - now); }));
@@ -4044,7 +4051,12 @@ renderPublicSite(ROOT_EL);
 #app-root .opz-tabs button.on { background: #141312; color: #fff; }
 #app-root .opz-tabs button i { font-style: normal; font-size: 11px; margin-left: 4px; color: #ff3d3f; }
 #app-root .opz-sub { margin: 0 0 8px; font-size: 12px; color: #8b857c; }
-#app-root .opz-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+#app-root .opz-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 6px; }
+#app-root .opz-grid .bf-item .br, #app-root .opz-grid .bf-item .nm { font-size: 10.5px; }
+#app-root .opz-grid .bf-item .pr { font-size: 12px; }
+#app-root .opz-grid .bf-item .pt, #app-root .opz-grid .bf-item .rv, #app-root .opz-grid .bf-item .cm, #app-root .opz-grid .bf-item .preal { font-size: 9.5px; }
+#app-root #bf-pad { position: relative; }
+#app-root #bf-pad .pad-all { position: absolute; right: 0; top: 2px; z-index: 2; border: 0; background: none; font-size: 12px; font-weight: 800; color: #111; padding: 6px 2px; cursor: pointer; }
 #app-root .opz-grid .bf-item { width: auto; }
 #app-root .opz-more { display: block; width: 100%; margin: 12px 0 0; padding: 12px 0; border: 1.5px solid #141312; border-radius: 12px; background: #fff; font-weight: 800; font-size: 14px; color: #141312; }
 #app-root .opz-more b { color: #ff3d3f; }
