@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>블프 데일리 캐러셀 만들기</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif; background: #eceae6; color: #141312; }
+  .bar { position: sticky; top: 0; z-index: 9; background: #141312; color: #fff; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .bar b { font-size: 14px; margin-right: 6px; }
+  .bar input { font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 6px; border: 0; width: 190px; }
+  .bar button { font: inherit; font-size: 13px; font-weight: 800; padding: 7px 12px; border-radius: 8px; border: 0; background: #ffe14d; cursor: pointer; }
+  .bar .st { font-size: 12px; opacity: .8; }
+  .covers { display: flex; gap: 6px; overflow-x: auto; padding: 8px 12px; background: #fff; }
+  .covers img { width: 56px; height: 70px; object-fit: cover; border-radius: 6px; border: 3px solid transparent; cursor: pointer; }
+  .covers img.on { border-color: #ff3d3f; }
+  .wrap { display: flex; flex-wrap: wrap; gap: 18px; padding: 16px; justify-content: center; }
+  .cell { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .cell .ctl { display: flex; gap: 6px; }
+  .cell .ctl button { font: inherit; font-size: 12px; font-weight: 800; padding: 6px 10px; border-radius: 8px; border: 1px solid #141312; background: #fff; cursor: pointer; }
+  .frame { width: 324px; height: 405px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,.15); border-radius: 6px; }
+  .slide { width: 1080px; height: 1350px; transform: scale(.3); transform-origin: 0 0; position: relative; overflow: hidden; background: #fff; }
+
+  /* 표지 */
+  .cv img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .cv .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 50%, rgba(0,0,0,.6) 100%); }
+  .cv .logo { position: absolute; left: 64px; top: 60px; color: #fff; font-size: 34px; font-weight: 900; letter-spacing: 1px; }
+  .cv .card { position: absolute; right: 56px; top: 150px; width: 430px; background: #fff; border-radius: 22px; padding: 26px 28px; box-shadow: 0 8px 30px rgba(0,0,0,.18); }
+  .cv .card .k { font-size: 26px; font-weight: 900; color: #ff3d3f; }
+  .cv .card ul { list-style: none; margin-top: 14px; }
+  .cv .card li { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 27px; font-weight: 800; padding: 10px 0; border-top: 1.5px solid #eee; }
+  .cv .card li:first-child { border-top: 0; }
+  .cv .card li small { font-size: 21px; font-weight: 700; color: #8a847b; white-space: nowrap; }
+  .cv .title { position: absolute; left: 64px; bottom: 120px; color: #fff; }
+  .cv .title p { font-size: 34px; font-weight: 800; opacity: .95; }
+  .cv .title h1 { font-size: 92px; line-height: 1.12; font-weight: 900; letter-spacing: -3px; margin-top: 10px; white-space: pre-line; }
+
+  /* 상품 */
+  .pg { padding: 54px 40px 0; }
+  .pg .hd { display: flex; align-items: center; justify-content: space-between; margin: 0 8px 26px; }
+  .pg .hd h2 { font-size: 50px; font-weight: 900; letter-spacing: -1.5px; }
+  .pg .hd span { font-size: 27px; font-weight: 800; color: #fff; background: #ff3d3f; padding: 8px 18px; border-radius: 30px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px 14px; }
+  .it .im { position: relative; width: 100%; aspect-ratio: 4 / 5; background: #f3f2ef; overflow: hidden; }
+  .it .im img { width: 100%; height: 100%; object-fit: cover; }
+  .it .im .tg { position: absolute; right: 10px; top: 10px; background: #ff3d3f; color: #fff; font-size: 24px; font-weight: 900; padding: 4px 10px; border-radius: 8px; }
+  .it .br { margin-top: 14px; font-size: 23px; font-weight: 800; color: #141312; }
+  .it .nm { margin-top: 6px; font-size: 23px; line-height: 1.32; color: #5a554e; height: 61px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .it .pr { margin-top: 8px; font-size: 30px; font-weight: 900; }
+  .it .pr i { font-style: normal; color: #ff3d3f; margin-right: 8px; }
+  .it .cp { margin-top: 6px; display: inline-block; font-size: 21px; font-weight: 800; color: #141312; background: #e9ff70; padding: 3px 9px; border-radius: 6px; }
+
+  /* 브랜드데이 */
+  .bd { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 14px; }
+  .bd .b .im { width: 100%; aspect-ratio: 1 / 1; background: #f3f2ef; overflow: hidden; }
+  .bd .b .im img { width: 100%; height: 100%; object-fit: cover; }
+  .bd .b p { margin-top: 10px; font-size: 26px; font-weight: 900; }
+  .bd .b p i { font-style: normal; color: #ff3d3f; margin-left: 6px; }
+
+  /* 마지막 */
+  .end { background: #141312; color: #fff; display: flex; flex-direction: column; justify-content: center; padding: 0 90px; }
+  .end .k { font-size: 34px; font-weight: 800; color: #ffe14d; }
+  .end h2 { font-size: 86px; line-height: 1.15; font-weight: 900; letter-spacing: -3px; margin-top: 18px; white-space: pre-line; }
+  .end p { font-size: 34px; font-weight: 700; margin-top: 40px; line-height: 1.5; opacity: .9; white-space: pre-line; }
+  .end .logo { position: absolute; left: 90px; bottom: 80px; font-size: 34px; font-weight: 900; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>블프 데일리 캐러셀</b>
+  <input id="d" placeholder="날짜 (예: 11.23(월))">
+  <input id="t" placeholder="표지 제목">
+  <button id="all">전체 PNG 저장</button>
+  <span class="st" id="st">불러오는 중…</span>
+</div>
+<div class="covers" id="covers"></div>
+<div class="wrap" id="wrap"></div>
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script>
+(async () => {
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
+  const img = (u) => !u ? "" : /^https:\/\/image\.msscdn\.net\//.test(u) ? "/api/mimg?u=" + encodeURIComponent(u.split("?")[0]) : u;
+  const v = await (await fetch("/api/sd?id=main")).json();
+  const B = v.bf || {};
+  const now = new Date(Date.now() + 9 * 36e5);
+  const key = "2026-" + String(now.getUTCMonth() + 1).padStart(2, "0") + "-" + String(now.getUTCDate()).padStart(2, "0");
+  const dayKeys = Object.keys(B.days || {}).sort();
+  const D = (B.days || {})[key] || (B.days || {})[dayKeys[dayKeys.length - 1]] || {};
+  const W = ["일", "월", "화", "수", "목", "금", "토"];
+  $("#d").value = `${now.getUTCMonth() + 1}.${now.getUTCDate()}(${W[now.getUTCDay()]})`;
+  $("#t").value = "무진장 블프\n오늘 뭐 세일해?";
+
+  // 같은 브랜드 연속 X, 할인 있는 것, 후기 많은 순
+  const pickList = (L) => {
+    let a = (L || []).filter((p) => p && p.img && p.link && (Number(p.rate) >= 15 || (p.cpn && p.cpn < p.sale)));
+    a = a.slice().sort((x, y) => (Math.log10((y.rv || 0) + 10) * 10 + (y.rate || 0) * 0.5) - (Math.log10((x.rv || 0) + 10) * 10 + (x.rate || 0) * 0.5));
+    const out = []; while (a.length) { const j = a.findIndex((x) => !out.length || x.brand !== out[out.length - 1].brand); out.push(a.splice(j < 0 ? 0 : j, 1)[0]); }
+    return out;
+  };
+  const sig = pickList((B.sigPreview || []).flatMap((g) => g.items || []));
+  const SEC = [
+    { k: "hot", h: "🔥 오늘의 하루특가", s: "오늘 자정까지", L: pickList(D.hot || [...(D.hotA || []), ...(D.hotB || [])]) },
+    { k: "outer", h: "🧥 아우터 특가", s: "무진장 아우터데이", L: pickList((B.r1 || {}).outer) },
+    { k: "kicks", h: "👟 킥스 특가", s: "무진장 킥스데이", L: pickList((B.r1 || {}).kicks) },
+    { k: "sig", h: "💎 시그니처특가", s: "블프 내내 이 가격", L: sig },
+  ].filter((x) => x.L.length >= 6);
+  const brands = (D.brands || []).filter((b) => (b.items || []).length).map((b) => ({ brand: b.brand, rate: b.rate || Math.max(...b.items.map((x) => x.rate || 0)), img: (pickList(b.items)[0] || b.items[0]).img }));
+  const off = {};
+
+  // 표지 사진: 광만두 라인업·착샷
+  const photos = [...new Set([...(v.lineup || []).map((c) => c.photo), ...((v.outfits || []).map((o) => o.img || o.photo))].filter((u) => u && /^https?:/.test(u)))].slice(0, 30);
+  let cover = photos[0] || "";
+  $("#covers").innerHTML = photos.map((u, i) => `<img src="${esc(u)}" data-i="${i}" class="${i ? "" : "on"}">`).join("");
+  $("#covers").onclick = (e) => { const t = e.target.closest("img"); if (!t) return; cover = photos[+t.dataset.i]; [...$("#covers").children].forEach((x) => x.classList.toggle("on", x === t)); draw(); };
+
+  const card = (p) => {
+    const c = p.cpn && p.cpn < p.sale ? p.cpn : 0;
+    return `<div class="it"><div class="im"><img src="${esc(img(p.img))}" crossorigin="anonymous">${p.rate ? `<span class="tg">-${esc(p.rate)}%</span>` : ""}</div>
+      <p class="br">${esc(p.brand)}</p><p class="nm">${esc(p.name)}</p>
+      <p class="pr">${p.rate ? `<i>${esc(p.rate)}%</i>` : ""}${esc(won(p.sale))}</p>${c ? `<span class="cp">쿠폰가 ${esc(won(c))}</span>` : ""}</div>`;
+  };
+  const slides = () => {
+    const S = [];
+    const tags = SEC.map((x) => `<li>${esc(x.h)}<small>${esc(x.s)}</small></li>`).join("") + (brands.length ? `<li>🏷️ 브랜드데이<small>${brands.length}개 브랜드</small></li>` : "");
+    S.push({ id: "cover", html: `<div class="slide cv">${cover ? `<img class="bg" src="${esc(cover)}" crossorigin="anonymous">` : ""}<div class="shade"></div><p class="logo">MD STUDIO</p>
+      <div class="card"><p class="k">${esc($("#d").value)} 오늘의 세일</p><ul>${tags}</ul></div>
+      <div class="title"><p>${esc($("#d").value)}</p><h1>${esc($("#t").value)}</h1></div></div>` });
+    SEC.forEach((x) => { const o = off[x.k] || 0; const L = x.L.slice(o, o + 6).length === 6 ? x.L.slice(o, o + 6) : x.L.slice(0, 6);
+      S.push({ id: x.k, html: `<div class="slide pg"><div class="hd"><h2>${esc(x.h)}</h2><span>${esc(x.s)}</span></div><div class="grid">${L.map(card).join("")}</div></div>` }); });
+    if (brands.length >= 6) { const o = off.bd || 0; const L = brands.slice(o, o + 9).length >= 6 ? brands.slice(o, o + 9) : brands.slice(0, 9);
+      S.push({ id: "bd", html: `<div class="slide pg"><div class="hd"><h2>🏷️ 오늘의 브랜드데이</h2><span>브랜드별 최대</span></div><div class="bd">${L.map((b) => `<div class="b"><div class="im"><img src="${esc(img(b.img))}" crossorigin="anonymous"></div><p>${esc(b.brand)}<i>~${esc(b.rate)}%</i></p></div>`).join("")}</div></div>` }); }
+    S.push({ id: "end", html: `<div class="slide end"><p class="k">${esc($("#d").value)}</p><h2>나머지 꿀템은\n프로필 링크에서</h2><p>시그니처·하루특가·브랜드데이\n쿠폰가까지 한 번에 정리해놨어요 👆</p><p class="logo">MD STUDIO</p></div>` });
+    return S;
+  };
+  const draw = () => {
+    const S = slides();
+    $("#wrap").innerHTML = S.map((s, i) => `<div class="cell"><div class="frame">${s.html}</div><div class="ctl"><span>${i + 1}/${S.length}</span>${["hot", "outer", "kicks", "sig", "bd"].includes(s.id) ? `<button data-sh="${s.id}">다른 상품</button>` : ""}<button data-dl="${i}">PNG 저장</button></div></div>`).join("");
+    $("#st").textContent = `${S.length}장 · 데이터 ${key}`;
+  };
+  $("#d").oninput = $("#t").oninput = draw;
+  const save = async (i) => {
+    const el = $("#wrap").querySelectorAll(".slide")[i];
+    const url = await htmlToImage.toPng(el, { width: 1080, height: 1350, pixelRatio: 1, style: { transform: "none" }, cacheBust: true });
+    const a = document.createElement("a"); a.href = url; a.download = `mdstudio_bf_${key}_${String(i + 1).padStart(2, "0")}.png`; a.click();
+  };
+  $("#wrap").onclick = async (e) => {
+    const sh = e.target.closest("[data-sh]"); if (sh) { const k = sh.dataset.sh; off[k] = (off[k] || 0) + (k === "bd" ? 9 : 6); draw(); return; }
+    const dl = e.target.closest("[data-dl]"); if (dl) { dl.textContent = "저장 중…"; try { await save(+dl.dataset.dl); dl.textContent = "저장됨 ✓"; } catch (er) { dl.textContent = "실패"; } }
+  };
+  $("#all").onclick = async () => { const n = $("#wrap").querySelectorAll(".slide").length; for (let i = 0; i < n; i++) { await save(i); await new Promise((r) => setTimeout(r, 400)); } };
+  draw();
+})();
+</script>
+</body>
+</html>
