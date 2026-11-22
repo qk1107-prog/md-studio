@@ -52,7 +52,7 @@ window.__r1Run = async (opt) => {
     let pick = det.filter((x) => (x.rv >= 30 && ((FREQ[x.i] || 0) >= 2 || x.rv >= 500)) || ((FREQ[x.i] || 0) >= 8 && (BEST[x.i] ?? 99) < 20)).sort((a, b) => sc(b) - sc(a)).slice(0, opt.n || 100);
     // 다양하게: 브랜드당 최대 4개, 종류(패딩·코트·플리스·자켓…)를 번갈아, 같은 브랜드 연속 금지
     const bc = {}; pick = det.filter((x) => (x.rv >= 30 && ((FREQ[x.i] || 0) >= 2 || x.rv >= 500)) || ((FREQ[x.i] || 0) >= 8 && (BEST[x.i] ?? 99) < 20)).sort((a, b) => sc(b) - sc(a)).filter((x) => (bc[x.brand] = (bc[x.brand] || 0) + 1) <= 4).slice(0, opt.n || 100);
-    const TY = key === "kicks" ? [["스니커즈", /스니커|운동화|러닝|트레이너|삼바|포스|덩크|조던|SL ?72|가젤|척|올드스쿨|젤|카야노|뉴발란스|\d{3,4}[A-Z]/i], ["부츠·워커", /부츠|워커|첼시|6인치|웨스턴/], ["로퍼·더비", /로퍼|더비|구두|정장|옥스포드|몽크/], ["방한·슬리퍼", /방한|패딩|퍼 |뮬|슬리퍼|어그|털/]] : [["패딩", /패딩|다운|푸퍼|덕다운|구스|PADD|DOWN|PUFFER/i], ["코트", /코트|COAT/i], ["플리스", /플리스|후리스|FLEECE|보아|셰르파/i], ["레더·무스탕", /레더|가죽|무스탕|시어링|LEATHER|MUSTANG/i], ["자켓·블루종", /자켓|재킷|블루종|봄버|MA-1|JACKET|헤링턴|트러커|워크/i], ["바람막이·기타", /./]];
+    const TY = key === "kicks" ? [["부츠·워커", /부츠|워커|첼시|6인치|웨스턴|BOOT/i], ["로퍼·더비", /로퍼|더비|구두|정장|옥스포드|몽크|LOAFER|DERBY/i], ["방한·슬리퍼", /방한|패딩 ?(슈즈|슬리퍼|부티)|뮬|슬리퍼|어그|털|UGG|MULE|SLIPPER/i], ["스니커즈", /./]] : [["패딩", /패딩|다운|푸퍼|덕다운|구스|PADD|DOWN|PUFFER/i], ["코트", /코트|COAT/i], ["플리스", /플리스|후리스|FLEECE|보아|셰르파/i], ["레더·무스탕", /레더|가죽|무스탕|시어링|LEATHER|MUSTANG/i], ["자켓·블루종", /자켓|재킷|블루종|봄버|MA-1|JACKET|헤링턴|트러커|워크/i], ["바람막이·기타", /./]];
     const tyOf = (x) => (TY.find((t) => t[1].test(x.name)) || TY[TY.length - 1])[0];
     const buckets = TY.map((t) => pick.filter((x) => tyOf(x) === t[0]));
     const mixed = []; for (let r = 0; mixed.length < pick.length && r < 200; r++) buckets.forEach((B) => { if (B[r]) mixed.push(B[r]); });
