@@ -2262,7 +2262,7 @@ async function renderPublicSite(root) {
     else if (/^#sp=(?:[MF]\d0\.)?\d+_\d+/.test(location.hash)) openPack(location.hash.slice(4));
     else if (/^#lp=(?:[MF]\d0\.)?\d+_\d+/.test(location.hash)) openPack(location.hash.slice(4), true);
     else if (location.hash === "#bp") openPicks();
-    else if (location.hash === "#lf" || location.hash === "#lf2" || location.hash === "#lf2") openLongform(location.hash.slice(1));
+    else if (location.hash === "#lf" || location.hash === "#lf2") openLongform(location.hash.slice(1));
     else if (location.hash === "#lu") openLineup();
     else if (location.hash === "#cps") openCoupons();
     else if (/^#cp=\d+/.test(location.hash)) openCoupon(location.hash.slice(4));
@@ -3679,7 +3679,7 @@ async function renderPublicSite(root) {
     }
   } catch (e) {}
   window.addEventListener("hashchange", routeFromHash);
-  if (/^#(ep|st|ct|ca|br|sp|lp|look|looks|cp|spa)=/.test(location.hash) || location.hash === "#bp" || location.hash === "#lf" || location.hash === "#lu" || location.hash === "#cps") routeFromHash();
+  if (/^#(ep|st|ct|ca|br|sp|lp|look|looks|cp|spa)=/.test(location.hash) || location.hash === "#bp" || location.hash === "#lf" || location.hash === "#lf2" || location.hash === "#lu" || location.hash === "#cps") routeFromHash();
   loadCoupons().then(renderCouponStrip);
   finishIntro();
 
