@@ -2424,7 +2424,9 @@ async function renderPublicSite(root) {
   const lfCard = (href, th, label, title, n) => `<a class="lf-card" href="${href}"><span class="lf-th"><img src="${esc(th)}" alt="" loading="lazy"><i>▶</i></span><span class="lf-tx"><b>${label}</b><strong>${esc(title)}</strong><em>${n ? `영상 + 나온 제품 ${n}개 보기 →` : "보러가기 →"}</em></span></a>`;
   const LF1_ON = ((LF_URL || LF_ITEMS.length) && (LF.on !== false)) || LF_PV;
   const LF_HTML = LF1_ON || LF2_ON
-    ? `<div class="lf-bar">${LF2_ON ? lfCard("#lf2", safeImg(LF2.thumb || "") || "/img/longform2-thumb.jpg", "NEW 영상 · 2편", LF2.title || "MZ 겨울 패딩", LF2_ITEMS.length) : ""}${LF1_ON ? lfCard("#lf", safeImg(LF.thumb || "") || "/img/longform-thumb.jpg", LF2_ON ? "1편" : "NEW 영상", LF.title || "무신사 블프 총정리", LF_ITEMS.length) : ""}</div>`
+    ? (LF2_ON && LF1_ON
+      ? `<div class="lf-bar two">${lfCard("#lf2", safeImg(LF2.thumbWide || "") || "/img/longform2-thumb-wide.jpg", "NEW 영상 · 2편", LF2.title || "MZ 겨울 패딩", LF2_ITEMS.length)}${lfCard("#lf", safeImg(LF.thumbWide || "") || "/img/longform-thumb-wide.jpg", "1편", LF.title || "무신사 블프 총정리", LF_ITEMS.length)}</div>`
+      : `<div class="lf-bar">${LF2_ON ? lfCard("#lf2", safeImg(LF2.thumb || "") || "/img/longform2-thumb.jpg", "NEW 영상 · 2편", LF2.title || "MZ 겨울 패딩", LF2_ITEMS.length) : ""}${LF1_ON ? lfCard("#lf", safeImg(LF.thumb || "") || "/img/longform-thumb.jpg", "NEW 영상", LF.title || "무신사 블프 총정리", LF_ITEMS.length) : ""}</div>`)
     : "";
   const BF_LOCKED = BF_ON && !BF_PREVIEW && !(((ADMIN && ADMIN.bf) || {}).on) && Date.now() < BF_UNLOCK_AT;
 
@@ -3947,7 +3949,11 @@ renderPublicSite(ROOT_EL);
 #app-root .plz-exp { margin: 8px 0 2px; padding: 9px 11px; background: #fff1f1; border-radius: 10px; font-size: 13px; color: #141312; }
 #app-root .plz-exp b { color: #ff3d3f; font-weight: 800; }
 #app-root .plz-exp small { display: block; color: #8b857c; font-size: 11px; margin-top: 2px; }
-#app-root .lf-bar .lf-card + .lf-card { margin-top: 8px; }
+#app-root .lf-bar.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#app-root .lf-bar.two .lf-card { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 6px 6px 8px; min-width: 0; }
+#app-root .lf-bar.two .lf-th { width: 100%; height: auto; aspect-ratio: 16 / 9; }
+#app-root .lf-bar.two .lf-tx { padding: 0 3px; }
+#app-root .lf-bar.two .lf-tx strong { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 12px; line-height: 1.3; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
