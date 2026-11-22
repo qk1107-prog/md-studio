@@ -2830,8 +2830,8 @@ async function renderPublicSite(root) {
       const items = (C.items || []).filter((p) => p && p.link);
       if (!C.on || !items.length) return "";
       if (C.from && nowFn() < Date.parse(C.from) && !preview) return "";
-      return `<div class="bf-sec bf-mycart" id="bf-mycart">${secHead("🛒", "광만두 장바구니", "", "제가 직접 산 것만 모았어요")}
-        <p class="tz-cpnote">${esc(C.note || "블프 때 제가 실제로 담고 결제한 리스트예요. 같이 사요 🙌")}</p>
+      return `<div class="bf-sec bf-mycart" id="bf-mycart">${secHead("🛒", "주인장 장바구니", "", "산 것·담아둔 것·찜한 것")}
+        <p class="tz-cpnote">${esc(C.note || "블프 때 제가 사고, 담아두고, 찜한 것들이에요. 같이 사요 🙌")}</p>
         ${chipsGrid("mycart", [{ label: "전체", items }], false)}
       </div>`;
     }
@@ -2957,7 +2957,7 @@ async function renderPublicSite(root) {
     }
     function navSec(live) {
       const MC = BFD.mycart || {}; const mcOn = MC.on && (MC.items || []).length && (!MC.from || nowFn() >= Date.parse(MC.from) || preview);
-      const L = live ? [...(mcOn ? [["bf-mycart", "🛒 광만두 장바구니"]] : []), ["opz", "시그니처·하루특가·브랜드데이"], ["bf-pad", "블프 겨울 준비"], ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
+      const L = live ? [...(mcOn ? [["bf-mycart", "🛒 주인장 장바구니"]] : []), ["opz", "시그니처·하루특가·브랜드데이"], ["bf-pad", "블프 겨울 준비"], ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
         : [["bf-pad", "🧥 블프 겨울 준비"], ["bf-sig", "✨ 시그니처특가"], ["bf-tease", "⚡ 프리오픈"], ["bf-bday", "🏷️ 브랜드특가"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"], ["bf-live", "라이브"]];
       return `<div class="bf-jump">${L.map(([id, t], i) => `<button type="button" data-go="${id}"${i < 4 ? ` class="k${i}"` : ""}>${t}</button>`).join("")}</div>`;
     }
@@ -3130,7 +3130,7 @@ async function renderPublicSite(root) {
       const q = (x) => root.querySelector(x);
       // 블프 칸이 다시 그려지면 새로 생긴 것만 남기고 예전에 옮겨둔 건 지움
       const one = (sel) => { const L = [...root.querySelectorAll("#tab-bf " + sel)]; if (L.length < 2) return L[0] || null; const z = L.find((x) => x.closest(".bf-zone")) || L[L.length - 1]; L.forEach((x) => { if (x !== z) x.remove(); }); return z; };
-      [q("section.aw"), q("#cpz"), q("#tsz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), q("#opz"), one("#bf-pad"), one("#bf-best"), q("#plz")].forEach((el) => {
+      [q("section.aw"), one("#bf-mycart"), q("#cpz"), q("#tsz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), q("#opz"), one("#bf-pad"), one("#bf-best"), q("#plz")].forEach((el) => {
         if (!el) return;
         // 원래 블프 칸 안에서 클릭을 받던 칸은 옮긴 뒤에도 클릭되게
         if (window.__bfZoneClick && !el.__bound && el.id !== "opz" && el.id !== "cpz" && el.id !== "tsz" && el.id !== "hotz" && el.id !== "plz" && !el.classList.contains("aw")) { el.__bound = true; el.addEventListener("click", window.__bfZoneClick); }
