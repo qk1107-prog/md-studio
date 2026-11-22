@@ -3017,7 +3017,7 @@ async function renderPublicSite(root) {
         box = document.createElement("section"); box.id = "plz"; box.className = "plz";
         box.addEventListener("click", (e) => { const d = e.target.closest("[data-pday]"); if (d) { planDay = d.dataset.pday; planQ = ""; renderPlan(); } const c = e.target.closest("[data-pq]"); if (c) { planQ = c.dataset.pq; const inp = box.querySelector(".plz-q input"); if (inp) inp.value = planQ; drawFind(); } });
       }
-      const anchor = (root.querySelector("#opz") && root.querySelector("#bf-pad")) || root.querySelector("#hotz") || root.querySelector("#spz") || root.querySelector("#tsz") || root.querySelector("#cpz");
+      const anchor = (root.querySelector("#opz") && (root.querySelector("#tab-bf > #bf-best") || root.querySelector("#bf-pad"))) || root.querySelector("#hotz") || root.querySelector("#spz") || root.querySelector("#tsz") || root.querySelector("#cpz");
       if (anchor) { if (anchor.nextSibling !== box) anchor.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       // 프리오픈·티징 특가 칸은 본편 전까지 중간(실시간 HOT 바로 아래)으로 올리기
       { const tzs = [...root.querySelectorAll("#bf-tease")]; const fresh = tzs.find((e) => !e.classList.contains("mv")) || tzs[0]; tzs.forEach((e) => { if (e !== fresh) e.remove(); }); if (fresh && box.parentNode) { fresh.classList.add("mv"); if (box.previousElementSibling !== fresh) box.before(fresh); } }
