@@ -2953,7 +2953,7 @@ async function renderPublicSite(root) {
     }
     function navSec(live) {
       const MC = BFD.mycart || {}; const mcOn = MC.on && (MC.items || []).length && (!MC.from || nowFn() >= Date.parse(MC.from) || preview);
-      const L = live ? [...(mcOn ? [["bf-mycart", "🛒 광만두 장바구니"]] : []), ["bf-sig", "시그니처특가"], ["bf-pad", "블프 겨울 준비"], ["bf-hot", "하루특가"], ["bf-brand", "브랜드특가"], ["bf-bday", "브랜드데이"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
+      const L = live ? [...(mcOn ? [["bf-mycart", "🛒 광만두 장바구니"]] : []), ["opz", "시그니처·하루특가·브랜드데이"], ["bf-pad", "블프 겨울 준비"], ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
         : [["bf-pad", "🧥 블프 겨울 준비"], ["bf-sig", "✨ 시그니처특가"], ["bf-tease", "⚡ 프리오픈"], ["bf-bday", "🏷️ 브랜드특가"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"], ["bf-live", "라이브"]];
       return `<div class="bf-jump">${L.map(([id, t], i) => `<button type="button" data-go="${id}"${i < 4 ? ` class="k${i}"` : ""}>${t}</button>`).join("")}</div>`;
     }
@@ -2977,8 +2977,8 @@ async function renderPublicSite(root) {
       let box = root.querySelector("#tsz");
       if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
-      if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsmore]")) { tsOpen = !tsOpen; renderTs(); if (!tsOpen) box.scrollIntoView({ block: "start" }); } }); }
-      const mv = root.querySelectorAll(".mvup"); const opA = (mv.length ? mv[mv.length - 1] : null) || root.querySelector("#opz") || cp;
+      if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsmore]")) { tsOpen = !tsOpen; renderTs(); orderBF(); if (!tsOpen) box.scrollIntoView({ block: "start" }); } }); }
+      const opA = cp;
       if (opA) { if (opA.nextSibling !== box) opA.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const endTxt = (t) => { if (!t) return "타임세일"; const k = kp(t); const h = Math.round((t - now) / 36e5); return h < 24 ? `⏰ ${h < 1 ? "곧" : h + "시간 뒤"} 마감` : `~${k.m}/${k.d} ${k.h}시`; };
@@ -3107,15 +3107,28 @@ async function renderPublicSite(root) {
       const showAll = false;
       const cards = cur[2].slice(0, 20).map((p) => itemCard(Object.assign({}, p, { tag: (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em></p><small>인기·후기·할인 좋은 순 · 쿠폰까지 적용${k ? ` · ${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em><span class="cpz-live"><i></i>LIVE</span></p><small>쿠폰까지 적용${k ? ` · ${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small></div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
         <p class="opz-sub">${esc(cur[3])}</p>
         <div class="${showAll ? "opz-grid" : "tsz-scroll"}">${cards}</div>
         ${cur[2].length > 20 ? `<button type="button" class="opz-more" data-r1all="${r1Tab}">${esc(cur[1].replace(/^\S+\s/, ""))} 전체보기 → <b>${cur[2].length}개</b></button>` : ""}`;
       window.__r1T = T;
       // 블프 겨울 준비·하루특가·브랜드특가를 꿀템 정리 바로 밑으로
-      let ref = box; ["bf-pad", "bf-hot", "bf-brand"].forEach((id) => { const el = root.querySelector("#" + id); if (el) { el.classList.add("mvup"); if (ref.nextSibling !== el) ref.after(el); ref = el; } });
-      const ts = root.querySelector("#tsz"); if (ts && ref !== box && ref.nextSibling !== ts) ref.after(ts);
+      orderBF();
+    }
+    // 본편 순서: 블프 카드 → 주인장 BEST PICK → 실시간 쿠폰 → 타임세일 꿀템 → 핫한 아이템 꿀템 → 오늘의 꿀템 정리 → 블프 겨울 준비 → 나머지
+    // 꿀템 정리에 합친 시그니처·하루특가·브랜드특가 칸은 아래에서 숨김
+    function orderBF() {
+      if (nowFn() < T_OPEN && !preview) return;
+      const tab = root.querySelector("#tab-bf"); if (!tab) return;
+      const top = root.querySelector("#bf-topcard");
+      let ref = top && top.parentNode === tab ? top : null;
+      [root.querySelector("section.aw"), root.querySelector("#cpz"), root.querySelector("#tsz"), root.querySelector("#hotz"), root.querySelector("#opz"), root.querySelector("#bf-pad")].forEach((el) => {
+        if (!el) return;
+        if (ref) { if (ref.nextSibling !== el) ref.after(el); } else if (tab.firstChild !== el) tab.prepend(el);
+        ref = el;
+      });
+      if (root.querySelector("#opz")) ["bf-sig", "bf-hot", "bf-brand", "bf-bday"].forEach((id) => { const el = root.querySelector("#" + id); if (el) el.style.display = "none"; });
     }
     // 전체보기: 코디처럼 따로 열리는 페이지(종류별 칩 + 2칸 그리드)
     function openR1(key) {
@@ -3147,7 +3160,7 @@ async function renderPublicSite(root) {
       let box = root.querySelector("#hotz");
       if (!cats.length || nowFn() >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
-      if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { hotOpen = !hotOpen; renderHot(); if (!hotOpen) box.scrollIntoView({ block: "start" }); return; } const b = e.target.closest("[data-hv]"); if (!b) return; hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); }); }
+      if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { hotOpen = !hotOpen; renderHot(); orderBF(); if (!hotOpen) box.scrollIntoView({ block: "start" }); return; } const b = e.target.closest("[data-hv]"); if (!b) return; hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); orderBF(); }); }
       const anchor = root.querySelector("#spz") || root.querySelector("#tsz") || cp;
       if (anchor && anchor.nextSibling !== box) anchor.after(box);
       else if (!cp && !box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
@@ -3198,11 +3211,11 @@ async function renderPublicSite(root) {
       top.replaceChildren(card);
     }
     function render() {
-      setTimeout(() => { renderTs(); renderHot(); try { renderPlan(); } catch (e) {} try { renderR1(); } catch (e) {} }, 0);
+      setTimeout(() => { renderTs(); renderHot(); try { renderPlan(); } catch (e) {} try { renderR1(); } catch (e) {} try { orderBF(); } catch (e) {} }, 0);
       // 페이지를 열어둔 채로 있어도 보고방(매시 정각)·이 방(매시 25분) 업데이트가 바로 보이게 3분마다 다시 받기
       if (!window.__tsPoll) window.__tsPoll = setInterval(() => {
         if (document.hidden) return;
-        sdFetch("main").then((v) => { if (!v || !v.bf) return; const o = BFD.dm && BFD.dm.at, t = BFD.ts && BFD.ts.at; const r1o = BFD.r1 && BFD.r1.at, dyo = JSON.stringify(BFD.days || {}).length; ["dm", "ts", "spot", "hot", "r1", "days"].forEach((k) => { if (v.bf[k]) BFD[k] = v.bf[k]; }); if ((BFD.dm && BFD.dm.at) !== o || (BFD.ts && BFD.ts.at) !== t || (BFD.r1 && BFD.r1.at) !== r1o || JSON.stringify(BFD.days || {}).length !== dyo) { renderTs(); renderHot(); try { renderPlan(); } catch (e) {} try { renderR1(); } catch (e) {} } }).catch(() => {});
+        sdFetch("main").then((v) => { if (!v || !v.bf) return; const o = BFD.dm && BFD.dm.at, t = BFD.ts && BFD.ts.at; const r1o = BFD.r1 && BFD.r1.at, dyo = JSON.stringify(BFD.days || {}).length; ["dm", "ts", "spot", "hot", "r1", "days"].forEach((k) => { if (v.bf[k]) BFD[k] = v.bf[k]; }); if ((BFD.dm && BFD.dm.at) !== o || (BFD.ts && BFD.ts.at) !== t || (BFD.r1 && BFD.r1.at) !== r1o || JSON.stringify(BFD.days || {}).length !== dyo) { renderTs(); renderHot(); try { renderPlan(); } catch (e) {} try { renderR1(); } catch (e) {} try { orderBF(); } catch (e) {} } }).catch(() => {});
       }, 180000);
       const now = nowFn();
       if (now >= T_END) { phase = "end"; zone.innerHTML = `<p class="bf-empty">이번 무진장은 끝났어요. 다음 블프 때 다시 정리할게요!</p>`; return; }
