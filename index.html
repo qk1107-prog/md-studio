@@ -2621,6 +2621,13 @@ async function renderPublicSite(root) {
     const cd = (until) => `<span data-cd="${until}"></span>`;
 
     // 본편 오픈 후 직전가랑 같은데 쿠폰도 없는 상품은 추천 칸에서 뺌
+    // 카드 오른쪽 위 할인율: 정가 대비 (쿠폰 있으면 쿠폰가 기준)
+    function discPct(p) {
+      const id = gidOf(p); const cur = Number(p.sale) || priceNow(p, id);
+      const nor = Math.max(Number(p.price) || 0, PRE[id] ? Number(PRE[id][1]) || 0 : 0);
+      const c = Number(p.cpn) || 0; const x = c && c < cur ? c : cur;
+      return nor > x && x ? Math.round((1 - x / nor) * 100) : (Number(p.rate) || 0);
+    }
     function noDeal(p) {
       if (nowFn() < T_OPEN) return false;
       const id = gidOf(p), pre = PRE[id] ? Number(PRE[id][0]) : 0; const cur = priceNow(p, id);
@@ -2640,7 +2647,12 @@ async function renderPublicSite(root) {
           const pctN = Math.round((1 - cur / base) * 100);
           return `<p class="pt"><s>${esc(won(base))}</s><b class="pbf">블프가</b></p><p class="pr"><i>${pctN}%</i>${esc(won(cur))}</p><p class="preal">직전가보다 -${pct}%</p>`;
         }
-        if (nowFn() >= T_OPEN) { const c = Number(p.cpn) || 0; if (c && c < cur) return `<p class="pt"><s>${esc(won(cur))}</s><b class="pbf">쿠폰가</b></p><p class="pr"><i>${Math.round((1 - c / cur) * 100)}%</i>${esc(won(c))}</p>`; return `<p class="pr">${esc(won(cur))}</p>`; }
+        if (nowFn() >= T_OPEN) {
+          // 직전가랑 같으면 '같아요' 대신 정가 대비 할인율 + 쿠폰가로
+          const nor = Math.max(Number(PRE[id][1]) || 0, Number(p.price) || 0); const c = Number(p.cpn) || 0;
+          const pc = nor > cur ? Math.round((1 - cur / nor) * 100) : 0;
+          return `${pc ? `<p class="pt"><s>${esc(won(nor))}</s></p>` : ""}<p class="pr">${pc ? `<i>${pc}%</i>` : ""}${esc(won(cur))}</p>${c && c < cur ? `<p class="preal">쿠폰 적용 시 ${esc(won(c))}</p>` : ""}`;
+        }
         // 티징 기간(11/20~22)엔 아직 블프가가 안 열린 상품이 많아서, 평소 표시(정가 취소선+할인가) 그대로
       }
       // 평소: 정가 취소선 + 할인율·할인가 (정가는 직전 스냅샷 → 없으면 할인율로 역산)
@@ -2966,7 +2978,8 @@ async function renderPublicSite(root) {
       if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
       if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsmore]")) { tsOpen = !tsOpen; renderTs(); if (!tsOpen) box.scrollIntoView({ block: "start" }); } }); }
-      if (cp) { if (cp.nextSibling !== box) cp.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
+      const opA = root.querySelector("#opz") || cp;
+      if (opA) { if (opA.nextSibling !== box) opA.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const endTxt = (t) => { if (!t) return "타임세일"; const k = kp(t); const h = Math.round((t - now) / 36e5); return h < 24 ? `⏰ ${h < 1 ? "곧" : h + "시간 뒤"} 마감` : `~${k.m}/${k.d} ${k.h}시`; };
       const card = (p) => {
@@ -3082,7 +3095,8 @@ async function renderPublicSite(root) {
       const R = BFD.r1 || {};
       const hot = (day.hot || [...(day.hotA || []), ...(day.hotB || [])]).filter((p) => !noDeal(p));
       const br = []; const bl = (day.brands || []).map((b) => (b.items || []).slice()); for (let r = 0; r < 8; r++) bl.forEach((L) => { if (L[r]) br.push(L[r]); });
-      const T = [["hot", "🔥 하루특가", hot, "오늘 자정까지"], ["brand", "🏷️ 브랜드특가", br.filter((p) => !noDeal(p)), "오늘의 브랜드"], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"]].filter((t) => t[2].length);
+      const sg = []; const sl = (BFD.sigPreview || []).map((g) => (g.items || []).filter((p) => !noDeal(p))); for (let r = 0; r < 80; r++) sl.forEach((L) => { if (L[r] && !(sg.length && sg[sg.length - 1].brand === L[r].brand)) sg.push(L[r]); else if (L[r]) sg.push(L[r]); });
+      const T = [["sig", "💎 시그니처특가", sg, "역대급 무진장 시그니처특가"], ["hot", "🔥 하루특가", hot, "오늘 자정까지"], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), "오늘의 브랜드"], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"]].filter((t) => t[2].length);
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
       const cp = root.querySelector("#cpz");
@@ -3091,7 +3105,7 @@ async function renderPublicSite(root) {
       const cur = T.find((t) => t[0] === r1Tab);
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const showAll = false;
-      const cards = cur[2].slice(0, 20).map((p) => itemCard(Object.assign({}, p, { tag: p.cpn ? "쿠폰가" : p.mj ? "무진장" : (p.tag || ""), comment: p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
+      const cards = cur[2].slice(0, 20).map((p) => itemCard(Object.assign({}, p, { tag: (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em></p><small>인기·후기·할인 좋은 순 · 쿠폰까지 적용${k ? ` · ${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
@@ -3113,7 +3127,7 @@ async function renderPublicSite(root) {
         pg.innerHTML = `<div class="ep-sticky"><div class="feed-header"><button class="back-link" data-r1x aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg></button><p class="feed-title">오늘의 꿀템 정리</p></div></div>
           <div class="ep-wrap r1-wrap"><div class="ep-hero"><span class="ep-series s-heart">무진장 본편</span><h1 class="ep-hero-title">${esc(cur[1])} ${cur[2].length}</h1><p class="r1-sub">${esc(cur[3])} · 인기·후기·할인 좋은 순 · 쿠폰까지 적용</p></div>
           ${types.length > 1 ? `<div class="opz-tabs r1-ty"><button type="button" data-ty="" class="${ty ? "" : "on"}">전체<i>${cur[2].length}</i></button>${types.map((t) => `<button type="button" data-ty="${esc(t)}" class="${ty === t ? "on" : ""}">${esc(t)}<i>${cur[2].filter((p) => p.ty === t).length}</i></button>`).join("")}</div>` : ""}
-          <div class="opz-grid">${L.map((p) => itemCard(Object.assign({}, p, { tag: p.cpn ? "쿠폰가" : p.mj ? "무진장" : (p.tag || ""), comment: p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("")}</div>
+          <div class="opz-grid">${L.map((p) => itemCard(Object.assign({}, p, { tag: (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("")}</div>
           <p class="ep-note">가격은 세일에 따라 바뀌어서 무신사에서 확인해 주세요.<br>이 페이지의 링크로 구매하시면 광만두가 일정 수수료를 받을 수 있어요.</p></div>`;
       };
       draw();
