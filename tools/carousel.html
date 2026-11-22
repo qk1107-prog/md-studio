@@ -71,7 +71,7 @@
 <div class="bar">
   <b>블프 데일리 캐러셀</b>
   <input id="d" placeholder="날짜 (예: 11.23(월))">
-  <input id="t" placeholder="표지 제목">
+  <textarea id="t" rows="2" placeholder="표지 제목 (줄바꿈 가능)" style="font:inherit;font-size:13px;padding:6px 8px;border-radius:6px;border:0;width:190px;resize:vertical"></textarea>
   <button id="all">전체 PNG 저장</button>
   <span class="st" id="st">불러오는 중…</span>
 </div>
@@ -96,7 +96,7 @@
 
   // 같은 브랜드 연속 X, 할인 있는 것, 후기 많은 순
   const pickList = (L) => {
-    let a = (L || []).filter((p) => p && p.img && p.link && (Number(p.rate) >= 15 || (p.cpn && p.cpn < p.sale)));
+    let a = (L || []).filter((p) => p && p.img && p.link && !/지프|스칼렛또/.test(p.brand || "") && (Number(p.rate) >= 15 || (p.cpn && p.cpn < p.sale)));
     a = a.slice().sort((x, y) => (Math.log10((y.rv || 0) + 10) * 10 + (y.rate || 0) * 0.5) - (Math.log10((x.rv || 0) + 10) * 10 + (x.rate || 0) * 0.5));
     const out = []; while (a.length) { const j = a.findIndex((x) => !out.length || x.brand !== out[out.length - 1].brand); out.push(a.splice(j < 0 ? 0 : j, 1)[0]); }
     return out;
@@ -108,7 +108,7 @@
     { k: "kicks", h: "👟 킥스 특가", s: "무진장 킥스데이", L: pickList((B.r1 || {}).kicks) },
     { k: "sig", h: "💎 시그니처특가", s: "블프 내내 이 가격", L: sig },
   ].filter((x) => x.L.length >= 6);
-  const brands = (D.brands || []).filter((b) => (b.items || []).length).map((b) => ({ brand: b.brand, rate: b.rate || Math.max(...b.items.map((x) => x.rate || 0)), img: (pickList(b.items)[0] || b.items[0]).img }));
+  const brands = (D.brands || []).filter((b) => (b.items || []).length && !/지프|스칼렛또/.test(b.brand)).map((b) => ({ brand: b.brand, rate: b.rate || Math.max(...b.items.map((x) => x.rate || 0)), img: (pickList(b.items)[0] || b.items[0]).img }));
   const off = {};
 
   // 표지 사진: 광만두 라인업·착샷
