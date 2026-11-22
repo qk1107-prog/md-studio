@@ -48,8 +48,8 @@ window.__r1Run = async (opt) => {
     }));
     // 트렌드(랭킹) 우선 + 후기 + 할인 + 쿠폰·무진장
     // 하입 점수: 여러 나이대·랭킹에 계속 들어가 있는 정도(FREQ) + 최고 순위 + 후기 + 할인·쿠폰
-    const sc = (x) => (FREQ[x.i] || 0) * 9 + Math.max(0, 40 - (BEST[x.i] ?? 99) * 0.6) + Math.log10(x.rv + 10) * 9 + x.rate * 0.4 + (x.cpn ? 6 : 0) + (x.mj ? 8 : 0);
-    let pick = det.filter((x) => (FREQ[x.i] || 0) >= 2 || x.rv >= 300 || (BEST[x.i] ?? 99) < 10).sort((a, b) => sc(b) - sc(a)).slice(0, opt.n || 100);
+    const sc = (x) => (FREQ[x.i] || 0) * 5 + Math.max(0, 30 - (BEST[x.i] ?? 99) * 0.5) + Math.log10(x.rv + 1) * 12 + x.rate * 0.3 + (x.cpn ? 5 : 0) + (x.mj ? 6 : 0);
+    let pick = det.filter((x) => (x.rv >= 30 && ((FREQ[x.i] || 0) >= 2 || x.rv >= 500)) || ((FREQ[x.i] || 0) >= 8 && (BEST[x.i] ?? 99) < 20)).sort((a, b) => sc(b) - sc(a)).slice(0, opt.n || 100);
     // 같은 브랜드 연속 금지
     const arr = [];
     while (pick.length) { const j = pick.findIndex((x) => !arr.length || x.brand !== arr[arr.length - 1].brand); arr.push(pick.splice(j < 0 ? 0 : j, 1)[0]); }
