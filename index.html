@@ -3022,7 +3022,7 @@ async function renderPublicSite(root) {
       const liveHtml = LV.length ? `<p class="plz-h">라이브 <span>${LV.length}</span></p>${LV.map((l) => `<a class="plz-live" href="https://www.musinsa.com${esc(String(l.h || "").replace(/^https?:\/\/www\.musinsa\.com/, ""))}" target="_blank" rel="noopener"><span class="plz-time">${fmtT(l.t)}</span><span class="plz-lb"><b>${esc(l.b)}</b><em>${esc(short(l.d))}</em></span><span class="plz-go">알림 →</span></a>${cpChip(l.b)}`).join("")}` : "";
       const bdHtml = bd && (bd.list || []).length ? `<p class="plz-h">시그니처 브랜드데이 <span>${esc(bd.p.replace(/\(.\)/g, ""))}</span></p><div class="plz-brands">${bd.list.map((x) => `<button type="button" class="plz-br" data-pq="${esc(x.b)}"><b>${esc(x.b)}</b><em>${esc(short(x.t))}</em>${x.x ? '<i>단독</i>' : ""}</button>`).join("")}</div>${bd.list.map((x) => cpChip(x.b)).join("")}` : "";
       const FAMQ = /노스페이스|나이키|아디다스|뉴발란스|어그|디스커버리|무신사 스탠다드|커버낫|마뗑킴|코오롱|아이더|살로몬|폴로|칼하트/;
-      const qAll = [...new Set([...lives.map((l) => l.b), ...bds.flatMap((x) => (x.list || []).map((y) => y.b))].filter(Boolean))];
+      const qAll = [...new Set([...lives.map((l) => l.b), ...bds.flatMap((x) => (x.list || []).map((y) => y.b))].filter(Boolean).filter((b) => !/우먼|\/|여성/.test(b)))]; if (!qAll.includes("노스페이스")) qAll.unshift("노스페이스");
       const qChips = [...qAll.filter((b) => FAMQ.test(b)), ...qAll.filter((b) => !FAMQ.test(b))].slice(0, 8).map((b) => `<button type="button" data-pq="${esc(b)}"${planQ === b ? ' class="on"' : ""}>${esc(b)}</button>`).join("");
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🗓️ 블프 <em class="plz-em">언제 뭐 사지?</em></p><small>브랜드를 검색하거나 날짜를 눌러보세요</small></div>
         <div class="plz-qbox">
