@@ -3051,7 +3051,15 @@ async function renderPublicSite(root) {
         ((BFD.hot || {}).cats || []).forEach((c) => (c.items || []).forEach(add)); ((BFD.hot || {}).rise || []).forEach(add);
         ((BFD.spot || {}).brands || []).forEach((o) => (o.items || []).forEach(add));
         try { ((ADMIN.awards || {}).items || []).forEach((x) => add({ brand: x.brand, name: x.name || x.product_name, img: x.img || x.image_url, link: x.link || x.curator_url, price: x.price, sale: x.sale })); } catch (e) {}
-        const cards = pool.slice(0, 9).map((p) => itemCard(Object.assign({}, p, { tag: "" }), 0)).join("");
+        // 이 브랜드 블프 최대 할인율(브랜드데이·라이브 문구에서) → 카드 태그 + 최대 혜택 시 예상가
+        const txts = []; bds.forEach((x) => (x.list || []).forEach((y) => { if (hit(y.b)) txts.push(String(y.t || "")); })); lives.forEach((l) => { if (hit(l.b)) txts.push(String(l.d || "")); });
+        let mx = 0, cx = 0; txts.forEach((t) => { (t.match(/(\d{1,2})%/g) || []).forEach(() => {}); const a = t.match(/최대\s*(\d{1,2})%\s*할인|~\s*(\d{1,2})%/); if (a) mx = Math.max(mx, Number(a[1] || a[2])); const c = t.match(/(?:쿠폰\s*(?:최대\s*)?(\d{1,2})%|(\d{1,2})%\s*쿠폰)/); if (c) cx = Math.max(cx, Number(c[1] || c[2])); });
+        const wonK = (n) => "약 " + (Math.round(n / 100) * 100).toLocaleString("ko-KR") + "원";
+        const cards = pool.slice(0, 9).map((p) => { const base = Number(p.price) || Number(p.sale) || 0; const cur = Number(p.rate) || (p.price && p.sale ? Math.round((1 - p.sale / p.price) * 100) : 0);
+          let tag = "", cm = "";
+          if (mx) { tag = `블프 최대 ${mx}%${cx ? "+쿠폰" : ""}`; if (base) { const est = base * (1 - mx / 100) * (1 - cx / 100); if (!p.sale || est < p.sale) cm = `최대 혜택 시 ${wonK(est)}`; } }
+          else if (cur >= 5) tag = `지금 -${cur}%`;
+          return itemCard(Object.assign({}, p, { tag, comment: cm }), 0); }).join("");
         out.innerHTML = ev.length || cards ? `${ev.length ? `<div class="plz-ev">${ev.map((x) => `<p>${x.h}</p>`).join("")}</div>` : `<p class="plz-none">이 브랜드는 아직 브랜드데이·라이브 일정이 없어요 · 회차 쿠폰은 매 회차 받을 수 있어요</p>`}${cards ? `<p class="plz-h">지금 볼 수 있는 제품</p><div class="tsz-scroll">${cards}</div>` : ""}` : `<p class="plz-none">찾는 브랜드가 아직 일정에 없어요</p>`;
       }
       drawFind();
