@@ -1244,7 +1244,11 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 const SD_DIRECT = (() => { try { return /[?&](fresh|owner)=1/.test(location.search) || localStorage.getItem("mds_owner") === "1"; } catch (e) { return false; } })();
 async function sdFetch(id) {
   if (!SD_DIRECT) {
-    try { const r = await fetch("/api/sd?id=" + id); if (r.ok) { const v = await r.json(); if (v != null) return v; } } catch (e) {}
+    // 캐시 서버로 3번까지 다시 시도 (접속 몰릴 때 수파베이스로 바로 몰려가지 않게)
+    for (let k = 0; k < 3; k++) {
+      try { const r = await fetch("/api/sd?id=" + id + (k ? "&r=" + k : "")); if (r.ok) { const v = await r.json(); if (v != null) return v; } } catch (e) {}
+      await new Promise((ok) => setTimeout(ok, 1500 * (k + 1)));
+    }
   }
   if (id === "episodes") return null;
   const { data } = await supabaseClient.from("site_data").select("value").eq("id", id).maybeSingle();
