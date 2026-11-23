@@ -3059,7 +3059,7 @@ async function renderPublicSite(root) {
       const card = (p, l) => { const sale = Number(p.sale) || 0, price = Number(p.price) || 0, rate = Number(p.rate) || 0, img = safeImg(p.img);
         return `<a class="bf-item tsc" href="${esc(safeUrl(p.link) || "#")}" target="_blank" rel="noopener"><div class="im">${img ? `<img src="${esc(img)}" loading="lazy" alt="" referrerpolicy="no-referrer">` : ""}${p.cp ? `<span class="tg lv-tg">${esc(p.cp)}% 쿠폰</span>` : rate ? `<span class="tg lv-tg">-${esc(rate)}%</span>` : ""}</div>
           <p class="br">${esc(p.brand || l.brand || "")}</p><p class="nm">${esc(p.name || "")}</p>${price > sale ? `<p class="pt"><s>${esc(won(price))}</s></p>` : ""}<p class="pr">${rate ? `<i>${esc(rate)}%</i>` : ""}${esc(won(sale))}</p></a>`; };
-      window.__lvLives = lives.map((l) => ({ brand: l.brand, coupon: l.coupon, list: (l.items || []).filter((p) => p && p.link).map((p) => Object.assign({}, p, { tag: `${l.rate ? l.rate + "% " : ""}라이브 쿠폰`, comment: `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` })) }));
+      window.__lvLives = lives.map((l) => ({ brand: l.brand, coupon: l.coupon, list: (l.items || []).filter((p) => p && p.link).map((p) => Object.assign({}, p, { tag: `${p.cp || l.rate ? (p.cp || l.rate) + "% " : ""}쿠폰`, comment: `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` })) }));
       const hm = (t) => { const k = kp(t); return `${k.h}:${String(k.mi).padStart(2, "0")}`; };
       const row = (l, i) => { const L = (l.items || []).filter((p) => p && p.link); const st = tm(l.start), en = tm(l.liveEnd);
         const onAir = st && st <= now && (!en || now < en);
