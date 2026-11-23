@@ -3076,7 +3076,7 @@ async function renderPublicSite(root) {
     // 지금 회차 칸: main.bf.r1 = { at, title?, end?, outer:[...], kicks:[...] } — 종류마다 한 줄(4개) + 100개 전체보기. 라이브 쿠폰 칸 바로 아래.
     function renderRd() {
       const R = BFD.r1 || {}; const now = nowFn();
-      const NAMES = { outer: "🧥 아우터데이", kicks: "👟 킥스데이", top: "👕 상의데이", bottom: "👖 하의데이", beauty: "🧴 뷰티데이", acc: "🎒 잡화데이" };
+      const NAMES = { outer: "아우터", kicks: "신발", top: "상의", bottom: "하의", beauty: "뷰티", acc: "잡화" };
       const endT = Date.parse(R.end || "2026-11-24T23:59:59+09:00");
       const rows = Object.keys(R).filter((k) => Array.isArray(R[k]) && R[k].length >= 4).sort((a, b) => (Object.keys(NAMES).indexOf(a) + 99) % 99 - (Object.keys(NAMES).indexOf(b) + 99) % 99).map((k) => {
         // 후기 있는 상품 중 할인율 큰 순, 같은 브랜드는 최대 5개·연달아 X, 100개
@@ -3086,12 +3086,12 @@ async function renderPublicSite(root) {
       }).filter((r) => r.list.length >= 4);
       let box = root.querySelector("#rdz");
       if (!rows.length || now >= endT || now >= T_END) { if (box) box.remove(); return; }
-      if (!box) { box = document.createElement("section"); box.id = "rdz"; box.className = "rdz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-rdall]"); if (b) { const r = (window.__rdRows || [])[Number(b.dataset.rdall)]; if (r && window.__openList) window.__openList("rd" + b.dataset.rdall, `${r.label} 할인 큰 꿀템`, r.list, "", r.label); } }); }
+      if (!box) { box = document.createElement("section"); box.id = "rdz"; box.className = "rdz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-rdall]"); if (b) { const r = (window.__rdRows || [])[Number(b.dataset.rdall)]; if (r && window.__openList) window.__openList("rd" + b.dataset.rdall, `⚡ ${r.label} 꿀템`, r.list, "", r.label + " 꿀템"); } }); }
       if (!box.parentNode) { const lv = root.querySelector("#lvz"); const bz = root.querySelector("#tab-bf"); if (lv) lv.after(box); else if (bz) bz.prepend(box); }
       window.__rdRows = rows;
       const ek = kp(endT);
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 지금은 <em>${esc(R.title || "1회차 · 아우터데이 · 킥스데이")}</em></p><small>${ek.m}/${ek.d}까지 · 할인 큰 순</small></div><div class="hotz-bar"><i></i></div>
-        ${rows.map((r, i) => `<div class="lv-row"><div class="lv-rh"><b>${esc(r.label)}</b><small>할인 큰 꿀템만 골랐어요</small><button type="button" class="lv-all" data-rdall="${i}">${r.list.length}개 전체보기 →</button></div><div class="bf-grid">${r.list.slice(0, 4).map((p) => itemCard(p, 0)).join("")}</div></div>`).join("")}`;
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 지금은 <em>${esc(R.title || "1회차 아우터데이·킥스데이")}</em> 중 꿀템</p><small>${ek.m}/${ek.d}까지</small></div><div class="hotz-bar"><i></i></div>
+        ${rows.map((r, i) => `<div class="rd-row"><div class="rd-rh"><b>${esc(r.label)}</b><button type="button" class="rd-all" data-rdall="${i}">전체보기 →</button></div><div class="rd-strip">${r.list.slice(0, 10).map((p) => itemCard(p, 0)).join("")}</div></div>`).join("")}`;
     }
     function renderTs() {
       const T = BFD.ts || {}; const now = nowFn();
@@ -4261,13 +4261,19 @@ renderPublicSite(ROOT_EL);
 #app-root .cpz-hint .cpz-more{margin-left:auto;color:#141312}
 #app-root .sec-more{display:block;width:100%;margin:10px 0 2px;padding:11px 0;border:1.5px solid #141312;border-radius:10px;background:#fff;color:#141312;font-size:13px;font-weight:800;cursor:pointer}
 #app-root .sec-more:active{background:#141312;color:#fff}
-#app-root .rdz{margin:4px 0 14px;border:2px solid #141312;border-radius:14px;padding:12px 12px 10px;background:#fff}
-#app-root .rdz .lv-row{margin-top:10px;padding-top:10px;border-top:1px dashed #d9d4cb}
-#app-root .rdz .lv-row:first-of-type{border-top:0;padding-top:0}
-#app-root .rdz .lv-rh{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:7px}
-#app-root .rdz .lv-rh b{font-size:14px;font-weight:900}
-#app-root .rdz .lv-rh small{font-size:11px;color:#666}
-#app-root .rdz .lv-all{margin-left:auto;border:0;background:#141312;color:#fff;font-size:11px;font-weight:800;padding:5px 9px;border-radius:999px;cursor:pointer}
+#app-root .rdz{margin:4px 0 16px}
+#app-root .rdz .rd-row{margin-top:10px}
+#app-root .rdz .rd-rh{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+#app-root .rdz .rd-rh b{font-size:13px;font-weight:900;background:#141312;color:#fff;padding:3px 10px;border-radius:999px}
+#app-root .rdz .rd-all{border:0;background:none;font:inherit;font-size:12px;font-weight:800;color:#141312;padding:6px 2px;cursor:pointer;white-space:nowrap}
+#app-root .rdz .rd-strip{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;margin-right:-16px;padding-right:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#app-root .rdz .rd-strip::-webkit-scrollbar{display:none}
+#app-root .rdz .rd-strip > .bf-item{flex:0 0 18.6%;min-width:0;scroll-snap-align:start}
+#app-root .rdz .bf-item .im{border-radius:8px}
+#app-root .rdz .bf-item .br{font-size:9.5px}
+#app-root .rdz .bf-item .nm{font-size:9.5px;-webkit-line-clamp:1}
+#app-root .rdz .bf-item .pr{font-size:11px}
+#app-root .rdz .bf-item .pt,#app-root .rdz .bf-item .rv,#app-root .rdz .bf-item .cm,#app-root .rdz .bf-item .preal,#app-root .rdz .bf-item .tg{display:none}
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
