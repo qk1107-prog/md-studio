@@ -14,10 +14,14 @@ function slim(id, out) {
   if (bf.days) {
     const k = new Date(Date.now() + 9 * 36e5); const pad = (n) => String(n).padStart(2, "0");
     const today = k.getUTCFullYear() + "-" + pad(k.getUTCMonth() + 1) + "-" + pad(k.getUTCDate());
-    const keys = Object.keys(bf.days).filter((d) => d <= today).sort().slice(-2);
+    const keys = Object.keys(bf.days).filter((d) => d <= today).sort().slice(-1);
     const d = {}; keys.forEach((x) => { d[x] = bf.days[x]; }); Object.keys(bf.days).filter((x) => x > today).forEach((x) => { d[x] = bf.days[x]; });
+    // 브랜드데이는 화면에 브랜드당 12개까지만 보여서 그만큼만
+    Object.keys(d).forEach((x) => { if (d[x] && Array.isArray(d[x].brands)) d[x] = Object.assign({}, d[x], { brands: d[x].brands.map((b) => Object.assign({}, b, { items: (b.items || []).slice(0, 12) })) }); });
     bf.days = d;
   }
+  // 본편 오픈 뒤엔 티징 칸이 안 보여서 브랜드 할인율(brands)만 남김
+  if (bf.teaser && Date.now() >= Date.parse("2026-11-22T10:00:00Z")) bf.teaser = { brands: bf.teaser.brands || [] };
   return Object.assign({}, out, { bf });
 }
 module.exports = async function handler(req, res) {
