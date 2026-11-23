@@ -2654,10 +2654,10 @@ async function renderPublicSite(root) {
       return nor > x && x ? Math.round((1 - x / nor) * 100) : (Number(p.rate) || 0);
     }
     // 광만두 콜라보 고정 카드: 순위가 아니라 '광만두 콜라보'라고 표시해서 각 목록 앞쪽에 하나씩 (블랙·그레이 번갈아)
-    function withPin(L, seed, pos, quiet) {
+    function withPin(L, seed, pos, quiet, want) {
       const P = ((BFD.collabPin || {}).on && (BFD.collabPin.items || []).filter((p) => p && p.link)) || [];
       if (!P.length || !L || L.length < 2) return L;
-      const p = P[Math.abs(seed || 0) % P.length];
+      const p = (want && P.find((x) => String(x.name || "").includes(want))) || P[Math.abs(seed || 0) % P.length];
       const out = L.filter((x) => x.link !== p.link);
       out.splice(Math.min(pos || 0, out.length), 0, Object.assign({}, p, { tag: "광만두 콜라보", comment: quiet ? "" : (BFD.collabPin.note || "출시 초도 할인 중"), pin: 1 }));
       return out;
@@ -2721,7 +2721,7 @@ async function renderPublicSite(root) {
         <p class="nm">${esc(p.name)}</p>
         ${priceHtml(p)}
         ${p.rv ? `<p class="rv">후기 ${Number(p.rv).toLocaleString("ko-KR")}</p>` : ""}
-        ${p.comment ? `<p class="cm">${esc(p.comment)}</p>` : ""}
+        ${p.comment ? `<p class="cm${/초도 할인/.test(p.comment) ? " cm-hot" : ""}">${esc(p.comment)}</p>` : ""}
       </a>`;
     }
     const GRIDS = {};
@@ -3142,7 +3142,7 @@ async function renderPublicSite(root) {
       const sg = []; const sl = (BFD.sigPreview || []).map((g) => (g.items || []).filter((p) => !noDeal(p))); for (let r = 0; r < 80; r++) sl.forEach((L) => { if (L[r] && !(sg.length && sg[sg.length - 1].brand === L[r].brand)) sg.push(L[r]); else if (L[r]) sg.push(L[r]); });
       const SO = ((BFD.sold || {}).items || []).filter((p) => !noDeal(p));
       const T = [["sold", "🔥 핫", SO, ""], ["sig", "💎 시그니처특가", sg, ""], ["hot", "⏰ 하루특가", hot, ""], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), ""], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), ""], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), ""]].filter((t) => t[2].length);
-      T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(withAds(t[2], new Date().getHours(), [3, 7, 11, 15]), new Date().getHours()); });
+      T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(withAds(t[2], new Date().getHours(), [3, 7, 11, 15]), 0, 0, false, (BFD.collabPin || {}).opz || "멜란지"); });
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
       const cp = root.querySelector("#cpz");
@@ -3234,7 +3234,7 @@ async function renderPublicSite(root) {
       const rise = (H.rise || []).filter((x) => x && x.link);
       if (hotView === -2 && !rise.length) hotView = -1;
       const full = (hotView === -2 ? rise : hotView < 0 || !cats[hotView] ? mix : cats[hotView].items);
-      const LIM = 8, list = (hotOpen ? withPin(withAds(full, hotView + 5, [2, 12, 22, 32]), hotView + 3, 5, true) : withPin(withAds(full, hotView + 5, [2]).slice(0, LIM - 1), hotView + 3, 5, true)).map((p) => { if (p.pin) return p; const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
+      const LIM = 8, list = (hotOpen ? withPin(withAds(full, hotView + 5, [2, 12, 22, 32]), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜") : withPin(withAds(full, hotView + 5, [2]).slice(0, LIM - 1), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜")).map((p) => { if (p.pin) return p; const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
       const sig = (H.at || "") + hotView + list.length;
       const fresh = box.dataset.sig !== sig; box.dataset.sig = sig;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 가장 핫한 <em>아이템 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small></div>
@@ -4107,6 +4107,9 @@ renderPublicSite(ROOT_EL);
 #app-root .opz-grid .bf-item .pr { font-size: 12px; }
 #app-root .opz-grid .bf-item .pt, #app-root .opz-grid .bf-item .rv, #app-root .opz-grid .bf-item .cm, #app-root .opz-grid .bf-item .preal { font-size: 9.5px; }
 #app-root #bf-pad { position: relative; }
+#app-root .bf-item .cm.cm-hot { display: inline-block; margin-top: 4px; background: #ff3d3f; color: #fff !important; font-weight: 900; font-size: 11px; padding: 3px 7px; border-radius: 6px; animation: cmHot 1.4s ease-in-out infinite; }
+@keyframes cmHot { 50% { background: #141312; } }
+@media (prefers-reduced-motion: reduce) { #app-root .bf-item .cm.cm-hot { animation: none; } }
 #app-root .bf-hub .bf-stamp { display: none; }
 #app-root #bf-pad .pad-all { position: absolute; right: 0; top: 2px; z-index: 2; border: 0; background: none; font-size: 12px; font-weight: 800; color: #111; padding: 6px 2px; cursor: pointer; }
 #app-root .opz-grid .bf-item { width: auto; }
