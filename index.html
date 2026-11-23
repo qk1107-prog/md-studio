@@ -3078,9 +3078,17 @@ async function renderPublicSite(root) {
       const R = BFD.r1 || {}; const now = nowFn();
       const NAMES = { outer: "아우터", kicks: "신발", top: "상의", bottom: "하의", beauty: "뷰티", acc: "잡화" };
       const endT = Date.parse(R.end || "2026-11-24T23:59:59+09:00");
+      const nbr = (x) => String(x || "").replace(/\s|맨$|우먼$/g, "").toLowerCase();
+      const HYPE = new Set(["도프제이슨","드로우핏","엘무드","프리즘웍스","디미트리블랙","노이즈","아웃스탠딩","에스피오나지","미세키서울","탄산마그네슘","노이어","후브스","아캄","비긴202","낫포너드","파코서플라이","247시리즈","노매뉴얼","디스이즈네버댓","엘엠씨","더콜디스트모먼트","인사일런스","킨치","쿠어","일리고","언탭트 스튜디오","그레이버","나이키","아디다스","노스페이스","팀버랜드","뉴발란스","살로몬","아식스","닥터마틴","록히드마틴","노드랩스","9999아카이브","낫온리포투데이","패러다임 필름","플루크","호카","오니츠카타이거","푸마","컨버스","야세","로맨틱무브","커스텀에이드","어그",
+        ...(((BFD.hot || {}).cats || []).find((c) => c.grp === "pick") || { items: [] }).items.map((p) => p.brand), ...((BFD.mycart || {}).items || []).map((p) => p.brand), ...(R.hype || [])].map(nbr));
+      const BAN = new Set(["엘칸토","식스핏","반스","슈펜","피노키","파스코로젠","락포트","지오지아","지이크","앤드지","폴햄","지오다노","베이직하우스","후아유","마인드브릿지","슈피트","힐탑", ...(R.ban || [])].map(nbr));
       const rows = Object.keys(R).filter((k) => Array.isArray(R[k]) && R[k].length >= 4).sort((a, b) => (Object.keys(NAMES).indexOf(a) + 99) % 99 - (Object.keys(NAMES).indexOf(b) + 99) % 99).map((k) => {
-        // 후기 있는 상품 중 할인율 큰 순, 같은 브랜드는 최대 5개·연달아 X, 100개
-        const cnt = {}; const L = R[k].filter((p) => p && p.link && Number(p.rate) >= 20 && Number(p.rv) >= 30 && !/샌들|슬리퍼|반팔|쇼츠/.test(p.name || "")).sort((a, b) => Number(b.rate) - Number(a.rate) || Number(b.rv) - Number(a.rv)).filter((p) => (cnt[p.brand] = (cnt[p.brand] || 0) + 1) <= 5).slice(0, 100);
+        // 광만두 결에 맞는 하입 브랜드 먼저(할인 큰 순), 흔한 브랜드는 빼고, 나머지는 뒤에. 같은 브랜드 최대 4개, 100개
+        const cnt = {}; const ok = (p) => p && p.link && !/샌들|슬리퍼|반팔|쇼츠/.test(p.name || "") && !BAN.has(nbr(p.brand));
+        const byRate = (a, b) => Number(b.rate) - Number(a.rate) || Number(b.rv) - Number(a.rv);
+        const hy = R[k].filter((p) => ok(p) && HYPE.has(nbr(p.brand)) && Number(p.rate) >= 15).sort(byRate);
+        const etc = R[k].filter((p) => ok(p) && !HYPE.has(nbr(p.brand)) && Number(p.rate) >= 30 && Number(p.rv) >= 100).sort(byRate);
+        const L = [...hy, ...etc].filter((p) => (cnt[p.brand] = (cnt[p.brand] || 0) + 1) <= 4).slice(0, 100);
         for (let i = 1; i < L.length; i++) if (L[i].brand === L[i - 1].brand) { const j = L.findIndex((x, n) => n > i && x.brand !== L[i - 1].brand); if (j > 0) [L[i], L[j]] = [L[j], L[i]]; }
         return { k, label: NAMES[k] || k, list: L };
       }).filter((r) => r.list.length >= 4);
