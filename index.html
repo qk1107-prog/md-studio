@@ -2979,7 +2979,7 @@ async function renderPublicSite(root) {
     const BEST_TABS = (BFD.bestTabs && Object.keys(BFD.bestTabs).length) ? Object.entries(BFD.bestTabs).filter(([, a]) => a && a.length) : [];
     function bestSec() {
       if (!BEST_TABS.length) return "";
-      return `<div class="bf-sec" id="bf-best">${secHead("🏆", "작년 무진장 BEST", "작년에 많이 팔린 것")}${curated("작년 무진장에서 제일 많이 팔린 것 중 올해도 살 만한 것만 골랐어요")}
+      return `<div class="bf-sec" id="bf-best">${secHead("🏆", "작년 무진장 BEST", "")}${curated("작년 무진장에서 제일 많이 팔린 것 중 올해도 살 만한 것만 골랐어요")}
         ${chipsGrid("best", BEST_TABS.map(([t, a]) => ({ label: /^TOP\s*\d+$/.test(t) ? "전체" : t, items: a })), false)}
       </div>`;
     }
@@ -4131,6 +4131,7 @@ renderPublicSite(ROOT_EL);
 #app-root .hotz-catbtn { margin-left: 0 !important; }
 #app-root .opz-tabs { flex-wrap: wrap; overflow: visible; }
 #app-root .cpz-more { border-bottom: 0 !important; font-size: 12px !important; font-weight: 800 !important; }
+#app-root .sec-rel .bf-sec-note { display: none; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
