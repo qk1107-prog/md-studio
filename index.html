@@ -3625,7 +3625,8 @@ async function renderPublicSite(root) {
     };
     renderPacks(false);
     renderPacks(true);
-    loadPacks().then(() => { if (PACKS) { renderPacks(false); renderPacks(true); } });
+    // 코디팩 데이터(1MB)는 첫 화면이 다 뜬 뒤에 받아서 블프 화면을 먼저 빨리 보이게
+    setTimeout(() => loadPacks().then(() => { if (PACKS) { renderPacks(false); renderPacks(true); } }), /pack/.test(location.hash) ? 0 : 2500);
   })();
 
   // ---------- 탭 ----------
