@@ -3086,7 +3086,11 @@ async function renderPublicSite(root) {
       const ORD = [...RAW.filter((p) => p && Number(p.top) > 0).sort((a, b) => Number(a.top) - Number(b.top)), ...RAW.filter((p) => p && !(Number(p.top) > 0))];
       const items = ORD.filter((p) => { if (!p || !p.link || (p.end && p.end <= now) || seenTs.has(p.link) || (spOut.has(p.brand) && !(Number(p.top) > 0))) return false; if (now >= T_OPEN && !(Number(p.rate) > 0) && !(Number(p.price) > Number(p.sale)) && !/쿠폰/.test(p.kind || "") && !(Number(p.cpn) > 0)) return false; seenTs.add(p.link); return true; }).slice(0, 50);
       let box = root.querySelector("#tsz");
-      if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
+      // 타임세일 칸은 "지금 가장 핫한 아이템" 칸의 ⏰ 타임세일 탭으로 합침
+      if (box) box.remove();
+      window.__tsAt = SRC.at || "";
+      window.__tsItems = (items.length < 3 || now >= T_END) ? [] : items.map((p) => Object.assign({}, p, { tag: String(p.kind || "타임세일").replace("무진장 프리오픈", "무진장 특가").replace("무진장 프리쿠폰", "무진장 쿠폰특가"), comment: /쿠폰/.test(p.kind || "") ? `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` : (p.comment || "") }));
+      return;
       const cp = root.querySelector("#cpz");
       if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsall]")) { window.__openList && window.__openList("ts", "⏰ 실시간 타임세일 중 꿀템", window.__tsItems || [], "", "실시간 타임세일 중 꿀템"); } }); }
       const opA = cp;
@@ -3280,7 +3284,7 @@ async function renderPublicSite(root) {
       let box = root.querySelector("#hotz");
       if (!cats.length || nowFn() >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
-      if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { const lab = hotView === -2 ? "📈 급상승" : hotView >= 0 && cats[hotView] ? cats[hotView].cat : "🔥 실시간 HOT"; window.__openList && window.__openList("hotall", "🔥 지금 가장 핫한 아이템 · " + lab, window.__hotFull || [], "", "지금 가장 핫한 아이템"); return; } const keep = () => { const y0 = box.getBoundingClientRect().top; return () => window.scrollBy(0, box.getBoundingClientRect().top - y0); }; const cb = e.target.closest("[data-hcat]"); if (cb) { const fix = keep(); hotCat = !hotCat; renderHot(); fix(); return; } const b = e.target.closest("[data-hv]"); if (!b) return; const fx = keep(); hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); orderBF(); fx(); }); }
+      if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { const lab = hotView === -3 ? "⏰ 타임세일" : hotView === -2 ? "📈 급상승" : hotView >= 0 && cats[hotView] ? cats[hotView].cat : "🔥 실시간 HOT"; window.__openList && window.__openList("hotall", "🔥 지금 가장 핫한 아이템 · " + lab, window.__hotFull || [], "", "지금 가장 핫한 아이템"); return; } const keep = () => { const y0 = box.getBoundingClientRect().top; return () => window.scrollBy(0, box.getBoundingClientRect().top - y0); }; const cb = e.target.closest("[data-hcat]"); if (cb) { const fix = keep(); hotCat = !hotCat; renderHot(); fix(); return; } const b = e.target.closest("[data-hv]"); if (!b) return; const fx = keep(); hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); orderBF(); fx(); }); }
       const anchor = root.querySelector("#spz") || root.querySelector("#tsz") || cp;
       if (anchor && anchor.nextSibling !== box) anchor.after(box);
       else if (!cp && !box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
@@ -3299,17 +3303,18 @@ async function renderPublicSite(root) {
       const catOf = new Map(); cats.forEach((c) => c.items.forEach((x) => catOf.set(x, c)));
       const rise = (H.rise || []).filter((x) => x && x.link);
       if (hotView === -2 && !rise.length) hotView = -1;
-      const full = (hotView === -2 ? rise : hotView < 0 || !cats[hotView] ? mix : cats[hotView].items);
-      const LIM = 8, onMix = hotView === -1, PN = (L, ...r) => (onMix ? withPin(L, ...r) : L), AD = (L, ...r) => (onMix ? withAds(L, ...r) : L), list = (hotOpen ? PN(AD(full, hotView + 5, [2, 12, 22, 32]), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜") : PN(AD(full, hotView + 5, [2]).slice(0, onMix ? LIM - 1 : LIM), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜")).map((p) => { if (p.pin) return p; const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
+      const tsL = window.__tsItems || []; if (hotView === -3 && !tsL.length) hotView = -1;
+      const full = (hotView === -3 ? tsL : hotView === -2 ? rise : hotView < 0 || !cats[hotView] ? mix : cats[hotView].items);
+      const LIM = 8, onMix = hotView === -1, PN = (L, ...r) => (onMix ? withPin(L, ...r) : L), AD = (L, ...r) => (onMix ? withAds(L, ...r) : L), list = (hotOpen ? PN(AD(full, hotView + 5, [2, 12, 22, 32]), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜") : PN(AD(full, hotView + 5, [2]).slice(0, onMix ? LIM - 1 : LIM), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜")).map((p) => { if (p.pin || hotView === -3) return p; const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
       const pkI = cats.findIndex((c) => c.grp === "pick"); const catOpen = hotCat || (hotView >= 0 && hotView !== pkI);
       window.__hotFull = PN(AD(full, hotView + 5, [2, 12, 22, 32]), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜").map((p) => (p.pin ? p : Object.assign({}, p)));
-      const sig = (H.at || "") + hotView + list.length + (catOpen ? "o" : "c");
+      const sig = (H.at || "") + (window.__tsAt || "") + hotView + list.length + (catOpen ? "o" : "c");
       const fresh = box.dataset.sig !== sig; box.dataset.sig = sig;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 가장 핫한 <em>아이템 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small>${full.length > LIM ? `<button type="button" class="sec-all" data-hmore="1">전체보기 →</button>` : ""}</div>
         <div class="hotz-bar"><i></i></div>
-        <div class="bf-chips hotz-chips"><button type="button" data-hv="-1" class="${hotView === -1 ? "active" : ""}">🔥 실시간 HOT</button>${rise.length ? `<button type="button" data-hv="-2" class="${hotView === -2 ? "active" : ""}">📈 급상승</button>` : ""}${pkI >= 0 ? `<button type="button" data-hv="${pkI}" class="${hotView === pkI ? "active" : ""}">${esc(cats[pkI].cat)}</button>` : ""}<button type="button" data-hcat="1" class="hotz-catbtn${catOpen ? " on" : ""}">카테고리 보기 ${catOpen ? "▴" : "▾"}</button></div>
+        <div class="bf-chips hotz-chips"><button type="button" data-hv="-1" class="${hotView === -1 ? "active" : ""}">🔥 실시간 HOT</button>${tsL.length ? `<button type="button" data-hv="-3" class="${hotView === -3 ? "active" : ""}">⏰ 타임세일</button>` : ""}${rise.length ? `<button type="button" data-hv="-2" class="${hotView === -2 ? "active" : ""}">📈 급상승</button>` : ""}${pkI >= 0 ? `<button type="button" data-hv="${pkI}" class="${hotView === pkI ? "active" : ""}">${esc(cats[pkI].cat)}</button>` : ""}<button type="button" data-hcat="1" class="hotz-catbtn${catOpen ? " on" : ""}">카테고리 보기 ${catOpen ? "▴" : "▾"}</button></div>
         ${catOpen ? `<div class="bf-chips hotz-cats">${cats.map((c, i) => (i === pkI ? "" : `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`)).join("")}</div>` : ""}
-        ${hotView === -2 ? `<p class="hotz-sub">📈 지금 갑자기 많이 찾는 상품</p>` : ""}${hotView >= 0 && cats[hotView] ? `<p class="hotz-sub">${cats[hotView].grp === "pick" ? "패션 좀 아는 사람들이 요즘 주목하는 브랜드의 인기템" : esc((cats[hotView].grp ? cats[hotView].grp + " · " : "") + cats[hotView].cat) + " 지금 제일 많이 보는 상품"}</p>` : ""}
+        ${hotView === -3 ? `<p class="hotz-sub">⏰ 지금 타임세일·특가 중인 꿀템${Date.parse(window.__tsAt || "") ? ` · ${kp(Date.parse(window.__tsAt)).h}시 ${String(kp(Date.parse(window.__tsAt)).mi).padStart(2, "0")}분 업데이트` : ""} · 꼭 쿠폰 받고 구매하세요</p>` : ""}${hotView === -2 ? `<p class="hotz-sub">📈 지금 갑자기 많이 찾는 상품</p>` : ""}${hotView >= 0 && cats[hotView] ? `<p class="hotz-sub">${cats[hotView].grp === "pick" ? "패션 좀 아는 사람들이 요즘 주목하는 브랜드의 인기템" : esc((cats[hotView].grp ? cats[hotView].grp + " · " : "") + cats[hotView].cat) + " 지금 제일 많이 보는 상품"}</p>` : ""}
         <div class="bf-grid hotz-grid${fresh ? " hotz-in" : ""}">${list.map((p, i) => itemCard(p, 0).replace(/^(\s*<[a-z]+)/, `$1 style="--d:${Math.min(i, 20) * 50}ms"`)).join("")}</div>
         `;
       hotAgo();
