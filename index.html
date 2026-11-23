@@ -2871,8 +2871,8 @@ async function renderPublicSite(root) {
       if (C.from && nowFn() < Date.parse(C.from) && !preview) return "";
       return `<div class="bf-sec bf-mycart" id="bf-mycart">${secHead("🛒", "주인장 장바구니", "", "산 것·담아둔 것·찜한 것")}
         <p class="tz-cpnote">${esc(C.note || "블프 때 제가 사고, 담아두고, 찜한 것들이에요. 같이 사요 🙌")}</p>
-        <div class="bf-grid">${items.slice(0, 8).map((p) => itemCard(p, 0)).join("")}</div>
-        ${items.length > 8 ? `<button type="button" class="opz-more" data-cart-all="1">장바구니 전체보기 → <b>${items.length}개</b></button>` : ""}
+        <div class="bf-grid">${items.slice(0, 3).map((p) => itemCard(p, 0)).join("")}</div>
+        ${items.length > 3 ? `<button type="button" class="opz-more" data-cart-all="1">장바구니 전체보기 → <b>${items.length}개</b></button>` : ""}
       </div>`;
     }
 
@@ -3172,7 +3172,7 @@ async function renderPublicSite(root) {
       const q = (x) => root.querySelector(x);
       // 블프 칸이 다시 그려지면 새로 생긴 것만 남기고 예전에 옮겨둔 건 지움
       const one = (sel) => { const L = [...root.querySelectorAll("#tab-bf " + sel)]; if (L.length < 2) return L[0] || null; const z = L.find((x) => x.closest(".bf-zone")) || L[L.length - 1]; L.forEach((x) => { if (x !== z) x.remove(); }); return z; };
-      [q("section.aw"), one("#bf-mycart"), q("#cpz"), q("#opz"), q("#tsz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), one("#bf-pad"), one("#bf-best"), q("#plz")].forEach((el) => {
+      [q("section.aw"), one("#bf-mycart"), q("#cpz"), q("#tsz"), q("#opz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), one("#bf-pad"), one("#bf-best"), q("#plz")].forEach((el) => {
         if (!el) return;
         // 원래 블프 칸 안에서 클릭을 받던 칸은 옮긴 뒤에도 클릭되게
         if (window.__bfZoneClick && !el.__bound && el.id !== "opz" && el.id !== "cpz" && el.id !== "tsz" && el.id !== "hotz" && el.id !== "plz" && !el.classList.contains("aw")) { el.__bound = true; el.addEventListener("click", window.__bfZoneClick); }
