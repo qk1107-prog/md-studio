@@ -61,10 +61,15 @@ window.__cpRun = async () => {
   for (let i = 0; i < rich.length; i += 8) {
     await Promise.all(rich.slice(i, i + 8).map(async (r) => {
       try {
-        const j = await (await fetch(`https://api.musinsa.com/api2/coupon/plp/v1/goods?gf=M&sortCode=SALE_ONE_WEEK_COUNT&couponNo=${r.c.couponNo}&couponKind=${r.c.couponKind}&size=60&caller=COUPON&page=1`, { credentials: "include" })).json();
-        const raw = (j.data && (j.data.list || j.data.goods)) || [];
+        // 쿠폰 사용 가능 상품: 2페이지(최대 120개)까지 받아서 전부 올림
+        let raw = [];
+        for (let pg = 1; pg <= 2; pg++) {
+          const j = await (await fetch(`https://api.musinsa.com/api2/coupon/plp/v1/goods?gf=M&sortCode=SALE_ONE_WEEK_COUNT&couponNo=${r.c.couponNo}&couponKind=${r.c.couponKind}&size=60&caller=COUPON&page=${pg}`, { credentials: "include" })).json();
+          const part = (j.data && (j.data.list || j.data.goods)) || [];
+          raw = raw.concat(part); if (part.length < 60) break;
+        }
         const L = raw.filter((g) => !g.isSoldOut && g.genderCode !== "WOMEN" && !/키즈|KIDS/i.test(g.goodsName || ""));
-        if (L.length > r.goods.length) r.goods = L.slice(0, 24);
+        if (L.length > r.goods.length) r.goods = L.slice(0, 120);
       } catch (e) {}
     }));
   }
@@ -104,7 +109,10 @@ window.__cpRun = async () => {
   list.forEach((c) => { if (!seenMap[c.no]) seenMap[c.no] = now; c.nw = (Date.now() - new Date(seenMap[c.no]).getTime() < 864e5) && prev ? 1 : 0; });
   const keep = new Set(list.map((c) => String(c.no)));
   Object.keys(seenMap).forEach((k) => { if (!keep.has(k) && Date.now() - new Date(seenMap[k]).getTime() > 7 * 864e5) delete seenMap[k]; });
-  window.__cpData = JSON.stringify({ at: now, list, seen: seenMap, on: !!(prev && prev.on) });
+  // 첫 화면용 쿠폰 목록엔 상품 24개까지만, 전체(최대 120개)는 gx 에 따로
+  const gx = {};
+  list.forEach((x) => { if (x.g && x.g.length > 24) { gx[String(x.no)] = x.g; x.g = x.g.slice(0, 24); } });
+  window.__cpData = JSON.stringify({ at: now, list, seen: seenMap, on: !!(prev && prev.on), gx });
   let btn = document.getElementById("__cpb");
   if (!btn) { btn = document.createElement("button"); btn.id = "__cpb"; btn.style.cssText = "position:fixed;top:10px;left:10px;z-index:999999;padding:20px;font-size:20px;background:#ff0"; document.body.appendChild(btn); }
   btn.textContent = "COPY " + list.length;

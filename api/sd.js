@@ -2,12 +2,15 @@
 // (방문자가 몇천 명이어도 수파베이스는 1분에 몇 번만 읽힘 → 전송량 절약)
 const SB = "https://cbuydjkvvzbluyohdkie.supabase.co";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
-const OK = { main: 1, coupons: 1, brands: 1, catrank: 1, packs: 1, episodes: 1 };
+const OK = { main: 1, coupons: 1, brands: 1, catrank: 1, packs: 1, episodes: 1, cpg: 1 };
 // 같은 서버 인스턴스 안에서 마지막으로 성공한 데이터를 기억 → 수파베이스가 느리거나 죽어도 그걸로 응답
 const LAST = {};
 const zlib = require("zlib");
 // 방문자에게 필요 없는 큰 값은 빼고 보냄 (전송량 절약)
 function slim(id, out) {
+  // 쿠폰: 전체 상품 목록(gx)은 쿠폰을 열 때만 따로(cpg) 보내고, 첫 화면용엔 빼기
+  if (id === "coupons" && out && out.gx) { const o = Object.assign({}, out); delete o.gx; return o; }
+  if (id === "cpg") return (out && out.gx) || {};
   if (id !== "main" || !out || !out.bf) return out;
   const bf = Object.assign({}, out.bf);
   delete bf.sigPreview5;
@@ -30,7 +33,7 @@ module.exports = async function handler(req, res) {
   try {
     const url = id === "episodes"
       ? SB + "/rest/v1/episodes?select=id,title,series,upload_date,reel_url,thumbnail_url,pick_comment,created_at&order=upload_date.desc,created_at.desc&limit=300"
-      : SB + "/rest/v1/site_data?id=eq." + id + "&select=value";
+      : SB + "/rest/v1/site_data?id=eq." + (id === "cpg" ? "coupons" : id) + "&select=value";
     const ac = new AbortController(); const tm = setTimeout(() => ac.abort(), 25000);
     const r = await fetch(url, { headers: { apikey: KEY, Authorization: "Bearer " + KEY }, signal: ac.signal }); clearTimeout(tm);
     if (!r.ok) throw new Error("sb " + r.status);
