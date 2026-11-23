@@ -2736,7 +2736,7 @@ async function renderPublicSite(root) {
       if (!arr || !arr.length) return `<p class="bf-empty">정리 중이에요 · 곧 올라와요</p>`;
       const cut = !open && arr.length > 8;
       const list = cut ? arr.slice(0, 8) : arr;
-      return `<div class="bf-grid" data-grid="${gid}">${list.map((p, i) => itemCard(p, rank ? i + 1 : (p.rank || 0))).join("")}${cut ? `<button type="button" class="bf-more-btn" data-expand="${gid}" style="grid-column:1/-1">전체 보기 ↓</button>` : ""}</div>`;
+      return `<div class="bf-grid" data-grid="${gid}">${list.map((p, i) => itemCard(p, rank ? i + 1 : (p.rank || 0))).join("")}</div>`;
     }
     const CHIP_DATA = {}, CHIP_RANK = {};
     function chipsGrid(gid, groups, rank) {
@@ -2816,7 +2816,7 @@ async function renderPublicSite(root) {
     // ---- 실시간 알림 (예약 작업이 bf.alerts 에 채움) ----
     function alertSec() {
       const A = Array.isArray(BFD.alerts) ? BFD.alerts : [];
-      const fresh = A.filter((a) => !a.at || Date.now() - Date.parse(a.at) < 12 * 3600 * 1000).slice(0, 3);
+      const fresh = A.filter((a) => !a.at || Date.now() - Date.parse(a.at) < 12 * 3600 * 1000).slice(0, 4);
       if (!fresh.length) return "";
       return `<div class="bf-alerts"><div class="bf-alerts-h"><span>🔔 지금 뜬 알림</span><small>${esc(BFD.alertsAt || "")} 업데이트</small></div>
         ${fresh.map((a) => `<a class="bf-alert" href="${esc(safeUrl(a.link) || "#")}" target="_blank" rel="noopener">${safeImg(a.img) ? `<img src="${esc(safeImg(a.img))}" alt="" referrerpolicy="no-referrer">` : ""}<span class="t">${esc(a.t || "")}</span><span class="x">${esc(a.text || "")}</span></a>`).join("")}</div>`;
@@ -2875,10 +2875,9 @@ async function renderPublicSite(root) {
       const items = (C.items || []).filter((p) => p && p.link);
       if (!C.on || !items.length) return "";
       if (C.from && nowFn() < Date.parse(C.from) && !preview) return "";
-      return `<div class="bf-sec bf-mycart" id="bf-mycart">${secHead("🛒", "주인장 장바구니", "", "산 것·담아둔 것·찜한 것")}
+      return `<div class="bf-sec bf-mycart sec-rel" id="bf-mycart">${items.length > 4 ? `<button type="button" class="sec-all" data-cart-all="1">전체보기 →</button>` : ""}${secHead("🛒", "주인장 장바구니", "", "산 것·담아둔 것·찜한 것")}
         <p class="tz-cpnote">${esc(C.note || "블프 때 제가 사고, 담아두고, 찜한 것들이에요. 같이 사요 🙌")}</p>
-        <div class="bf-grid">${items.slice(0, 3).map((p) => itemCard(p, 0)).join("")}</div>
-        ${items.length > 3 ? `<button type="button" class="opz-more" data-cart-all="1">장바구니 전체보기 → <b>${items.length}개</b></button>` : ""}
+        <div class="bf-grid">${items.slice(0, 4).map((p) => itemCard(p, 0)).join("")}</div>
       </div>`;
     }
 
@@ -3027,7 +3026,7 @@ async function renderPublicSite(root) {
       let box = root.querySelector("#tsz");
       if (items.length < 3 || now >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
-      if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsmore]")) { tsOpen = !tsOpen; renderTs(); orderBF(); if (!tsOpen) box.scrollIntoView({ block: "start" }); } }); }
+      if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsall]")) { window.__openList && window.__openList("ts", "⏰ 실시간 타임세일 중 꿀템", window.__tsItems || [], "", "실시간 타임세일 중 꿀템"); } }); }
       const opA = cp;
       if (opA) { if (opA.nextSibling !== box) opA.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
@@ -3045,10 +3044,10 @@ async function renderPublicSite(root) {
           ${isCp ? `<p class="tsc-cp">쿠폰 적용가 <b>${esc(won(sale))}</b>${rate ? ` <i>(-${esc(rate)}%)</i>` : ""}</p>` : `<p class="pr">${rate ? `<i>${esc(rate)}%</i>` : ""}${esc(won(sale))}</p>`}
         </a>`;
       };
-      const shown = tsOpen ? items : items.slice(0, 20);
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 <em class="ts-em">타임세일 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago"></small>${items.length > 20 || tsOpen ? `<button type="button" class="tsz-more" data-tsmore="1">${tsOpen ? "접기 ▲" : "전체보기 ▼"}</button>` : ""}</div>
+      const shown = items.slice(0, 8); window.__tsItems = items.map((p) => Object.assign({}, p, { tag: String(p.kind || "타임세일").replace("무진장 프리오픈", "무진장 특가").replace("무진장 프리쿠폰", "무진장 쿠폰특가"), comment: /쿠폰/.test(p.kind || "") ? `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` : (p.comment || "") }));
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 <em class="ts-em">타임세일 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago"></small>${items.length > 8 ? `<button type="button" class="sec-all" data-tsall="1">전체보기 →</button>` : ""}</div>
         <div class="hotz-bar"><i></i></div>
-        <div class="${tsOpen ? "bf-grid" : "tsz-scroll"}">${shown.map(card).join("")}${!tsOpen && items.length > 20 ? `<button type="button" class="spz-endcard" data-tsmore="1"><b>+${items.length - 20}</b>전체보기 →</button>` : ""}</div>`;
+        <div class="bf-grid">${shown.map(card).join("")}</div>`;
       const el = box.querySelector(".tsz-ago"), t = Date.parse(SRC.at || "");
       if (el && t) { const k = kp(t); el.textContent = `${k.h}시 ${String(k.mi).padStart(2, "0")}분 업데이트 · 꼭 쿠폰 받고 구매하세요`; }
     }
@@ -3147,7 +3146,7 @@ async function renderPublicSite(root) {
       const br = []; const bl = (day.brands || []).map((b) => (b.items || []).slice()); for (let r = 0; r < 12; r++) bl.forEach((L) => { if (L[r]) br.push(L[r]); });
       const sg = []; const sl = (BFD.sigPreview || []).map((g) => (g.items || []).filter((p) => !noDeal(p))); for (let r = 0; r < 80; r++) sl.forEach((L) => { if (L[r] && !(sg.length && sg[sg.length - 1].brand === L[r].brand)) sg.push(L[r]); else if (L[r]) sg.push(L[r]); });
       const SO = ((BFD.sold || {}).items || []).filter((p) => !noDeal(p));
-      const T = [["sold", "🔥 핫", SO, ""], ["sig", "💎 시그니처특가", sg, ""], ["hot", "⏰ 하루특가", hot, ""], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), ""], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), ""], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), ""]].filter((t) => t[2].length);
+      const T = [["sold", "🔥 HOT", SO, ""], ["sig", "💎 시그니처특가", sg, ""], ["hot", "⏰ 하루특가", hot, ""], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), ""], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), ""], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), ""]].filter((t) => t[2].length);
       T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(withAds(t[2], new Date().getHours(), [3, 7, 11, 15]), 0, 0, false, (BFD.collabPin || {}).opz || "멜란지"); });
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
@@ -3157,13 +3156,12 @@ async function renderPublicSite(root) {
       const cur = T.find((t) => t[0] === r1Tab);
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const showAll = false;
-      const cards = cur[2].slice(0, 20).map((p) => itemCard(Object.assign({}, p, { tag: p.pin ? p.tag : (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.pin ? p.comment : p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
+      const cards = cur[2].slice(0, 8).map((p) => itemCard(Object.assign({}, p, { tag: p.pin ? p.tag : (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.pin ? p.comment : p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em><span class="opz-date">${kp(now).m}월 ${kp(now).d}일</span><span class="cpz-live"><i></i>LIVE</span></p><small>쿠폰까지 적용${k ? ` · ${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small></div><div class="hotz-bar"><i></i></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em><span class="opz-date">${kp(now).m}월 ${kp(now).d}일</span><span class="cpz-live"><i></i>LIVE</span></p><small>쿠폰까지 적용${k ? ` · ${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small>${cur[2].length > 8 ? `<button type="button" class="sec-all" data-r1all="${r1Tab}">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
         ${cur[3] ? `<p class="opz-sub">${esc(cur[3])}</p>` : ""}
-        <div class="${showAll ? "opz-grid" : "tsz-scroll"}">${cards}</div>
-        ${cur[2].length > 20 ? `<button type="button" class="opz-more" data-r1all="${r1Tab}">${esc(cur[1].replace(/^\S+\s/, ""))} 전체보기 → <b>${cur[2].length}개</b></button>` : ""}`;
+        <div class="bf-grid">${cards}</div>`;
       window.__r1T = T;
       // 블프 겨울 준비·하루특가·브랜드특가를 꿀템 정리 바로 밑으로
       orderBF();
@@ -3186,7 +3184,7 @@ async function renderPublicSite(root) {
         ref = el;
       });
       const pad = root.querySelector("#bf-pad");
-      if (pad && !pad.querySelector("[data-padall]")) { const b = document.createElement("button"); b.type = "button"; b.className = "pad-all"; b.dataset.padall = "1"; b.textContent = "전체보기 →"; pad.prepend(b); }
+      [root.querySelector("#bf-pad"), root.querySelector("#bf-best")].forEach((sc) => { if (sc && !sc.querySelector("[data-padall]")) { sc.classList.add("sec-rel"); const b = document.createElement("button"); b.type = "button"; b.className = "sec-all"; b.dataset.padall = "1"; b.textContent = "전체보기 →"; sc.prepend(b); } });
       if (root.querySelector("#opz")) ["bf-sig", "bf-hot", "bf-brand", "bf-bday"].forEach((id) => { const el = root.querySelector("#" + id); if (el) el.style.display = "none"; });
     }
     // 전체보기: 코디처럼 따로 열리는 페이지(종류별 칩 + 2칸 그리드)
@@ -3220,7 +3218,7 @@ async function renderPublicSite(root) {
       let box = root.querySelector("#hotz");
       if (!cats.length || nowFn() >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
-      if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { hotOpen = !hotOpen; renderHot(); orderBF(); if (!hotOpen) box.scrollIntoView({ block: "start" }); return; } const cb = e.target.closest("[data-hcat]"); if (cb) { hotCat = !hotCat; renderHot(); return; } const b = e.target.closest("[data-hv]"); if (!b) return; hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); orderBF(); }); }
+      if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { const lab = hotView === -2 ? "📈 급상승" : hotView >= 0 && cats[hotView] ? cats[hotView].cat : "🔥 실시간 HOT"; window.__openList && window.__openList("hotall", "🔥 지금 가장 핫한 아이템 · " + lab, window.__hotFull || [], "", "지금 가장 핫한 아이템"); return; } const keep = () => { const y0 = box.getBoundingClientRect().top; return () => window.scrollBy(0, box.getBoundingClientRect().top - y0); }; const cb = e.target.closest("[data-hcat]"); if (cb) { const fix = keep(); hotCat = !hotCat; renderHot(); fix(); return; } const b = e.target.closest("[data-hv]"); if (!b) return; const fx = keep(); hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); orderBF(); fx(); }); }
       const anchor = root.querySelector("#spz") || root.querySelector("#tsz") || cp;
       if (anchor && anchor.nextSibling !== box) anchor.after(box);
       else if (!cp && !box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
@@ -3242,15 +3240,16 @@ async function renderPublicSite(root) {
       const full = (hotView === -2 ? rise : hotView < 0 || !cats[hotView] ? mix : cats[hotView].items);
       const LIM = 8, onMix = hotView === -1, PN = (L, ...r) => (onMix ? withPin(L, ...r) : L), AD = (L, ...r) => (onMix ? withAds(L, ...r) : L), list = (hotOpen ? PN(AD(full, hotView + 5, [2, 12, 22, 32]), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜") : PN(AD(full, hotView + 5, [2]).slice(0, onMix ? LIM - 1 : LIM), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜")).map((p) => { if (p.pin) return p; const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
       const pkI = cats.findIndex((c) => c.grp === "pick"); const catOpen = hotCat || (hotView >= 0 && hotView !== pkI);
+      window.__hotFull = PN(AD(full, hotView + 5, [2, 12, 22, 32]), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜").map((p) => (p.pin ? p : Object.assign({}, p)));
       const sig = (H.at || "") + hotView + list.length + (catOpen ? "o" : "c");
       const fresh = box.dataset.sig !== sig; box.dataset.sig = sig;
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 가장 핫한 <em>아이템 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 가장 핫한 <em>아이템 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small>${full.length > LIM ? `<button type="button" class="sec-all" data-hmore="1">전체보기 →</button>` : ""}</div>
         <div class="hotz-bar"><i></i></div>
         <div class="bf-chips hotz-chips"><button type="button" data-hv="-1" class="${hotView === -1 ? "active" : ""}">🔥 실시간 HOT</button>${rise.length ? `<button type="button" data-hv="-2" class="${hotView === -2 ? "active" : ""}">📈 급상승</button>` : ""}${pkI >= 0 ? `<button type="button" data-hv="${pkI}" class="${hotView === pkI ? "active" : ""}">${esc(cats[pkI].cat)}</button>` : ""}<button type="button" data-hcat="1" class="hotz-catbtn${catOpen ? " on" : ""}">카테고리 보기 ${catOpen ? "▴" : "▾"}</button></div>
         ${catOpen ? `<div class="bf-chips hotz-cats">${cats.map((c, i) => (i === pkI ? "" : `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`)).join("")}</div>` : ""}
         ${hotView === -2 ? `<p class="hotz-sub">📈 지금 갑자기 많이 찾는 상품</p>` : ""}${hotView >= 0 && cats[hotView] ? `<p class="hotz-sub">${cats[hotView].grp === "pick" ? "패션 좀 아는 사람들이 요즘 주목하는 브랜드의 인기템" : esc((cats[hotView].grp ? cats[hotView].grp + " · " : "") + cats[hotView].cat) + " 지금 제일 많이 보는 상품"}</p>` : ""}
         <div class="bf-grid hotz-grid${fresh ? " hotz-in" : ""}">${list.map((p, i) => itemCard(p, 0).replace(/^(\s*<[a-z]+)/, `$1 style="--d:${Math.min(i, 20) * 50}ms"`)).join("")}</div>
-        ${full.length > LIM ? `<button type="button" class="hotz-more" data-hmore="1">${hotOpen ? "접기 ▲" : `전체보기 ▼ <small>${full.length}개</small>`}</button>` : ""}`;
+        `;
       hotAgo();
       if (!window.__hotTick) {
         window.__hotTick = 1; let k = 0;
@@ -3347,7 +3346,7 @@ async function renderPublicSite(root) {
     const zoneClick = (e) => {
       if (e.target.closest("[data-cart-all]")) { const C = BFD.mycart || {}; window.__openList && window.__openList("cart", "🛒 주인장 장바구니", (C.items || []).filter((p) => p && p.link), "산 것·담아둔 것·찜한 것", "주인장 장바구니"); return; }
       const pa = e.target.closest("[data-padall]");
-      if (pa) { const sec = pa.closest(".bf-sec"); const x = sec && sec.querySelector("[data-expand]"); if (x) x.click(); else if (sec) sec.querySelector("[data-grid]")?.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+      if (pa) { const sec = pa.closest(".bf-sec"); const gw = sec && sec.querySelector("[data-grid]"); const g = gw && GRIDS[gw.dataset.grid]; if (g && g.arr && g.arr.length) { const t = (sec.querySelector(".bf-h, h2, .bf-sec-h") || {}).textContent || "전체보기"; window.__openList && window.__openList(gw.dataset.grid, t.trim().replace(/\s+/g, " ").slice(0, 24), g.arr, "", t.trim().replace(/\s+/g, " ").slice(0, 24)); } return; }
       const ex = e.target.closest("[data-expand]");
       if (ex) { const g = GRIDS[ex.dataset.expand]; const wrap = ex.closest("[data-grid]"); if (g && wrap) wrap.outerHTML = gridBlock(ex.dataset.expand, g.arr, g.rank, true); return; }
       const chip = e.target.closest("[data-chips] button");
@@ -4126,6 +4125,12 @@ renderPublicSite(ROOT_EL);
 #app-root #r1-page .r1-wrap { padding: 0 16px 40px; }
 #app-root #r1-page .r1-sub { margin: 6px 0 0; font-size: 12px; color: #8b857c; }
 #app-root #r1-page .r1-ty { position: sticky; top: 52px; z-index: 5; background: #f7f4ef; padding: 8px 0; margin: 4px 0 10px; }
+#app-root .sec-rel { position: relative; }
+#app-root .sec-all { position: absolute; right: 2px; top: 4px; z-index: 2; border: 0; background: none; font: inherit; font-size: 12px; font-weight: 800; color: #141312; padding: 6px 2px; cursor: pointer; white-space: nowrap; }
+#app-root .hotz, #app-root .tsz, #app-root .opz { position: relative; }
+#app-root .hotz-catbtn { margin-left: 0 !important; }
+#app-root .opz-tabs { flex-wrap: wrap; overflow: visible; }
+#app-root .cpz-more { border-bottom: 0 !important; font-size: 12px !important; font-weight: 800 !important; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
