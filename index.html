@@ -2662,6 +2662,15 @@ async function renderPublicSite(root) {
       out.splice(Math.min(pos || 0, out.length), 0, Object.assign({}, p, { tag: "광만두 콜라보", comment: quiet ? "" : (BFD.collabPin.note || "출시 초도 할인 중"), pin: 1 }));
       return out;
     }
+    // 광만두 추천(데케트 등): 목록 사이사이에 자연스럽게 (같은 상품 중복 X)
+    function withAds(L, seed, slots) {
+      const A = ((BFD.adPins || {}).on && (BFD.adPins.items || []).filter((p) => p && p.link)) || [];
+      if (!A.length || !L || L.length < 3) return L;
+      const out = L.filter((x) => !A.some((a) => a.link === x.link));
+      const pos = slots || [2, 6, 10, 14];
+      pos.forEach((at, k) => { const a = A[(Math.abs(seed || 0) + k) % A.length]; if (k < A.length && at <= out.length) out.splice(at, 0, Object.assign({}, a)); });
+      return out;
+    }
     function noDeal(p) {
       if (nowFn() < T_OPEN) return false;
       const id = gidOf(p), pre = PRE[id] ? Number(PRE[id][0]) : 0; const cur = priceNow(p, id);
@@ -3133,7 +3142,7 @@ async function renderPublicSite(root) {
       const sg = []; const sl = (BFD.sigPreview || []).map((g) => (g.items || []).filter((p) => !noDeal(p))); for (let r = 0; r < 80; r++) sl.forEach((L) => { if (L[r] && !(sg.length && sg[sg.length - 1].brand === L[r].brand)) sg.push(L[r]); else if (L[r]) sg.push(L[r]); });
       const SO = ((BFD.sold || {}).items || []).filter((p) => !noDeal(p));
       const T = [["sold", "🔥 핫", SO, ""], ["sig", "💎 시그니처특가", sg, ""], ["hot", "⏰ 하루특가", hot, ""], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), ""], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), ""], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), ""]].filter((t) => t[2].length);
-      T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(t[2], new Date().getHours()); });
+      T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(withAds(t[2], new Date().getHours(), [3, 7, 11, 15]), new Date().getHours()); });
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
       const cp = root.querySelector("#cpz");
@@ -3225,7 +3234,7 @@ async function renderPublicSite(root) {
       const rise = (H.rise || []).filter((x) => x && x.link);
       if (hotView === -2 && !rise.length) hotView = -1;
       const full = (hotView === -2 ? rise : hotView < 0 || !cats[hotView] ? mix : cats[hotView].items);
-      const LIM = 8, list = (hotOpen ? withPin(full, hotView + 3, 5, true) : withPin(full.slice(0, LIM - 1), hotView + 3, 5, true)).map((p) => { if (p.pin) return p; const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
+      const LIM = 8, list = (hotOpen ? withPin(withAds(full, hotView + 5, [2, 12, 22, 32]), hotView + 3, 5, true) : withPin(withAds(full, hotView + 5, [2]).slice(0, LIM - 1), hotView + 3, 5, true)).map((p) => { if (p.pin) return p; const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
       const sig = (H.at || "") + hotView + list.length;
       const fresh = box.dataset.sig !== sig; box.dataset.sig = sig;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 가장 핫한 <em>아이템 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small></div>
