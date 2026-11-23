@@ -2053,7 +2053,7 @@ async function renderPublicSite(root) {
         </a>`;
     cpOverlay("cl" + key, o.title || "모아보기", `
       <div class="cpz-hero">${o.hero ? `<b>${esc(o.hero)}</b>` : ""}<p>${esc(o.sub || o.title || "")}</p>${o.at ? `<small>${esc(o.at)} 쿠폰 적용가 기준 · 가격은 바뀔 수 있어요</small>` : ""}</div>
-      <div class="spz-grid">${o.items.filter((x) => curl(x.link)).map(card).join("")}</div>
+      ${(o.secs || []).length ? o.secs.map((sc) => { const L2 = o.items.filter((x) => x.s === sc.k && curl(x.link)); return L2.length ? `<div class="ep-brand-row"><p class="ep-brand-name" style="margin:0 16px 4px">${esc(sc.t)} <small style="color:#999;font-weight:700">${L2.length}</small></p>${sc.d ? `<p class="ep-note" style="margin:0 16px 10px;text-align:left">${esc(sc.d)}</p>` : ""}<div class="spz-grid">${L2.map(card).join("")}</div></div>` : ""; }).join("") : `<div class="spz-grid">${o.items.filter((x) => curl(x.link)).map(card).join("")}</div>`}
       <p class="ep-note">${esc(o.note || "가격은 세일에 따라 바뀌어서 무신사에서 확인해 주세요.")}<br>이 페이지의 링크로 구매하시면 광만두가 일정 수수료를 받을 수 있어요.</p>`);
   }
   async function openCoupon(no) {
