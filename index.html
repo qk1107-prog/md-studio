@@ -3089,7 +3089,7 @@ async function renderPublicSite(root) {
       const on = box.querySelector(".plz-day.on"); if (on && on.scrollIntoView && box.dataset.sc !== planDay) { box.dataset.sc = planDay; const sc = box.querySelector(".plz-days"); sc.scrollLeft = Math.max(0, on.offsetLeft - sc.offsetWidth / 2 + on.offsetWidth / 2); }
     }
     // ---------- 본편: 쿠폰 바로 아래 '오늘의 꿀템 정리' (하루특가·브랜드특가·회차 아우터·킥스) ----------
-    let r1Tab = "";
+    let r1Tab = "sold";
     function renderR1() {
       let box = root.querySelector("#opz");
       const now = nowFn();
@@ -3100,7 +3100,8 @@ async function renderPublicSite(root) {
       const hot = (day.hot || [...(day.hotA || []), ...(day.hotB || [])]).filter((p) => !noDeal(p));
       const br = []; const bl = (day.brands || []).map((b) => (b.items || []).slice()); for (let r = 0; r < 12; r++) bl.forEach((L) => { if (L[r]) br.push(L[r]); });
       const sg = []; const sl = (BFD.sigPreview || []).map((g) => (g.items || []).filter((p) => !noDeal(p))); for (let r = 0; r < 80; r++) sl.forEach((L) => { if (L[r] && !(sg.length && sg[sg.length - 1].brand === L[r].brand)) sg.push(L[r]); else if (L[r]) sg.push(L[r]); });
-      const T = [["sig", "💎 시그니처특가", sg, "역대급 무진장 시그니처특가"], ["hot", "🔥 하루특가", hot, "오늘 자정까지"], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), "오늘의 브랜드"], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"]].filter((t) => t[2].length);
+      const SO = ((BFD.sold || {}).items || []).filter((p) => !noDeal(p));
+      const T = [["sold", "🛍️ 다들 산 거", SO, "광만두 링크로 실제로 많이 산 것들"], ["sig", "💎 시그니처특가", sg, "역대급 무진장 시그니처특가"], ["hot", "🔥 하루특가", hot, "오늘 자정까지"], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), "오늘의 브랜드"], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"]].filter((t) => t[2].length);
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
       const cp = root.querySelector("#cpz");
@@ -3226,7 +3227,7 @@ async function renderPublicSite(root) {
       // 페이지를 열어둔 채로 있어도 보고방(매시 정각)·이 방(매시 25분) 업데이트가 바로 보이게 3분마다 다시 받기
       if (!window.__tsPoll) window.__tsPoll = setInterval(() => {
         if (document.hidden) return;
-        sdFetch("main").then((v) => { if (!v || !v.bf) return; const o = BFD.dm && BFD.dm.at, t = BFD.ts && BFD.ts.at; const r1o = BFD.r1 && BFD.r1.at, dyo = JSON.stringify(BFD.days || {}).length; ["dm", "ts", "spot", "hot", "r1", "days"].forEach((k) => { if (v.bf[k]) BFD[k] = v.bf[k]; }); if ((BFD.dm && BFD.dm.at) !== o || (BFD.ts && BFD.ts.at) !== t || (BFD.r1 && BFD.r1.at) !== r1o || JSON.stringify(BFD.days || {}).length !== dyo) { renderTs(); renderHot(); try { renderPlan(); } catch (e) {} try { renderR1(); } catch (e) {} try { orderBF(); } catch (e) {} } }).catch(() => {});
+        sdFetch("main").then((v) => { if (!v || !v.bf) return; const o = BFD.dm && BFD.dm.at, t = BFD.ts && BFD.ts.at; const r1o = BFD.r1 && BFD.r1.at, dyo = JSON.stringify(BFD.days || {}).length; ["dm", "ts", "spot", "hot", "r1", "days", "sold"].forEach((k) => { if (v.bf[k]) BFD[k] = v.bf[k]; }); if ((BFD.dm && BFD.dm.at) !== o || (BFD.ts && BFD.ts.at) !== t || (BFD.r1 && BFD.r1.at) !== r1o || JSON.stringify(BFD.days || {}).length !== dyo) { renderTs(); renderHot(); try { renderPlan(); } catch (e) {} try { renderR1(); } catch (e) {} try { orderBF(); } catch (e) {} } }).catch(() => {});
       }, 180000);
       const now = nowFn();
       if (now >= T_END) { phase = "end"; zone.innerHTML = `<p class="bf-empty">이번 무진장은 끝났어요. 다음 블프 때 다시 정리할게요!</p>`; return; }
