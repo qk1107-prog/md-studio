@@ -3035,7 +3035,20 @@ async function renderPublicSite(root) {
     function renderLv() {
       const LV = BFD.lv || {}; const now = nowFn();
       const tm = (x) => x ? (typeof x === "number" ? x : Date.parse(x)) : 0;
-      const lives = (Array.isArray(LV.lives) ? LV.lives : (LV.items ? [LV] : [])).filter((l) => l && (l.items || []).some((p) => p && p.link) && !(tm(l.end) && tm(l.end) <= now));
+      // 아래 "실시간 쿠폰" 칸의 쿠폰별 상품(site_data coupons)과 연동: l.cpn = ["쿠폰 이름 일부", ...]
+      if (!COUPONS && !window.__lvCp) { window.__lvCp = 1; loadCoupons().then(() => { if (COUPONS) renderLv(); }); }
+      const cpItems = (l) => {
+        const keys = [].concat(l.cpn || []).filter(Boolean); if (!keys.length || !COUPONS || !COUPONS.list) return [];
+        const y = new Date(now).getFullYear(); const out = [];
+        COUPONS.list.filter((c) => keys.some((k) => String(c.n || "").includes(k))).forEach((c) => {
+          const m = String(c.exp || "").match(/(\d+)\/(\d+)/); if (m && new Date(y, +m[1] - 1, +m[2], 23, 59, 59).getTime() < now) return;
+          const pct = parseFloat(c.v) || 0; const cm = String(c.cond || "").match(/최대\s*([\d,.]+)\s*(만원|천원|원)/); const cap = cm ? parseFloat(cm[1].replace(/,/g, "")) * (cm[2] === "만원" ? 1e4 : cm[2] === "천원" ? 1e3 : 1) : Infinity;
+          (c.g || []).forEach((g) => { if (!g || !g.l || !/%$/.test(String(c.v))) return; const sp = Number(g.s) || 0; if (!sp) return; const np = Number(g.r) > 0 ? Math.round(sp / (1 - g.r / 100) / 1000) * 1000 : sp; const sale = Math.round(sp - Math.min(sp * pct / 100, cap));
+            out.push({ brand: g.b, name: g.n, img: "https://image.msscdn.net" + g.i, link: "https://www.musinsa.com/curator/goods/" + g.l, price: Math.max(np, sp), sale, rate: Math.round((1 - sale / Math.max(np, sp)) * 100) }); });
+        });
+        return out;
+      };
+      const lives = (Array.isArray(LV.lives) ? LV.lives : (LV.items ? [LV] : [])).map((l) => { const seen = new Set(); const items = [...(l.items || []), ...cpItems(l)].filter((p) => p && p.link && !seen.has(p.link) && seen.add(p.link)); return Object.assign({}, l, { items }); }).filter((l) => l && (l.items || []).some((p) => p && p.link) && !(tm(l.end) && tm(l.end) <= now));
       let box = root.querySelector("#lvz");
       if (!lives.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "lvz"; box.className = "lvz sec-rel"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-lvall]"); if (b) { const l = (window.__lvLives || [])[Number(b.dataset.lvall)]; if (l && window.__openList) window.__openList("lv" + b.dataset.lvall, `🔴 ${l.brand} 라이브 쿠폰`, l.list, l.coupon || "", `${l.brand} 라이브 쿠폰`); } }); }
