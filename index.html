@@ -1566,7 +1566,7 @@ async function renderPublicSite(root) {
           <p class="feed-title">${esc(groupName || "LOOK")}</p>
         </div>
         <div class="feed-list look-grid">
-          ${list.map((o) => `<div class="look-cell outfit-card" data-outfit-id="${esc(o.id)}">${photoTag(o.photo, "")}</div>`).join("")}
+          ${list.map((o) => `<div class="look-cell outfit-card" data-outfit-id="${esc(o.id)}">${photoTag(o.photo, "")}${(() => { const P = (o.pieces || []).filter((x) => x && x.link); if (!P.length) return ""; const B = [...new Set(P.map((x) => x.brand).filter(Boolean))]; return `<span class="look-cap"><b>${esc(B.slice(0, 2).join(" · "))}${B.length > 2 ? " 외" : ""}</b><i>착용 제품 ${P.length}개 →</i></span>`; })()}</div>`).join("")}
         </div>
       </div>
     `;
@@ -3558,7 +3558,7 @@ async function renderPublicSite(root) {
 
   // ---------- 실착: 분류(타이트 컷 → 전체 컷)마다 9개 + 더보기 ----------
   const LOOK_MAX = 9;
-  const lookCell = (o) => `<div class="look-cell outfit-card" data-outfit-id="${esc(o.id)}">${photoTag(o.photo, "")}</div>`;
+  const lookCell = (o) => `<div class="look-cell outfit-card" data-outfit-id="${esc(o.id)}">${photoTag(o.photo, "")}${(() => { const P = (o.pieces || []).filter((x) => x && x.link); if (!P.length) return ""; const B = [...new Set(P.map((x) => x.brand).filter(Boolean))]; return `<span class="look-cap"><b>${esc(B.slice(0, 2).join(" · "))}${B.length > 2 ? " 외" : ""}</b><i>착용 제품 ${P.length}개 →</i></span>`; })()}</div>`;
   root.querySelector("#look-groups").innerHTML = (outfitGroups.length ? outfitGroups : [null]).map((g) => {
     const list = g ? outfits.filter((o) => o.group === g) : outfits;
     return `
@@ -4284,6 +4284,11 @@ renderPublicSite(ROOT_EL);
 #app-root .rdz .bf-item .pt,#app-root .rdz .bf-item .rv,#app-root .rdz .bf-item .cm,#app-root .rdz .bf-item .preal,#app-root .rdz .bf-item .tg{display:none}
 #app-root #plz .tsz-scroll{margin:0 !important;padding:2px 0 4px !important;max-width:100%}
 #app-root #plz .tsz-scroll > .bf-item{flex:0 0 23%;max-width:140px}
+#app-root .look-grid{gap:6px}
+#app-root .look-cell{border-radius:10px}
+#app-root .look-cap{position:absolute;left:0;right:0;bottom:0;padding:22px 8px 7px;background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,0));color:#fff;display:flex;flex-direction:column;gap:1px;pointer-events:none}
+#app-root .look-cap b{font-size:10.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#app-root .look-cap i{font-style:normal;font-size:9.5px;opacity:.85}
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
