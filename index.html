@@ -1029,12 +1029,12 @@
   #app-root .bf-pick-sec .bf-pick-banner b em { font-style: normal; color: #E4FF1A; }
   #app-root .bf-pick-sec .bf-pick-banner span { display: block; margin-top: 3px; font-size: 11px; opacity: 0.75; }
   #app-root .bf-alerts { margin: 12px 0 0; border: 1.5px solid #141312; border-radius: 12px; overflow: hidden; }
-  #app-root .bf-alerts-h { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; background: #ff3d3f; color: #fff; font-size: 12.5px; font-weight: 900; }
+  #app-root .bf-alerts-h { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: #ff3d3f; color: #fff; font-size: 12.5px; font-weight: 900; }
   #app-root .bf-alerts-h small { font-size: 10px; font-weight: 700; opacity: 0.85; }
-  #app-root .bf-alert { display: flex; gap: 10px; align-items: center; padding: 9px 12px; border-top: 1px solid #eee9e2; color: inherit; text-decoration: none; }
-  #app-root .bf-alert img { width: 40px; height: 48px; object-fit: cover; border-radius: 6px; background: #f3f1ee; flex: none; }
+  #app-root .bf-alert { display: flex; gap: 8px; align-items: center; padding: 5px 10px; border-top: 1px solid #eee9e2; color: inherit; text-decoration: none; }
+  #app-root .bf-alert img { width: 28px; height: 34px; object-fit: cover; border-radius: 6px; background: #f3f1ee; flex: none; }
   #app-root .bf-alert .t { flex: none; font-size: 10px; font-weight: 800; color: #ff3d3f; width: 34px; }
-  #app-root .bf-alert .x { font-size: 12px; font-weight: 700; line-height: 1.35; letter-spacing: -0.2px; }
+  #app-root .bf-alert .x { font-size: 11px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; font-weight: 700; line-height: 1.35; letter-spacing: -0.2px; }
   #app-root .bf-cur { margin: -2px 0 10px; font-size: 11.5px; font-weight: 700; color: #141312; letter-spacing: -0.2px; }
   #app-root .bf-cur b { display: inline-block; margin-right: 6px; padding: 2px 7px; border-radius: 20px; background: #ff3d3f; color: #fff; font-size: 10px; font-weight: 900; vertical-align: 1px; }
   #app-root .bf-price-note { margin: 0 0 8px; font-size: 10.5px; color: #8a8378; }
@@ -1217,6 +1217,12 @@
   #app-root .collab-card .cc-open i { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: luDot 1s ease-in-out infinite; }
   @keyframes luDot { 50% { opacity: .2; } }
   @media (prefers-reduced-motion: reduce) { #app-root .collab-card .cc-ring, #app-root .collab-card .cc-open i { animation: none; } }
+#app-root .bf-hub { display: none !important; }
+#app-root .hotz-chips { align-items: center; }
+#app-root .hotz-catbtn { margin-left: auto; background: #fff !important; color: #141312 !important; border: 1.5px solid #141312 !important; }
+#app-root .hotz-catbtn.on { background: #141312 !important; color: #fff !important; }
+#app-root .hotz-cats { margin-top: 6px; }
+#app-root .opz-date { margin-left: 6px; font-size: 12px; font-weight: 800; color: #ff3d3f; letter-spacing: -0.3px; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2810,7 +2816,7 @@ async function renderPublicSite(root) {
     // ---- 실시간 알림 (예약 작업이 bf.alerts 에 채움) ----
     function alertSec() {
       const A = Array.isArray(BFD.alerts) ? BFD.alerts : [];
-      const fresh = A.filter((a) => !a.at || Date.now() - Date.parse(a.at) < 12 * 3600 * 1000).slice(0, 6);
+      const fresh = A.filter((a) => !a.at || Date.now() - Date.parse(a.at) < 12 * 3600 * 1000).slice(0, 3);
       if (!fresh.length) return "";
       return `<div class="bf-alerts"><div class="bf-alerts-h"><span>🔔 지금 뜬 알림</span><small>${esc(BFD.alertsAt || "")} 업데이트</small></div>
         ${fresh.map((a) => `<a class="bf-alert" href="${esc(safeUrl(a.link) || "#")}" target="_blank" rel="noopener">${safeImg(a.img) ? `<img src="${esc(safeImg(a.img))}" alt="" referrerpolicy="no-referrer">` : ""}<span class="t">${esc(a.t || "")}</span><span class="x">${esc(a.text || "")}</span></a>`).join("")}</div>`;
@@ -3153,7 +3159,7 @@ async function renderPublicSite(root) {
       const showAll = false;
       const cards = cur[2].slice(0, 20).map((p) => itemCard(Object.assign({}, p, { tag: p.pin ? p.tag : (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.pin ? p.comment : p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em><span class="cpz-live"><i></i>LIVE</span></p><small>쿠폰까지 적용${k ? ` · ${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small></div><div class="hotz-bar"><i></i></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em><span class="opz-date">${kp(now).m}월 ${kp(now).d}일</span><span class="cpz-live"><i></i>LIVE</span></p><small>쿠폰까지 적용${k ? ` · ${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small></div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
         ${cur[3] ? `<p class="opz-sub">${esc(cur[3])}</p>` : ""}
         <div class="${showAll ? "opz-grid" : "tsz-scroll"}">${cards}</div>
@@ -3208,13 +3214,13 @@ async function renderPublicSite(root) {
       window.addEventListener("popstate", onPop);
     }
     window.__openList = (key, label, list, sub, pageTitle) => openR1(key, [[key, label, list, sub]], pageTitle);
-    let hotView = -1, hotOpen = false;
+    let hotView = -1, hotOpen = false, hotCat = false;
     function renderHot() {
       const H = BFD.hot || {}; const cats = (H.cats || []).filter((c) => c && (c.items || []).length);
       let box = root.querySelector("#hotz");
       if (!cats.length || nowFn() >= T_END) { if (box) box.remove(); return; }
       const cp = root.querySelector("#cpz");
-      if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { hotOpen = !hotOpen; renderHot(); orderBF(); if (!hotOpen) box.scrollIntoView({ block: "start" }); return; } const b = e.target.closest("[data-hv]"); if (!b) return; hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); orderBF(); }); }
+      if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { hotOpen = !hotOpen; renderHot(); orderBF(); if (!hotOpen) box.scrollIntoView({ block: "start" }); return; } const cb = e.target.closest("[data-hcat]"); if (cb) { hotCat = !hotCat; renderHot(); return; } const b = e.target.closest("[data-hv]"); if (!b) return; hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); orderBF(); }); }
       const anchor = root.querySelector("#spz") || root.querySelector("#tsz") || cp;
       if (anchor && anchor.nextSibling !== box) anchor.after(box);
       else if (!cp && !box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
@@ -3234,12 +3240,14 @@ async function renderPublicSite(root) {
       const rise = (H.rise || []).filter((x) => x && x.link);
       if (hotView === -2 && !rise.length) hotView = -1;
       const full = (hotView === -2 ? rise : hotView < 0 || !cats[hotView] ? mix : cats[hotView].items);
-      const LIM = 8, onMix = hotView === -1, PN = (L, ...r) => (onMix ? withPin(L, ...r) : L), AD = (L, ...r) => (onMix ? withAds(L, ...r) : L), list = (hotOpen ? PN(AD(full, hotView + 5, [2, 12, 22, 32]), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜") : PN(AD(full, hotView + 5, [2]).slice(0, LIM - 1), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜")).map((p) => { if (p.pin) return p; const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
-      const sig = (H.at || "") + hotView + list.length;
+      const LIM = 8, onMix = hotView === -1, PN = (L, ...r) => (onMix ? withPin(L, ...r) : L), AD = (L, ...r) => (onMix ? withAds(L, ...r) : L), list = (hotOpen ? PN(AD(full, hotView + 5, [2, 12, 22, 32]), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜") : PN(AD(full, hotView + 5, [2]).slice(0, onMix ? LIM - 1 : LIM), hotView + 3, 5, true, (BFD.collabPin || {}).hot || "차콜")).map((p) => { if (p.pin) return p; const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
+      const pkI = cats.findIndex((c) => c.grp === "pick"); const catOpen = hotCat || (hotView >= 0 && hotView !== pkI);
+      const sig = (H.at || "") + hotView + list.length + (catOpen ? "o" : "c");
       const fresh = box.dataset.sig !== sig; box.dataset.sig = sig;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 가장 핫한 <em>아이템 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small></div>
         <div class="hotz-bar"><i></i></div>
-        <div class="bf-chips"><button type="button" data-hv="-1" class="${hotView === -1 ? "active" : ""}">🔥 실시간 HOT</button>${rise.length ? `<button type="button" data-hv="-2" class="${hotView === -2 ? "active" : ""}">📈 급상승</button>` : ""}${cats.map((c, i) => `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`).join("")}</div>
+        <div class="bf-chips hotz-chips"><button type="button" data-hv="-1" class="${hotView === -1 ? "active" : ""}">🔥 실시간 HOT</button>${rise.length ? `<button type="button" data-hv="-2" class="${hotView === -2 ? "active" : ""}">📈 급상승</button>` : ""}${pkI >= 0 ? `<button type="button" data-hv="${pkI}" class="${hotView === pkI ? "active" : ""}">${esc(cats[pkI].cat)}</button>` : ""}<button type="button" data-hcat="1" class="hotz-catbtn${catOpen ? " on" : ""}">카테고리 보기 ${catOpen ? "▴" : "▾"}</button></div>
+        ${catOpen ? `<div class="bf-chips hotz-cats">${cats.map((c, i) => (i === pkI ? "" : `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`)).join("")}</div>` : ""}
         ${hotView === -2 ? `<p class="hotz-sub">📈 지금 갑자기 많이 찾는 상품</p>` : ""}${hotView >= 0 && cats[hotView] ? `<p class="hotz-sub">${cats[hotView].grp === "pick" ? "패션 좀 아는 사람들이 요즘 주목하는 브랜드의 인기템" : esc((cats[hotView].grp ? cats[hotView].grp + " · " : "") + cats[hotView].cat) + " 지금 제일 많이 보는 상품"}</p>` : ""}
         <div class="bf-grid hotz-grid${fresh ? " hotz-in" : ""}">${list.map((p, i) => itemCard(p, 0).replace(/^(\s*<[a-z]+)/, `$1 style="--d:${Math.min(i, 20) * 50}ms"`)).join("")}</div>
         ${full.length > LIM ? `<button type="button" class="hotz-more" data-hmore="1">${hotOpen ? "접기 ▲" : `전체보기 ▼ <small>${full.length}개</small>`}</button>` : ""}`;
