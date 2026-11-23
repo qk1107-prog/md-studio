@@ -2048,12 +2048,14 @@ async function renderPublicSite(root) {
     const card = (x) => `<a class="bf-item" href="${esc(curl(x.link))}" target="_blank" rel="noopener">
           <div class="im"><img src="${esc(safeImg(x.img))}" loading="lazy" alt="" referrerpolicy="no-referrer">${x.rate ? `<span class="tg">${esc(x.rate)}%</span>` : ""}</div>
           <p class="br">${esc(x.brand)}</p><p class="nm">${esc(x.name)}</p>
-          ${Number(x.price) > Number(x.cpn) ? `<p class="pt"><s>${esc(won2(x.price))}</s></p>` : ""}
+          ${Number(x.price) > Number(x.cpn) ? `<p class="pt">${x.pl ? `<span>${esc(x.pl)}</span>` : ""}<s>${esc(won2(x.price))}</s></p>` : ""}
           <p class="pr">${x.rate ? `<i>${esc(x.rate)}%</i>` : ""}${esc(won2(x.cpn))}</p>
         </a>`;
     cpOverlay("cl" + key, o.title || "모아보기", `
       <div class="cpz-hero">${o.hero ? `<b>${esc(o.hero)}</b>` : ""}<p>${esc(o.sub || o.title || "")}</p>${o.at ? `<small>${esc(o.at)} 쿠폰 적용가 기준 · 가격은 바뀔 수 있어요</small>` : ""}</div>
+      <a class="col-home col-home-top" href="/" onclick="try{history.replaceState(null,'',location.pathname);}catch(e){}">MD STUDIO 전체 보기 <span aria-hidden="true">→</span></a>
       ${(o.secs || []).length ? o.secs.map((sc) => { const L2 = o.items.filter((x) => x.s === sc.k && curl(x.link)); return L2.length ? `<div class="ep-brand-row"><p class="ep-brand-name" style="margin:0 16px 4px">${esc(sc.t)} <small style="color:#999;font-weight:700">${L2.length}</small></p>${sc.d ? `<p class="ep-note" style="margin:0 16px 10px;text-align:left">${esc(sc.d)}</p>` : ""}<div class="spz-grid">${L2.map(card).join("")}</div></div>` : ""; }).join("") : `<div class="spz-grid">${o.items.filter((x) => curl(x.link)).map(card).join("")}</div>`}
+      <a class="col-home" href="/" onclick="try{history.replaceState(null,'',location.pathname);}catch(e){}">MD STUDIO 전체 둘러보기 <span aria-hidden="true">→</span></a>
       <p class="ep-note">${esc(o.note || "가격은 세일에 따라 바뀌어서 무신사에서 확인해 주세요.")}<br>이 페이지의 링크로 구매하시면 광만두가 일정 수수료를 받을 수 있어요.</p>`);
   }
   async function openCoupon(no) {
@@ -4131,6 +4133,8 @@ renderPublicSite(ROOT_EL);
 #app-root .spz .bf-item .tg { background: #141312; color: #ffe14d; }
 #app-root .spz-after { margin: 2px 0 0; font-size: 10.5px; font-weight: 900; color: #ff3d3f; letter-spacing: -0.2px; }
 
+#app-root .col-home { display: block; margin: 22px 16px 6px; padding: 14px 0; border-radius: 12px; background: #141312; color: #fff; text-align: center; font-size: 14px; font-weight: 800; letter-spacing: -0.2px; text-decoration: none; }
+#app-root .col-home-top { margin: -4px 16px 16px; padding: 10px 0; background: #fff; color: #141312; border: 1.5px solid #141312; font-size: 13px; }
 #app-root .spz-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 8px; padding: 0 16px; }
 #app-root .spz-tabs { display: flex; gap: 6px; padding: 12px 16px 14px; }
 #app-root .spz-tabs a { flex: 1; text-align: center; padding: 9px 0; border: 1px solid #1a1a1a; border-radius: 999px; font-size: 12.5px; font-weight: 800; color: #1a1a1a; text-decoration: none; }
