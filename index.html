@@ -2654,12 +2654,12 @@ async function renderPublicSite(root) {
       return nor > x && x ? Math.round((1 - x / nor) * 100) : (Number(p.rate) || 0);
     }
     // 광만두 콜라보 고정 카드: 순위가 아니라 '광만두 콜라보'라고 표시해서 각 목록 앞쪽에 하나씩 (블랙·그레이 번갈아)
-    function withPin(L, seed) {
+    function withPin(L, seed, pos, quiet) {
       const P = ((BFD.collabPin || {}).on && (BFD.collabPin.items || []).filter((p) => p && p.link)) || [];
       if (!P.length || !L || L.length < 2) return L;
       const p = P[Math.abs(seed || 0) % P.length];
       const out = L.filter((x) => x.link !== p.link);
-      out.unshift(Object.assign({}, p, { tag: "광만두 콜라보", comment: BFD.collabPin.note || "광만두 콜라보 · 초도 할인 중", pin: 1 }));
+      out.splice(Math.min(pos || 0, out.length), 0, Object.assign({}, p, { tag: "광만두 콜라보", comment: quiet ? "" : (BFD.collabPin.note || "출시 초도 할인 중"), pin: 1 }));
       return out;
     }
     function noDeal(p) {
@@ -3225,7 +3225,7 @@ async function renderPublicSite(root) {
       const rise = (H.rise || []).filter((x) => x && x.link);
       if (hotView === -2 && !rise.length) hotView = -1;
       const full = (hotView === -2 ? rise : hotView < 0 || !cats[hotView] ? mix : cats[hotView].items);
-      const LIM = hotView >= 0 ? 6 : 8, list = withPin(hotOpen ? full : full.slice(0, LIM), hotView + 3).map((p) => { if (p.pin) return p; const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
+      const LIM = 8, list = (hotOpen ? withPin(full, hotView + 3, 5, true) : withPin(full.slice(0, LIM - 1), hotView + 3, 5, true)).map((p) => { if (p.pin) return p; const r = Number(p.price) > Number(p.sale) ? Number(p.rate) || 0 : 0, e = r > 0 ? 0 : expOf(p, catOf.get(p)); return Object.assign({}, p, { tag: e ? `예상 ~${e}%` : "", comment: (p.w || []).length ? "👀 " + p.w.join(" · ") : "" }); });
       const sig = (H.at || "") + hotView + list.length;
       const fresh = box.dataset.sig !== sig; box.dataset.sig = sig;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 가장 핫한 <em>아이템 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small></div>
