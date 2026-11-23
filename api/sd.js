@@ -41,7 +41,7 @@ module.exports = async function handler(req, res) {
     const out = id === "episodes" ? j : (j[0] ? j[0].value : null);
     if (out == null) throw new Error("empty");
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=300, stale-while-revalidate=900, stale-if-error=86400");
+    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=120, stale-while-revalidate=600, stale-if-error=86400");
     res.statusCode = 200;
     const body = JSON.stringify(slim(id, out)).split(SB + "/storage/v1/object/public/").join("https://" + (req.headers.host || "md-studio-lovat.vercel.app") + "/api/img?p=");
     LAST[id] = body;

@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 빠르게: 사이트 데이터·쿠폰을 HTML 받자마자 같이 받기 시작, 이미지·라이브러리 서버 미리 연결 -->
+<link rel="preload" href="/api/sd?id=main" as="fetch" crossorigin="anonymous">
+<link rel="preload" href="/api/sd?id=coupons" as="fetch" crossorigin="anonymous">
+<link rel="preconnect" href="https://image.msscdn.net">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="dns-prefetch" href="https://cbuydjkvvzbluyohdkie.supabase.co">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MD STUDIO</title>
