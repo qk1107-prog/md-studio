@@ -3078,7 +3078,7 @@ async function renderPublicSite(root) {
       const R = BFD.r1 || {}; const now = nowFn();
       const NAMES = { outer: "🧥 아우터데이", kicks: "👟 킥스데이", top: "👕 상의데이", bottom: "👖 하의데이", beauty: "🧴 뷰티데이", acc: "🎒 잡화데이" };
       const endT = Date.parse(R.end || "2026-11-24T23:59:59+09:00");
-      const rows = Object.keys(R).filter((k) => Array.isArray(R[k]) && R[k].length >= 4).map((k) => {
+      const rows = Object.keys(R).filter((k) => Array.isArray(R[k]) && R[k].length >= 4).sort((a, b) => (Object.keys(NAMES).indexOf(a) + 99) % 99 - (Object.keys(NAMES).indexOf(b) + 99) % 99).map((k) => {
         // 후기 있는 상품 중 할인율 큰 순, 같은 브랜드는 최대 5개·연달아 X, 100개
         const cnt = {}; const L = R[k].filter((p) => p && p.link && Number(p.rate) >= 20 && Number(p.rv) >= 30 && !/샌들|슬리퍼|반팔|쇼츠/.test(p.name || "")).sort((a, b) => Number(b.rate) - Number(a.rate) || Number(b.rv) - Number(a.rv)).filter((p) => (cnt[p.brand] = (cnt[p.brand] || 0) + 1) <= 5).slice(0, 100);
         for (let i = 1; i < L.length; i++) if (L[i].brand === L[i - 1].brand) { const j = L.findIndex((x, n) => n > i && x.brand !== L[i - 1].brand); if (j > 0) [L[i], L[j]] = [L[j], L[i]]; }
