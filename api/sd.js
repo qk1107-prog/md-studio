@@ -5,6 +5,21 @@ const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 const OK = { main: 1, coupons: 1, brands: 1, catrank: 1, packs: 1, episodes: 1 };
 // 같은 서버 인스턴스 안에서 마지막으로 성공한 데이터를 기억 → 수파베이스가 느리거나 죽어도 그걸로 응답
 const LAST = {};
+const zlib = require("zlib");
+// 방문자에게 필요 없는 큰 값은 빼고 보냄 (전송량 절약)
+function slim(id, out) {
+  if (id !== "main" || !out || !out.bf) return out;
+  const bf = Object.assign({}, out.bf);
+  delete bf.sigPreview5;
+  if (bf.days) {
+    const k = new Date(Date.now() + 9 * 36e5); const pad = (n) => String(n).padStart(2, "0");
+    const today = k.getUTCFullYear() + "-" + pad(k.getUTCMonth() + 1) + "-" + pad(k.getUTCDate());
+    const keys = Object.keys(bf.days).filter((d) => d <= today).sort().slice(-2);
+    const d = {}; keys.forEach((x) => { d[x] = bf.days[x]; }); Object.keys(bf.days).filter((x) => x > today).forEach((x) => { d[x] = bf.days[x]; });
+    bf.days = d;
+  }
+  return Object.assign({}, out, { bf });
+}
 module.exports = async function handler(req, res) {
   const id = String((req.query && req.query.id) || "main");
   if (!OK[id]) { res.statusCode = 400; return res.end("bad id"); }
@@ -19,18 +34,27 @@ module.exports = async function handler(req, res) {
     const out = id === "episodes" ? j : (j[0] ? j[0].value : null);
     if (out == null) throw new Error("empty");
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=180, stale-while-revalidate=600, stale-if-error=86400");
+    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=300, stale-while-revalidate=900, stale-if-error=86400");
     res.statusCode = 200;
-    const body = JSON.stringify(out).split(SB + "/storage/v1/object/public/").join("https://" + (req.headers.host || "md-studio-lovat.vercel.app") + "/api/img?p=");
+    const body = JSON.stringify(slim(id, out)).split(SB + "/storage/v1/object/public/").join("https://" + (req.headers.host || "md-studio-lovat.vercel.app") + "/api/img?p=");
     LAST[id] = body;
-    return res.end(body);
+    return send(req, res, body);
     res.end(JSON.stringify(out).split(SB + "/storage/v1/object/public/").join("https://" + (req.headers.host || "md-studio-lovat.vercel.app") + "/api/img?p="));
   } catch (e) {
-    if (LAST[id]) { res.setHeader("Content-Type", "application/json; charset=utf-8"); res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60, stale-while-revalidate=600"); res.statusCode = 200; return res.end(LAST[id]); }
+    if (LAST[id]) { res.setHeader("Content-Type", "application/json; charset=utf-8"); res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60, stale-while-revalidate=600"); res.statusCode = 200; return send(req, res, LAST[id]); }
     res.setHeader("Cache-Control", "no-store");
     res.statusCode = 502;
     res.end("err");
   }
 };
 
+// gzip 으로 압축해서 보냄 (JSON 은 10분의 1 정도로 줄어요)
+function send(req, res, body) {
+  res.setHeader("Vary", "Accept-Encoding");
+  if (/\bgzip\b/.test(String(req.headers["accept-encoding"] || ""))) {
+    res.setHeader("Content-Encoding", "gzip");
+    return res.end(zlib.gzipSync(body, { level: 6 }));
+  }
+  return res.end(body);
+}
 module.exports.config = { maxDuration: 30 };
