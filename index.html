@@ -2659,7 +2659,7 @@ async function renderPublicSite(root) {
       if (!P.length || !L || L.length < 2) return L;
       const p = P[Math.abs(seed || 0) % P.length];
       const out = L.filter((x) => x.link !== p.link);
-      out.splice(1, 0, Object.assign({}, p, { tag: "광만두 콜라보", comment: BFD.collabPin.note || "광만두 콜라보 · 초도 할인 중", pin: 1 }));
+      out.unshift(Object.assign({}, p, { tag: "광만두 콜라보", comment: BFD.collabPin.note || "광만두 콜라보 · 초도 할인 중", pin: 1 }));
       return out;
     }
     function noDeal(p) {
@@ -3131,8 +3131,8 @@ async function renderPublicSite(root) {
       const br = []; const bl = (day.brands || []).map((b) => (b.items || []).slice()); for (let r = 0; r < 12; r++) bl.forEach((L) => { if (L[r]) br.push(L[r]); });
       const sg = []; const sl = (BFD.sigPreview || []).map((g) => (g.items || []).filter((p) => !noDeal(p))); for (let r = 0; r < 80; r++) sl.forEach((L) => { if (L[r] && !(sg.length && sg[sg.length - 1].brand === L[r].brand)) sg.push(L[r]); else if (L[r]) sg.push(L[r]); });
       const SO = ((BFD.sold || {}).items || []).filter((p) => !noDeal(p));
-      const T = [["sold", "🛍️ 다들 산 거", SO, "광만두 링크로 실제로 많이 산 것들"], ["sig", "💎 시그니처특가", sg, "역대급 무진장 시그니처특가"], ["hot", "🔥 하루특가", hot, "오늘 자정까지"], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), "오늘의 브랜드"], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), "1회차 · 11.22~24"]].filter((t) => t[2].length);
-      T.forEach((t, i) => { t[2] = withPin(t[2], i); });
+      const T = [["sold", "🔥 핫", SO, ""], ["sig", "💎 시그니처특가", sg, ""], ["hot", "⏰ 하루특가", hot, ""], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), ""], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), ""], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), ""]].filter((t) => t[2].length);
+      T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(t[2], new Date().getHours()); });
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
       const cp = root.querySelector("#cpz");
@@ -3145,7 +3145,7 @@ async function renderPublicSite(root) {
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em><span class="cpz-live"><i></i>LIVE</span></p><small>쿠폰까지 적용${k ? ` · ${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small></div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
-        <p class="opz-sub">${esc(cur[3])}</p>
+        ${cur[3] ? `<p class="opz-sub">${esc(cur[3])}</p>` : ""}
         <div class="${showAll ? "opz-grid" : "tsz-scroll"}">${cards}</div>
         ${cur[2].length > 20 ? `<button type="button" class="opz-more" data-r1all="${r1Tab}">${esc(cur[1].replace(/^\S+\s/, ""))} 전체보기 → <b>${cur[2].length}개</b></button>` : ""}`;
       window.__r1T = T;
