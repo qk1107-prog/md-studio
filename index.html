@@ -3038,24 +3038,26 @@ async function renderPublicSite(root) {
       // 아래 "실시간 쿠폰" 칸의 쿠폰별 상품(site_data coupons)과 연동: l.cpn = ["쿠폰 이름 일부", ...]
       if (!COUPONS && !window.__lvCp) { window.__lvCp = 1; loadCoupons().then(() => { if (COUPONS) renderLv(); }); }
       const cpItems = (l) => {
-        const keys = [].concat(l.cpn || []).filter(Boolean); if (!keys.length || !COUPONS || !COUPONS.list) return [];
-        const y = new Date(now).getFullYear(); const out = [];
-        COUPONS.list.filter((c) => keys.some((k) => String(c.n || "").includes(k))).forEach((c) => {
+        const keys = [].concat(l.cpn || []).filter(Boolean); const cpb = l.cpb || ""; if ((!keys.length && !cpb) || !COUPONS || !COUPONS.list) return [];
+        const y = new Date(now).getFullYear(); const best = new Map();
+        // cpn: 쿠폰 이름으로 고르기 / cpb: 그 브랜드 상품이 들어 있는 상품 쿠폰 전부 (상품마다 제일 싼 쿠폰가)
+        COUPONS.list.filter((c) => keys.some((k) => String(c.n || "").includes(k)) || (cpb && c.k !== "C" && (c.g || []).some((g) => g && g.b === cpb))).forEach((c) => {
           const m = String(c.exp || "").match(/(\d+)\/(\d+)/); if (m && new Date(y, +m[1] - 1, +m[2], 23, 59, 59).getTime() < now) return;
           const pct = parseFloat(c.v) || 0; const cm = String(c.cond || "").match(/최대\s*([\d,.]+)\s*(만원|천원|원)/); const cap = cm ? parseFloat(cm[1].replace(/,/g, "")) * (cm[2] === "만원" ? 1e4 : cm[2] === "천원" ? 1e3 : 1) : Infinity;
-          (c.g || []).forEach((g) => { if (!g || !g.l || !/%$/.test(String(c.v))) return; const sp = Number(g.s) || 0; if (!sp) return; const np = Number(g.r) > 0 ? Math.round(sp / (1 - g.r / 100) / 1000) * 1000 : sp; const sale = Math.round(sp - Math.min(sp * pct / 100, cap));
-            out.push({ brand: g.b, name: g.n, img: "https://image.msscdn.net" + g.i, link: "https://www.musinsa.com/curator/goods/" + g.l, price: Math.max(np, sp), sale, rate: Math.round((1 - sale / Math.max(np, sp)) * 100) }); });
+          (c.g || []).forEach((g) => { if (!g || !g.l || !/%$/.test(String(c.v)) || (cpb && !keys.some((k) => String(c.n || "").includes(k)) && g.b !== cpb)) return; const sp = Number(g.s) || 0; if (!sp) return; const np = Number(g.r) > 0 ? Math.round(sp / (1 - g.r / 100) / 1000) * 1000 : sp; const sale = Math.round(sp - Math.min(sp * pct / 100, cap));
+            const it = { brand: g.b, name: g.n, img: "https://image.msscdn.net" + g.i, link: "https://www.musinsa.com/curator/goods/" + g.l, price: Math.max(np, sp), sale, rate: Math.round((1 - sale / Math.max(np, sp)) * 100), cp: pct };
+            const o = best.get(it.link); if (!o || it.sale < o.sale) best.set(it.link, it); });
         });
-        return out;
+        return [...best.values()].sort((a, b) => b.cp - a.cp || b.rate - a.rate);
       };
-      const lives = (Array.isArray(LV.lives) ? LV.lives : (LV.items ? [LV] : [])).map((l) => { const seen = new Set(); const items = [...(l.items || []), ...cpItems(l)].filter((p) => p && p.link && !seen.has(p.link) && seen.add(p.link)); return Object.assign({}, l, { items }); }).filter((l) => l && (l.items || []).some((p) => p && p.link) && !(tm(l.end) && tm(l.end) <= now));
+      const lives = (Array.isArray(LV.lives) ? LV.lives : (LV.items ? [LV] : [])).map((l) => { const seen = new Set(); const items = [...(l.items || []).map((p) => Object.assign({ cp: l.rate }, p)), ...cpItems(l)].filter((p) => p && p.link && !seen.has(p.link) && seen.add(p.link)); return Object.assign({}, l, { items }); }).filter((l) => l && (l.items || []).some((p) => p && p.link) && !(tm(l.end) && tm(l.end) <= now));
       let box = root.querySelector("#lvz");
       if (!lives.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "lvz"; box.className = "lvz sec-rel"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-lvall]"); if (b) { const l = (window.__lvLives || [])[Number(b.dataset.lvall)]; if (l && window.__openList) window.__openList("lv" + b.dataset.lvall, `🔴 ${l.brand} 라이브 쿠폰`, l.list, l.coupon || "", `${l.brand} 라이브 쿠폰`); } }); }
       if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const card = (p, l) => { const sale = Number(p.sale) || 0, price = Number(p.price) || 0, rate = Number(p.rate) || 0, img = safeImg(p.img);
-        return `<a class="bf-item tsc" href="${esc(safeUrl(p.link) || "#")}" target="_blank" rel="noopener"><div class="im">${img ? `<img src="${esc(img)}" loading="lazy" alt="" referrerpolicy="no-referrer">` : ""}${rate ? `<span class="tg lv-tg">-${esc(rate)}%</span>` : ""}</div>
+        return `<a class="bf-item tsc" href="${esc(safeUrl(p.link) || "#")}" target="_blank" rel="noopener"><div class="im">${img ? `<img src="${esc(img)}" loading="lazy" alt="" referrerpolicy="no-referrer">` : ""}${p.cp ? `<span class="tg lv-tg">${esc(p.cp)}% 쿠폰</span>` : rate ? `<span class="tg lv-tg">-${esc(rate)}%</span>` : ""}</div>
           <p class="br">${esc(p.brand || l.brand || "")}</p><p class="nm">${esc(p.name || "")}</p>${price > sale ? `<p class="pt"><s>${esc(won(price))}</s></p>` : ""}<p class="pr">${rate ? `<i>${esc(rate)}%</i>` : ""}${esc(won(sale))}</p></a>`; };
       window.__lvLives = lives.map((l) => ({ brand: l.brand, coupon: l.coupon, list: (l.items || []).filter((p) => p && p.link).map((p) => Object.assign({}, p, { tag: `${l.rate ? l.rate + "% " : ""}라이브 쿠폰`, comment: `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` })) }));
       const hm = (t) => { const k = kp(t); return `${k.h}:${String(k.mi).padStart(2, "0")}`; };
@@ -3067,7 +3069,7 @@ async function renderPublicSite(root) {
           <div class="bf-grid">${L.slice(0, 4).map((p) => card(p, l)).join("")}</div></div>`; };
       const at = tm(LV.at);
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title"><span class="lv-dot"></span>실시간 <span class="lv-em">라이브 쿠폰</span><span class="cpz-live"><i></i>LIVE</span></p></div>
-        <p class="lv-sub">${at ? `<b class="lv-clock">${esc(hm(at))}</b> 기준 · ` : ""}방송 ${lives.length}개 · 라이브 때마다 바로 바뀌어요 · <b>쿠폰 받고 구매하세요</b></p>
+        <p class="lv-sub">${at ? `<b class="lv-clock">${esc(hm(at))}</b> 기준 · ` : ""}라이브 쿠폰 뜰 때마다 바로 올려드려요 · <b>쿠폰 받고 구매하세요</b></p>
         <div class="hotz-bar"><i></i></div>
         ${lives.map(row).join("")}`;
     }
