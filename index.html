@@ -1994,6 +1994,8 @@ async function renderPublicSite(root) {
     const t = root.querySelector("nav.tabs button.active");
     box.hidden = false;
   }
+  // 쿠폰 페이지(#cp=…, #cps) 위·아래에 MD STUDIO로 가기 버튼
+  const CP_HOME_BTN = (cls, label) => `<a class="${cls}" href="/" onclick="try{history.replaceState(null,'',location.pathname);}catch(e){}">${label} <span aria-hidden="true">→</span></a>`;
   function cpOverlay(key, title, inner) {
     const existing = root.querySelector("#ep-backdrop");
     if (existing && existing.dataset.ep === key) return null;
@@ -2005,7 +2007,7 @@ async function renderPublicSite(root) {
           <button class="back-link" id="ep-close" aria-label="뒤로가기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
           <p class="feed-title">${esc(title)}</p>
         </div></div>
-        <div class="ep-wrap">${inner}</div>
+        <div class="ep-wrap">${/^cp/.test(key) ? CP_HOME_BTN("col-home col-home-top", "MD STUDIO 전체 보기") + inner + CP_HOME_BTN("col-home", "MD STUDIO 전체 둘러보기") : inner}</div>
       </div>`;
     const backdrop = holder.firstElementChild;
     root.appendChild(backdrop);
