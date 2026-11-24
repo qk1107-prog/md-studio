@@ -3054,17 +3054,29 @@ async function renderPublicSite(root) {
         return [...best.values()].sort((a, b) => b.cp - a.cp || b.rate - a.rate);
       };
       const lives = (Array.isArray(LV.lives) ? LV.lives : (LV.items ? [LV] : [])).map((l) => { const seen = new Set(); const items = [...(l.items || []).map((p) => Object.assign({ cp: l.rate }, p)), ...cpItems(l)].filter((p) => p && p.link && !seen.has(p.link) && seen.add(p.link)); return Object.assign({}, l, { items }); }).filter((l) => l && (l.items || []).some((p) => p && p.link) && !(tm(l.end) && tm(l.end) <= now));
+      // 지금 라이브 = 방송 시작했고 끝나지 않은 것(끝 시각 없으면 시작 후 90분). 나머지·bf.lvPast는 "지난 라이브 쿠폰" 한 줄로
+      const onNow = (l) => tm(l.start) && tm(l.start) <= now && now < (tm(l.liveEnd) || tm(l.start) + 90 * 6e4);
+      const curL = lives.filter(onNow);
+      const pastSeen = new Set(); const pastItems = []; const pastNames = [];
+      [...lives.filter((l) => !onNow(l)), ...(Array.isArray(BFD.lvPast) ? BFD.lvPast : []).map((l) => Object.assign({}, l, { items: [...(l.items || []), ...cpItems(l)] }))].filter((l) => !(tm(l.end) && tm(l.end) <= now)).forEach((l) => {
+        const nm = `${l.brand}${l.rate ? " " + l.rate + "%" : ""}`; if (!pastNames.includes(nm)) pastNames.push(nm);
+        (l.items || []).forEach((p) => { if (p && p.link && !pastSeen.has(p.link)) { pastSeen.add(p.link); pastItems.push(Object.assign({ cp: l.rate }, p)); } });
+      });
+      // 브랜드 섞어서 (한 줄에 여러 방송이 보이게)
+      const byB = {}; pastItems.forEach((p) => (byB[p.brand] = byB[p.brand] || []).push(p)); const pastMix = []; for (let r = 0; r < 200; r++) Object.values(byB).forEach((L) => { if (L[r]) pastMix.push(L[r]); });
       let box = root.querySelector("#lvz");
-      if (!lives.length || now >= T_END) { if (box) box.remove(); return; }
-      if (!box) { box = document.createElement("section"); box.id = "lvz"; box.className = "lvz sec-rel"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-lvall]"); if (b) { const l = (window.__lvLives || [])[Number(b.dataset.lvall)]; if (l && window.__openList) window.__openList("lv" + b.dataset.lvall, `🔴 ${l.brand} 라이브 쿠폰`, l.list, l.coupon || "", `${l.brand} 라이브 쿠폰`); } }); }
+      if ((!curL.length && !pastMix.length) || now >= T_END) { if (box) box.remove(); return; }
+      if (!box) { box = document.createElement("section"); box.id = "lvz"; box.className = "lvz sec-rel"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-lvall]"); if (b) { const l = (window.__lvLives || [])[Number(b.dataset.lvall)]; if (l && window.__openList) window.__openList("lv" + b.dataset.lvall, l.brand === "지난 라이브" ? "🔴 지난 라이브 쿠폰 상품" : `🔴 ${l.brand} 라이브 쿠폰`, l.list, l.coupon || "", `${l.brand} 라이브 쿠폰`); } }); }
       if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const card = (p, l) => { const sale = Number(p.sale) || 0, price = Number(p.price) || 0, rate = Number(p.rate) || 0, img = safeImg(p.img);
         return `<a class="bf-item tsc" href="${esc(safeUrl(p.link) || "#")}" target="_blank" rel="noopener"><div class="im">${img ? `<img src="${esc(img)}" loading="lazy" alt="" referrerpolicy="no-referrer">` : ""}${p.cp ? `<span class="tg lv-tg">${esc(p.cp)}% 쿠폰</span>` : rate ? `<span class="tg lv-tg">-${esc(rate)}%</span>` : ""}</div>
           <p class="br">${esc(p.brand || l.brand || "")}</p><p class="nm">${esc(p.name || "")}</p>${price > sale ? `<p class="pt"><s>${esc(won(price))}</s></p>` : ""}<p class="pr">${rate ? `<i>${esc(rate)}%</i>` : ""}${esc(won(sale))}</p></a>`; };
-      window.__lvLives = lives.map((l) => ({ brand: l.brand, coupon: l.coupon, list: (l.items || []).filter((p) => p && p.link).map((p) => Object.assign({}, p, { tag: `${p.cp || l.rate ? (p.cp || l.rate) + "% " : ""}쿠폰`, comment: `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` })) }));
+      const shown = [...curL, ...(pastMix.length ? [{ brand: "지난 라이브", coupon: pastNames.join(" · "), __past: 1, items: pastMix }] : [])];
+      window.__lvLives = shown.map((l) => ({ brand: l.brand, coupon: l.coupon, list: (l.items || []).filter((p) => p && p.link).map((p) => Object.assign({}, p, { tag: `${p.cp || l.rate ? (p.cp || l.rate) + "% " : ""}쿠폰`, comment: `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` })) }));
       const hm = (t) => { const k = kp(t); return `${k.h}:${String(k.mi).padStart(2, "0")}`; };
       const row = (l, i) => { const L = (l.items || []).filter((p) => p && p.link); const st = tm(l.start), en = tm(l.liveEnd);
+        if (l.__past) return `<div class="lv-row lv-past"><div class="lv-rh"><span class="lv-off">지난 라이브 쿠폰</span><small>${esc(l.coupon)} · 쿠폰은 아직 쓸 수 있어요</small>${L.length > 4 ? `<button type="button" class="lv-all" data-lvall="${i}">전체보기 →</button>` : ""}</div><div class="bf-grid">${L.slice(0, 4).map((p) => card(p, l)).join("")}</div></div>`;
         const onAir = st && st <= now && (!en || now < en);
         const badge = onAir ? `<span class="lv-on"><i></i>방송 중</span>` : st && now < st ? `<span class="lv-soon">${esc(hm(st))} 방송 예정</span>` : `<span class="lv-off">${esc(l.live || "라이브")}</span>`;
         const ek = tm(l.end) ? kp(tm(l.end)) : null;
@@ -3074,7 +3086,7 @@ async function renderPublicSite(root) {
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title"><span class="lv-dot"></span>실시간 <span class="lv-em">라이브 쿠폰</span><span class="cpz-live"><i></i>LIVE</span></p></div>
         <p class="lv-sub">${at ? `<b class="lv-clock">${esc(hm(at))}</b> 기준 · ` : ""}라이브 쿠폰 뜰 때마다 바로 올려드려요 · <b>쿠폰 받고 구매하세요</b></p>
         <div class="hotz-bar"><i></i></div>
-        ${lives.map(row).join("")}`;
+        ${curL.length ? "" : `<p class="lv-wait">🔴 오늘 라이브가 시작되면 여기에 바로 올라와요</p>`}${shown.map(row).join("")}`;
     }
     // 지금 회차 칸: main.bf.r1 = { at, title?, end?, outer:[...], kicks:[...] } — 종류마다 한 줄(4개) + 100개 전체보기. 라이브 쿠폰 칸 바로 아래.
     function renderRd() {
@@ -3391,7 +3403,7 @@ async function renderPublicSite(root) {
       // 페이지를 열어둔 채로 있어도 보고방(매시 정각)·이 방(매시 25분) 업데이트가 바로 보이게 3분마다 다시 받기
       if (!window.__tsPoll) window.__tsPoll = setInterval(() => {
         if (document.hidden) return;
-        sdFetch("main").then((v) => { if (!v || !v.bf) return; const o = BFD.dm && BFD.dm.at, t = BFD.ts && BFD.ts.at; const r1o = BFD.r1 && BFD.r1.at, lvo = JSON.stringify(BFD.lv || {}), dyo = JSON.stringify(BFD.days || {}).length; ["dm", "ts", "spot", "hot", "r1", "days", "sold", "lv"].forEach((k) => { if (v.bf[k]) BFD[k] = v.bf[k]; }); if ((BFD.dm && BFD.dm.at) !== o || (BFD.ts && BFD.ts.at) !== t || (BFD.r1 && BFD.r1.at) !== r1o || JSON.stringify(BFD.days || {}).length !== dyo || JSON.stringify(BFD.lv || {}) !== lvo) { try { renderLv(); } catch (e) {} try { renderRd(); } catch (e) {} renderTs(); renderHot(); try { renderPlan(); } catch (e) {} try { renderR1(); } catch (e) {} try { orderBF(); } catch (e) {} } }).catch(() => {});
+        sdFetch("main").then((v) => { if (!v || !v.bf) return; const o = BFD.dm && BFD.dm.at, t = BFD.ts && BFD.ts.at; const r1o = BFD.r1 && BFD.r1.at, lvo = JSON.stringify(BFD.lv || {}), dyo = JSON.stringify(BFD.days || {}).length; ["dm", "ts", "spot", "hot", "r1", "days", "sold", "lv", "lvPast"].forEach((k) => { if (v.bf[k]) BFD[k] = v.bf[k]; }); if ((BFD.dm && BFD.dm.at) !== o || (BFD.ts && BFD.ts.at) !== t || (BFD.r1 && BFD.r1.at) !== r1o || JSON.stringify(BFD.days || {}).length !== dyo || JSON.stringify(BFD.lv || {}) !== lvo) { try { renderLv(); } catch (e) {} try { renderRd(); } catch (e) {} renderTs(); renderHot(); try { renderPlan(); } catch (e) {} try { renderR1(); } catch (e) {} try { orderBF(); } catch (e) {} } }).catch(() => {});
       }, 180000);
       const now = nowFn();
       if (now >= T_END) { phase = "end"; zone.innerHTML = `<p class="bf-empty">이번 무진장은 끝났어요. 다음 블프 때 다시 정리할게요!</p>`; return; }
@@ -4296,6 +4308,7 @@ renderPublicSite(ROOT_EL);
 #app-root .look-cap i{font-style:normal;font-size:9.5px;opacity:.85}
 #app-root .bio-notice{margin:8px 0 0;padding:7px 10px;background:#fff4f3;border:1px solid #ffd2cf;border-radius:8px;font-size:11.5px;line-height:1.5;color:#3a3530;letter-spacing:-.2px}
 #app-root .bio-notice b{color:#ff3d3f;font-weight:800}
+#app-root .lvz .lv-wait{margin:8px 0 2px;font-size:12px;font-weight:800;color:#ff3d3f}
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
