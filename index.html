@@ -425,6 +425,9 @@
   #app-root .cpz-tick-in a b { color: #ff6a3d; margin-right: 3px; }
   #app-root .cpz-tick:hover .cpz-tick-in { animation-play-state: paused; }
   @keyframes cpzTick { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+  #app-root .cpz-chip.is-up { border-color: #ff3d3f; background: #fff7f5; box-shadow: 0 0 0 2px rgba(255,61,63,.35), 0 6px 16px rgba(255,61,63,.22); animation: cpzUp 1.6s ease-in-out infinite; }
+  #app-root .cpz-upb { position: absolute; right: 0; top: 0; font-size: 8.5px; font-weight: 900; color: #141312; background: #E4FF1A; border-radius: 0 0 0 6px; padding: 2px 6px 1px; letter-spacing: -0.2px; }
+  @keyframes cpzUp { 0%,100% { box-shadow: 0 0 0 2px rgba(255,61,63,.35), 0 6px 16px rgba(255,61,63,.22); } 50% { box-shadow: 0 0 0 4px rgba(255,61,63,.18), 0 6px 20px rgba(255,61,63,.32); } }
   #app-root .cpz-hot { position: absolute; left: 8px; top: -1px; font-size: 8.5px; font-weight: 900; color: #fff; background: linear-gradient(135deg, #ff7a2f, #ff2d3f); border-radius: 0 0 5px 5px; padding: 2px 5px 1px; letter-spacing: 0.3px; }
   #app-root .cpz-chip.is-hot { border-color: #ffb08a; box-shadow: 0 0 0 1px rgba(255,90,40,.15), 0 4px 12px rgba(255,80,40,.12); }
   #app-root .cpz-chip.is-hot::before { background: linear-gradient(180deg, #ff9a3d, #ff2d3f); }
@@ -1896,6 +1899,8 @@ async function renderPublicSite(root) {
 
   // 스타터팩 전체보기: 코디 이미지 크게 + 제품
   // ---------- 지금 쓰기 좋은 쿠폰 (site_data id='coupons', 예약 작업이 1시간마다 갱신) ----------
+  // 쿠폰 칸(#cpz)은 베스트 픽 위로 올려서, 아래 칸들은 장바구니 칸 뒤를 기준으로 붙여요
+  const cpA = () => root.querySelector("#tab-bf > #bf-mycart") || root.querySelector("#cpz");
   let COUPONS = null, couponsP = null;
   const CP_PV = (() => { try { return new URLSearchParams(location.search).get("awards") === "1"; } catch (e) { return false; } })();
   function loadCoupons() {
@@ -1905,7 +1910,7 @@ async function renderPublicSite(root) {
     return couponsP;
   }
   const cpKind = (c) => (c.k === "C" ? "장바구니" : "상품");
-  const cpHotSet = () => { if (!COUPONS || !COUPONS.list) return new Set(); const L = COUPONS.list; const pct = (c) => (/%$/.test(c.v) ? parseFloat(c.v) : 0); const pool = L.slice(0, 60).filter((c) => pct(c) >= 10 || /만원|천원/.test(c.v)); const top = pool.slice().sort((a, b) => (b.bf || 0) - (a.bf || 0) || pct(b) - pct(a) || (b.cnt || 0) - (a.cnt || 0)).slice(0, 6); return new Set(top.map((c) => String(c.no))); };
+  const cpHotSet = () => { if (!COUPONS || !COUPONS.list) return new Set(); const L = COUPONS.list; const pct = (c) => (/%$/.test(c.v) ? parseFloat(c.v) : 0); const pool = L.slice(0, 60).filter((c) => pct(c) >= 10 || /만원|천원/.test(c.v)); const top = pool.slice().sort((a, b) => (b.up ? 1 : 0) - (a.up ? 1 : 0) || (b.bf || 0) - (a.bf || 0) || pct(b) - pct(a) || (b.cnt || 0) - (a.cnt || 0)).slice(0, 6); return new Set(top.map((c) => String(c.no))); };
   // ---- 대표 브랜드 프리오픈 쿠폰 강조 칸 (타임세일 TOP 10 바로 아래) : 티징 쿠폰이 있는 대표 브랜드만 자동으로 ----
   function renderSpot(L) {
     const BR = ["노스페이스", "아디다스", "나이키", "뉴발란스", "어그", "살로몬", "아크테릭스"];
@@ -1952,12 +1957,12 @@ async function renderPublicSite(root) {
     let box = root.querySelector("#spz");
     if (!blocks) { if (box) box.remove(); return; }
     if (!box) { box = document.createElement("section"); box.id = "spz"; box.className = "spz"; }
-    const anchor = root.querySelector("#tsz") || root.querySelector("#cpz");
+    const anchor = root.querySelector("#tsz") || cpA();
     if (anchor && anchor.nextSibling !== box) anchor.after(box);
     box.innerHTML = blocks;
   }
   let CP_HOT = new Set();
-  const cpChip = (c) => `<a class="cpz-chip k-${esc(c.k)}${CP_HOT.has(String(c.no)) ? " is-hot" : ""}" href="#cp=${esc(c.no)}">${CP_HOT.has(String(c.no)) ? '<span class="cpz-hot">🔥 HOT</span>' : ""}<span class="cpz-k">${c.nw ? '<em class="cpz-new">NEW</em> ' : ""}${c.tz ? '<em class="cpz-bf" style="background:#6a2ff0">티징</em>' : c.bf ? '<em class="cpz-bf">무진장</em>' : cpKind(c)}</span><span class="cpz-v">${esc(c.v)}</span><span class="cpz-n">${esc(c.n)}</span><span class="cpz-m">${esc([c.cond, c.exp ? "~" + c.exp : ""].filter(Boolean).join(" · "))}</span></a>`;
+  const cpChip = (c) => `<a class="cpz-chip k-${esc(c.k)}${CP_HOT.has(String(c.no)) ? " is-hot" : ""}${c.up ? " is-up" : ""}" href="#cp=${esc(c.no)}">${CP_HOT.has(String(c.no)) ? '<span class="cpz-hot">🔥 HOT</span>' : ""}${c.up ? `<span class="cpz-upb">＋상품 ${esc(c.up)}개 추가</span>` : ""}<span class="cpz-k">${c.nw ? '<em class="cpz-new">NEW</em> ' : ""}${c.tz ? '<em class="cpz-bf" style="background:#6a2ff0">티징</em>' : c.bf ? '<em class="cpz-bf">무진장</em>' : cpKind(c)}</span><span class="cpz-v">${esc(c.v)}</span><span class="cpz-n">${esc(c.n)}</span><span class="cpz-m">${esc([c.cond, c.exp ? "~" + c.exp : ""].filter(Boolean).join(" · "))}</span></a>`;
   const cpTime = (iso) => { try { const d = new Date(iso); const k = new Date(d.getTime() + 9 * 3600e3); return `${k.getUTCMonth() + 1}/${k.getUTCDate()} ${String(k.getUTCHours()).padStart(2, "0")}:${String(k.getUTCMinutes()).padStart(2, "0")}`; } catch (e) { return ""; } };
   function renderCouponStrip() {
     const box = root.querySelector("#cpz");
@@ -1970,7 +1975,7 @@ async function renderPublicSite(root) {
     const CP_FAM = /노스페이스|아디다스|나이키|뉴발란스|어그|살로몬|아크테릭스|푸마|컨버스|반스|닥터마틴|파타고니아|디스커버리|내셔널지오그래픽|컬럼비아|코오롱|아이더|케이투|리바이스|폴로|라코스테|챔피온|커버낫|스파오|무신사 스탠다드|칼하트|디키즈|스투시|아식스|미즈노|오니츠카|팀버랜드|크록스|잔스포츠|이스트팩|캉골|엠엘비|후아유|지오다노|탑텐|에잇세컨즈|마인드브릿지|드로우핏|수아레|토피|쿠어|인사일런스|예일|마리떼|마뗑킴|디스이즈네버댓|노매뉴얼|락피쉬|몽벨|네파|블랙야크|스노우피크|데상트|르꼬끄|휠라|리복|언더아머|유니클로|자라|캘빈클라인|타미|게스|랭글러/;
     const CP_TOP = /노스페이스|아디다스|나이키|뉴발란스|어그|살로몬|아크테릭스|파타고니아|칼하트|스투시/;
     const cpPri = (n) => (CP_TOP.test(n) ? 2 : CP_FAM.test(n) ? 1 : 0);
-    const L = COUPONS.list.map((c, i) => [c, i]).sort((a, b) => cpPri(b[0].n) - cpPri(a[0].n) || a[1] - b[1]).map((x) => x[0]);
+    const L = COUPONS.list.map((c, i) => [c, i]).sort((a, b) => (b[0].up ? 3 : cpPri(b[0].n)) - (a[0].up ? 3 : cpPri(a[0].n)) || a[1] - b[1]).map((x) => x[0]);
     const hot = L.filter((c) => CP_HOT.has(String(c.no)));
     const rest = L.filter((c) => !CP_HOT.has(String(c.no)));
     const nw = L.filter((c) => c.nw);
@@ -3147,7 +3152,7 @@ async function renderPublicSite(root) {
       window.__tsAt = SRC.at || "";
       window.__tsItems = (items.length < 3 || now >= T_END) ? [] : items.map((p) => Object.assign({}, p, { tag: String(p.kind || "타임세일").replace("무진장 프리오픈", "무진장 특가").replace("무진장 프리쿠폰", "무진장 쿠폰특가"), comment: /쿠폰/.test(p.kind || "") ? `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` : (p.comment || "") }));
       return;
-      const cp = root.querySelector("#cpz");
+      const cp = cpA();
       if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsall]")) { window.__openList && window.__openList("ts", "⏰ 실시간 타임세일 중 꿀템", window.__tsItems || [], "", "실시간 타임세일 중 꿀템"); } }); }
       const opA = cp;
       if (opA) { if (opA.nextSibling !== box) opA.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
@@ -3272,7 +3277,7 @@ async function renderPublicSite(root) {
       T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(withAds(t[2], new Date().getHours(), [3, 7, 11, 15]), 0, 0, false, (BFD.collabPin || {}).opz || "멜란지"); });
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
-      const cp = root.querySelector("#cpz");
+      const cp = cpA();
       if (cp) { if (cp.nextSibling !== box) cp.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       if (!T.find((t) => t[0] === r1Tab)) r1Tab = T[0][0];
       const cur = T.find((t) => t[0] === r1Tab);
@@ -3312,7 +3317,7 @@ async function renderPublicSite(root) {
       const q = (x) => root.querySelector(x);
       // 블프 칸이 다시 그려지면 새로 생긴 것만 남기고 예전에 옮겨둔 건 지움
       const one = (sel) => { const L = [...root.querySelectorAll("#tab-bf " + sel)]; if (L.length < 2) return L[0] || null; const z = L.find((x) => x.closest(".bf-zone")) || L[L.length - 1]; L.forEach((x) => { if (x !== z) x.remove(); }); return z; };
-      [q("#lvz"), q("#rdz"), q("section.aw"), one("#bf-mycart"), q("#cpz"), q("#tsz"), q("#opz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), one("#bf-pad"), one("#bf-best"), q("#plz")].forEach((el) => {
+      [q("#lvz"), q("#cpz"), q("section.aw"), q("#rdz"), one("#bf-mycart"), q("#tsz"), q("#opz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), one("#bf-pad"), one("#bf-best"), q("#plz")].forEach((el) => {
         if (!el) return;
         // 원래 블프 칸 안에서 클릭을 받던 칸은 옮긴 뒤에도 클릭되게
         if (window.__bfZoneClick && !el.__bound && el.id !== "opz" && el.id !== "lvz" && el.id !== "rdz" && el.id !== "cpz" && el.id !== "tsz" && el.id !== "hotz" && el.id !== "plz" && !el.classList.contains("aw")) { el.__bound = true; el.addEventListener("click", window.__bfZoneClick); }
@@ -3353,7 +3358,7 @@ async function renderPublicSite(root) {
       const H = BFD.hot || {}; const cats = (H.cats || []).filter((c) => c && (c.items || []).length);
       let box = root.querySelector("#hotz");
       if (!cats.length || nowFn() >= T_END) { if (box) box.remove(); return; }
-      const cp = root.querySelector("#cpz");
+      const cp = cpA();
       if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { const lab = hotView === -3 ? "⏰ 타임세일" : hotView === -2 ? "📈 급상승" : hotView >= 0 && cats[hotView] ? cats[hotView].cat : "🔥 실시간 HOT"; window.__openList && window.__openList("hotall", "🔥 지금 가장 핫한 아이템 · " + lab, window.__hotFull || [], "", "지금 가장 핫한 아이템"); return; } const keep = () => { const y0 = box.getBoundingClientRect().top; return () => window.scrollBy(0, box.getBoundingClientRect().top - y0); }; const cb = e.target.closest("[data-hcat]"); if (cb) { const fix = keep(); hotCat = !hotCat; renderHot(); fix(); return; } const b = e.target.closest("[data-hv]"); if (!b) return; const fx = keep(); hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); orderBF(); fx(); }); }
       const anchor = root.querySelector("#spz") || root.querySelector("#tsz") || cp;
       if (anchor && anchor.nextSibling !== box) anchor.after(box);
