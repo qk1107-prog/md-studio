@@ -3123,9 +3123,9 @@ async function renderPublicSite(root) {
         // 광만두 결에 맞는 하입 브랜드 먼저(할인 큰 순), 흔한 브랜드는 빼고, 나머지는 뒤에. 같은 브랜드 최대 4개, 100개
         const cnt = {}; const ok = (p) => p && p.link && !/샌들|슬리퍼|반팔|숏슬리브|쇼츠|반바지|jersey|저지|레인셀|키즈/i.test(p.name || "") && !(/티셔츠|\bTEE\b/i.test(p.name || "") && !/롱|긴팔|L\/S|long/i.test(p.name || "")) && !BAN.has(nbr(p.brand));
         const byRate = (a, b) => Number(b.rate) - Number(a.rate) || Number(b.rv) - Number(a.rv);
-        const hy = R[k].filter((p) => ok(p) && HYPE.has(nbr(p.brand)) && Number(p.rate) >= 15).sort(byRate);
-        const etc = R[k].filter((p) => ok(p) && !HYPE.has(nbr(p.brand)) && Number(p.rate) >= 20 && Number(p.rv) >= 30).sort(byRate);
-        const L = [...hy, ...etc].filter((p) => (cnt[p.brand] = (cnt[p.brand] || 0) + 1) <= 6).slice(0, 300);
+        const pin = R[k].filter((p) => ok(p) && p.pin); const hy = R[k].filter((p) => ok(p) && !p.pin && HYPE.has(nbr(p.brand)) && Number(p.rate) >= 10).sort(byRate);
+        const etc = R[k].filter((p) => ok(p) && !p.pin && !HYPE.has(nbr(p.brand)) && Number(p.rate) >= 15 && Number(p.rv) >= 10).sort(byRate);
+        const L = [...pin, ...[...hy, ...etc].filter((p) => (cnt[p.brand] = (cnt[p.brand] || 0) + 1) <= 8)].slice(0, 600);
         for (let i = 1; i < L.length; i++) if (L[i].brand === L[i - 1].brand) { const j = L.findIndex((x, n) => n > i && x.brand !== L[i - 1].brand); if (j > 0) [L[i], L[j]] = [L[j], L[i]]; }
         // 카테고리별(ty)로도 나눔: 정해진 순서 + 기타는 맨 뒤
         const CORD = ["니트·가디건", "맨투맨·후드", "셔츠", "롱슬리브", "와이드·카고", "데님", "슬랙스", "스웨트·트레이닝"];
@@ -3143,9 +3143,9 @@ async function renderPublicSite(root) {
       const ek = kp(endT);
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 지금은 <em>${esc(R.title || "1회차 아우터데이·킥스데이")}</em> 중 꿀템</p><small>${ek.m}/${ek.d}까지</small></div><div class="hotz-bar"><i></i></div>
         ${rows.map((r, i) => { const sel = (window.__rdCat || {})[i] || ""; const cl = sel && r.cats.find((x) => x.t === sel); const L = cl ? cl.list : r.list;
-          return `<div class="rd-row"><div class="rd-rh"><b>${esc(r.label)}</b><small>${L.length}개</small><button type="button" class="rd-all" data-rdall="${i}">전체보기 →</button></div>
-          <div class="rd-cats"><button type="button" class="${sel ? "" : "on"}" data-rdcat="${i}|">전체</button>${r.cats.map((c) => `<button type="button" class="${sel === c.t ? "on" : ""}" data-rdcat="${i}|${esc(c.t)}">${esc(c.t)} <i>${c.list.length}</i></button>`).join("")}</div>
-          <div class="rd-grid">${L.slice(0, 10).map((p) => itemCard(p, 0)).join("")}</div></div>`; }).join("")}`;
+          return `<div class="rd-row"><div class="rd-rh"><b>${esc(r.label)}</b><button type="button" class="rd-all" data-rdall="${i}">전체보기 →</button></div>
+          <div class="rd-cats"><button type="button" class="${sel ? "" : "on"}" data-rdcat="${i}|">전체</button>${r.cats.map((c) => `<button type="button" class="${sel === c.t ? "on" : ""}" data-rdcat="${i}|${esc(c.t)}">${esc(c.t)}</button>`).join("")}</div>
+          <div class="rd-grid">${L.slice(0, 15).map((p) => itemCard(p, 0)).join("")}</div></div>`; }).join("")}`;
     }
     function renderTs() {
       const T = BFD.ts || {}; const now = nowFn();
@@ -4354,7 +4354,7 @@ renderPublicSite(ROOT_EL);
 #app-root .rdz .rd-cats button.on{background:#141312;border-color:#141312;color:#fff}
 #app-root .rdz .rd-cats button.on i{color:#ffd84d}
 #app-root .rdz .rd-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-@media(max-width:560px){#app-root .rdz .rd-grid{grid-template-columns:repeat(3,minmax(0,1fr))}#app-root .rdz .rd-grid>.bf-item:nth-child(n+10){display:none}}
+@media(max-width:560px){#app-root .rdz .rd-grid{grid-template-columns:repeat(3,minmax(0,1fr))}#app-root .rdz .rd-grid>.bf-item:nth-child(n+13){display:none}}
 #app-root .lvz{padding:8px 10px 8px !important;margin:2px 0 10px !important}
 #app-root .lvz .hotz-title{font-size:14px}
 #app-root .lvz .lv-sub{font-size:11px;margin:0 0 4px}
