@@ -1226,6 +1226,10 @@
 #app-root .hotz-catbtn.on { background: #141312 !important; color: #fff !important; }
 #app-root .hotz-cats { margin-top: 6px; }
 #app-root .opz-date { margin-left: 6px; font-size: 12px; font-weight: 800; color: #ff3d3f; letter-spacing: -0.3px; }
+.lv-strip{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.lv-strip>.bf-item{flex:0 0 calc((100% - 24px)/4);scroll-snap-align:start;min-width:0}
+@media(max-width:560px){.lv-strip>.bf-item{flex-basis:calc((100% - 16px)/3)}}
+.lv-pasth{margin:14px 0 2px;font-size:12px;font-weight:800;color:#666}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -3077,31 +3081,29 @@ async function renderPublicSite(root) {
       // 지금 라이브 = 방송 시작했고 끝나지 않은 것(끝 시각 없으면 시작 후 90분). 나머지·bf.lvPast는 "지난 라이브 쿠폰" 한 줄로
       const onNow = (l) => tm(l.start) && tm(l.start) <= now && now < (tm(l.liveEnd) || tm(l.start) + 90 * 6e4);
       const curL = lives.filter(onNow);
-      const pastSeen = new Set(); const pastItems = []; const pastNames = [];
-      [...lives.filter((l) => !onNow(l)), ...(Array.isArray(BFD.lvPast) ? BFD.lvPast : []).map((l) => Object.assign({}, l, { items: [...(l.items || []), ...cpItems(l)] }))].filter((l) => !(tm(l.end) && tm(l.end) <= now)).forEach((l) => {
-        const nm = `${l.brand}${l.rate ? " " + l.rate + "%" : ""}`; if (!pastNames.includes(nm)) pastNames.push(nm);
-        (l.items || []).forEach((p) => { if (p && p.link && !pastSeen.has(p.link)) { pastSeen.add(p.link); pastItems.push(Object.assign({ cp: l.rate }, p)); } });
-      });
-      // 브랜드 섞어서 (한 줄에 여러 방송이 보이게)
-      const byB = {}; pastItems.forEach((p) => (byB[p.brand] = byB[p.brand] || []).push(p)); const pastMix = []; for (let r = 0; r < 200; r++) Object.values(byB).forEach((L) => { if (L[r]) pastMix.push(L[r]); });
+      // 지난 라이브: 방송마다 한 줄씩(최근 방송 먼저), 상품은 전부 가로로 넘겨보게
+      const pastL = [...lives.filter((l) => !onNow(l)).sort((a, b) => (tm(b.start) || 0) - (tm(a.start) || 0)), ...(Array.isArray(BFD.lvPast) ? BFD.lvPast : []).map((l) => { const sn = new Set(); return Object.assign({}, l, { items: [...(l.items || []).map((p) => Object.assign({ cp: l.rate }, p)), ...cpItems(l)].filter((p) => p && p.link && !sn.has(p.link) && sn.add(p.link)) }); })]
+        .filter((l) => !(tm(l.end) && tm(l.end) <= now) && (l.items || []).some((p) => p && p.link)).filter((l, i, a) => a.findIndex((x) => x.brand === l.brand) === i).map((l) => Object.assign({}, l, { __past: 1 }));
+      const pastMix = pastL;
       let box = root.querySelector("#lvz");
       if ((!curL.length && !pastMix.length) || now >= T_END) { if (box) box.remove(); return; }
-      if (!box) { box = document.createElement("section"); box.id = "lvz"; box.className = "lvz sec-rel"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-lvall]"); if (b) { const l = (window.__lvLives || [])[Number(b.dataset.lvall)]; if (l && window.__openList) window.__openList("lv" + b.dataset.lvall, l.brand === "지난 라이브" ? "🔴 지난 라이브 쿠폰 상품" : `🔴 ${l.brand} 라이브 쿠폰`, l.list, l.coupon || "", `${l.brand} 라이브 쿠폰`); } }); }
+      if (!box) { box = document.createElement("section"); box.id = "lvz"; box.className = "lvz sec-rel"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-lvall]"); if (b) { const l = (window.__lvLives || [])[Number(b.dataset.lvall)]; if (l && window.__openList) window.__openList("lv" + b.dataset.lvall, `🔴 ${l.brand} 라이브 쿠폰`, l.list, l.coupon || "", `${l.brand} 라이브 쿠폰`); } }); }
       if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const card = (p, l) => { const sale = Number(p.sale) || 0, price = Number(p.price) || 0, rate = Number(p.rate) || 0, img = safeImg(p.img);
         return `<a class="bf-item tsc" href="${esc(safeUrl(p.link) || "#")}" target="_blank" rel="noopener"><div class="im">${img ? `<img src="${esc(img)}" loading="lazy" alt="" referrerpolicy="no-referrer">` : ""}${p.cp ? `<span class="tg lv-tg">${esc(p.cp)}% 쿠폰</span>` : rate ? `<span class="tg lv-tg">-${esc(rate)}%</span>` : ""}</div>
           <p class="br">${esc(p.brand || l.brand || "")}</p><p class="nm">${esc(p.name || "")}</p>${price > sale ? `<p class="pt"><s>${esc(won(price))}</s></p>` : ""}<p class="pr">${rate ? `<i>${esc(rate)}%</i>` : ""}${esc(won(sale))}</p></a>`; };
-      const shown = [...curL, ...(pastMix.length ? [{ brand: "지난 라이브", coupon: pastNames.join(" · "), __past: 1, items: pastMix }] : [])];
+      const shown = [...curL, ...pastL];
       window.__lvLives = shown.map((l) => ({ brand: l.brand, coupon: l.coupon, list: (l.items || []).filter((p) => p && p.link).map((p) => Object.assign({}, p, { tag: `${p.cp || l.rate ? (p.cp || l.rate) + "% " : ""}쿠폰`, comment: `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` })) }));
       const hm = (t) => { const k = kp(t); return `${k.h}:${String(k.mi).padStart(2, "0")}`; };
       const row = (l, i) => { const L = (l.items || []).filter((p) => p && p.link); const st = tm(l.start), en = tm(l.liveEnd);
-        if (l.__past) return `<div class="lv-row lv-past"><div class="lv-rh"><span class="lv-off">지난 라이브 쿠폰</span><small>${esc(l.coupon)} · 쿠폰은 아직 쓸 수 있어요</small>${L.length > 4 ? `<button type="button" class="lv-all" data-lvall="${i}">전체보기 →</button>` : ""}</div><div class="bf-grid">${L.slice(0, 4).map((p) => card(p, l)).join("")}</div></div>`;
+        const ek0 = tm(l.end) ? kp(tm(l.end)) : null;
+        if (l.__past) return `${i === curL.length ? `<p class="lv-pasth">지난 라이브 쿠폰 · 방송은 끝났지만 쿠폰은 아직 쓸 수 있어요</p>` : ""}<div class="lv-row lv-past"><div class="lv-rh"><span class="lv-off">${esc(l.live || "지난 라이브")}</span><b>${esc(l.brand)}</b><small>${esc(l.coupon || "")}${ek0 ? ` · ${ek0.m}/${ek0.d} ${ek0.h}시까지` : ""}</small><button type="button" class="lv-all" data-lvall="${i}">${L.length}개 전체보기 →</button></div><div class="lv-strip">${L.map((p) => card(p, l)).join("")}</div></div>`;
         const onAir = st && st <= now && (!en || now < en);
         const badge = onAir ? `<span class="lv-on"><i></i>방송 중</span>` : st && now < st ? `<span class="lv-soon">${esc(hm(st))} 방송 예정</span>` : `<span class="lv-off">${esc(l.live || "라이브")}</span>`;
         const ek = tm(l.end) ? kp(tm(l.end)) : null;
         return `<div class="lv-row"><div class="lv-rh">${badge}<b>${esc(l.brand)}</b><small>${esc(l.coupon || "")}${ek ? ` · ${ek.m}/${ek.d} ${ek.h}시까지` : ""}</small>${L.length > 4 ? `<button type="button" class="lv-all" data-lvall="${i}">${L.length}개 전체보기 →</button>` : ""}</div>
-          <div class="bf-grid">${L.slice(0, 4).map((p) => card(p, l)).join("")}</div></div>`; };
+          <div class="lv-strip">${L.map((p) => card(p, l)).join("")}</div></div>`; };
       const at = tm(LV.at);
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title"><span class="lv-dot"></span>실시간 <span class="lv-em">라이브 쿠폰</span><span class="cpz-live"><i></i>LIVE</span></p></div>
         <p class="lv-sub">${at ? `<b class="lv-clock">${esc(hm(at))}</b> 기준 · ` : ""}라이브 쿠폰 뜰 때마다 바로 올려드려요 · <b>쿠폰 받고 구매하세요</b></p>
