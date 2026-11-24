@@ -1643,14 +1643,18 @@ async function renderAdminApp(root) {
   // ============================================================
   // 4. 추천템 (편) — Supabase episodes / episode_items 표
   // ============================================================
-  const EP_LABELS = ["국밥", "힙함", "남친룩", "옷쟁이", "루키"];
-  const EP_EMOJI = { 국밥: "🍚", 힙함: "🔥", 남친룩: "🤍", 옷쟁이: "👑", 루키: "🌱" };
+  const EP_LABELS = ["국밥", "힙함", "남친룩", "옷쟁이", "루키", "MA-1", "M65", "N3B", "레더"];
+  const EP_EMOJI = { 국밥: "🍚", 힙함: "🔥", 남친룩: "🤍", 옷쟁이: "👑", 루키: "🌱", "MA-1": "✈️", M65: "🪖", N3B: "🧥", 레더: "🖤" };
   const EP_EXPECT = { 국밥: 9, 힙함: 9, 남친룩: 9, 옷쟁이: 3, 루키: 1 };
   const EP_EXPECT_BRANDS = { 국밥: 3, 힙함: 3, 남친룩: 3, 옷쟁이: 1, 루키: 1 };
   let EPISODES_CACHE = null;
 
   function normLabel(s) {
     s = String(s || "");
+    if (/MA-?1/i.test(s)) return "MA-1";
+    if (/M-?65/i.test(s)) return "M65";
+    if (/N-?3B/i.test(s)) return "N3B";
+    if (s.includes("레더")) return "레더";
     if (s.includes("국밥") || s.includes("🍚")) return "국밥";
     if (s.includes("힙") || s.includes("🔥")) return "힙함";
     if (s.includes("남친") || s.includes("🤍")) return "남친룩";
