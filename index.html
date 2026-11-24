@@ -1301,6 +1301,7 @@ async function loadEpisodeItemsFromSupabase(episodeId) {
   if (error) throw error;
   const M = (window.__EPMAP || {})[episodeId];
   if (M) { const base = ["국밥", "힙함", "남친룩", "옷쟁이", "루키"]; (data || []).forEach((it) => { const i = base.indexOf(it.label); if (i >= 0 && M[i]) it.label = M[i]; }); }
+  (data || []).forEach((it) => { const n = String(it.product_name || ""); if (n.startsWith("@착샷|")) { it.label = "착샷"; it.product_name = n.slice(4); } });
   return data || [];
 }
 
@@ -1335,6 +1336,8 @@ const EP_LABELS = [
   { key: "M65", emoji: "🪖" },
   { key: "N3B", emoji: "🧥" },
   { key: "레더", emoji: "🖤" },
+  { key: "통합", emoji: "🧩" },
+  { key: "착샷", emoji: "📸" },
 ];
 
 // 편마다 섹션 순서: 그 편 제품에서 먼저 나오는(sort_order 작은) 라벨이 앞으로 (예: 협찬 브랜드가 있는 힙함을 맨 앞에)
