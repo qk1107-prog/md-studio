@@ -2483,6 +2483,7 @@ async function renderPublicSite(root) {
         <div class="profile-text">
           <p class="profile-name" id="brand-home-text" style="cursor:pointer;">${esc(site.name)}</p>
           <p class="bio">${(() => { const ls = String(site.bio || "").split("\n").filter((x) => x.trim()); if (ls.length < 2) return esc(site.bio); return `<span class="bio-hot">${esc(ls[0]).replace(/무진장/, "<b>무진장</b>")}</span>${ls.slice(1).map(esc).join("<br>")}`; })()}</p>
+          ${(() => { const ua = navigator.userAgent || ""; const inApp = /Instagram|KAKAOTALK|FBAN|FBAV|Line\//i.test(ua); const pv = /[?&]awards=1/.test(location.search); if (!inApp && !pv) return ""; const kakao = /KAKAOTALK/i.test(ua); return `<p class="bio-notice">📢 <b>${kakao ? "카톡" : "인스타"}에서 보고 계신다면</b> 제품을 누른 뒤 ${kakao ? "오른쪽 아래 <b>⋮ → 다른 브라우저로 열기</b>" : "오른쪽 위 <b>⋯ → 외부 브라우저로 열기</b>"}를 눌러주세요. 로그인된 무신사에서 쿠폰까지 바로 적용돼요</p>`; })()}
         </div>
       </div>
       <hr class="head-divider">
@@ -4293,6 +4294,8 @@ renderPublicSite(ROOT_EL);
 #app-root .look-cap{position:absolute;left:0;right:0;bottom:0;padding:22px 8px 7px;background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,0));color:#fff;display:flex;flex-direction:column;gap:1px;pointer-events:none}
 #app-root .look-cap b{font-size:10.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #app-root .look-cap i{font-style:normal;font-size:9.5px;opacity:.85}
+#app-root .bio-notice{margin:8px 0 0;padding:7px 10px;background:#fff4f3;border:1px solid #ffd2cf;border-radius:8px;font-size:11.5px;line-height:1.5;color:#3a3530;letter-spacing:-.2px}
+#app-root .bio-notice b{color:#ff3d3f;font-weight:800}
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
