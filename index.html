@@ -3084,16 +3084,16 @@ async function renderPublicSite(root) {
       // 지난 라이브: 방송마다 한 줄씩(최근 방송 먼저), 상품은 전부 가로로 넘겨보게
       const pastL = [...lives.filter((l) => !onNow(l)).sort((a, b) => (tm(b.start) || 0) - (tm(a.start) || 0)), ...(Array.isArray(BFD.lvPast) ? BFD.lvPast : []).map((l) => { const sn = new Set(); return Object.assign({}, l, { items: [...(l.items || []).map((p) => Object.assign({ cp: l.rate }, p)), ...cpItems(l)].filter((p) => p && p.link && !sn.has(p.link) && sn.add(p.link)) }); })]
         .filter((l) => !(tm(l.end) && tm(l.end) <= now) && (l.items || []).some((p) => p && p.link)).filter((l, i, a) => a.findIndex((x) => x.brand === l.brand) === i).map((l) => Object.assign({}, l, { __past: 1 }));
-      const pastMix = pastL;
+      const pastMix = []; // 끝난 방송은 안 보여줌 (광만두님 요청 11/25)
       let box = root.querySelector("#lvz");
-      if ((!curL.length && !pastMix.length) || now >= T_END) { if (box) box.remove(); return; }
+      if ((!curL.length && !lives.some((l) => tm(l.start) && now < tm(l.start) && kp(tm(l.start)).d === kp(now).d) && kp(now).h < 18) || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "lvz"; box.className = "lvz sec-rel"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-lvall]"); if (b) { const l = (window.__lvLives || [])[Number(b.dataset.lvall)]; if (l && window.__openList) window.__openList("lv" + b.dataset.lvall, `🔴 ${l.brand} 라이브 쿠폰`, l.list, l.coupon || "", `${l.brand} 라이브 쿠폰`); } }); }
       if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const card = (p, l) => { const sale = Number(p.sale) || 0, price = Number(p.price) || 0, rate = Number(p.rate) || 0, img = safeImg(p.img);
         return `<a class="bf-item tsc" href="${esc(safeUrl(p.link) || "#")}" target="_blank" rel="noopener"><div class="im">${img ? `<img src="${esc(img)}" loading="lazy" alt="" referrerpolicy="no-referrer">` : ""}${p.cp ? `<span class="tg lv-tg">${esc(p.cp)}% 쿠폰</span>` : rate ? `<span class="tg lv-tg">-${esc(rate)}%</span>` : ""}</div>
           <p class="br">${esc(p.brand || l.brand || "")}</p><p class="nm">${esc(p.name || "")}</p>${price > sale ? `<p class="pt"><s>${esc(won(price))}</s></p>` : ""}<p class="pr">${rate ? `<i>${esc(rate)}%</i>` : ""}${esc(won(sale))}</p></a>`; };
-      const shown = [...curL, ...pastL];
+      const upL = lives.filter((l) => tm(l.start) && now < tm(l.start) && kp(tm(l.start)).d === kp(now).d); const shown = [...curL, ...upL];
       window.__lvLives = shown.map((l) => ({ brand: l.brand, coupon: l.coupon, list: (l.items || []).filter((p) => p && p.link).map((p) => Object.assign({}, p, { tag: `${p.cp || l.rate ? (p.cp || l.rate) + "% " : ""}쿠폰`, comment: `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` })) }));
       const hm = (t) => { const k = kp(t); return `${k.h}:${String(k.mi).padStart(2, "0")}`; };
       const row = (l, i) => { const L = (l.items || []).filter((p) => p && p.link); const st = tm(l.start), en = tm(l.liveEnd);
@@ -3121,22 +3121,31 @@ async function renderPublicSite(root) {
       const BAN = new Set(["엘칸토","식스핏","반스","슈펜","피노키","파스코로젠","락포트","지오지아","지이크","앤드지","폴햄","지오다노","베이직하우스","후아유","마인드브릿지","슈피트","힐탑", ...(R.ban || [])].map(nbr));
       const rows = Object.keys(R).filter((k) => Array.isArray(R[k]) && R[k].length >= 4).sort((a, b) => (Object.keys(NAMES).indexOf(a) + 99) % 99 - (Object.keys(NAMES).indexOf(b) + 99) % 99).map((k) => {
         // 광만두 결에 맞는 하입 브랜드 먼저(할인 큰 순), 흔한 브랜드는 빼고, 나머지는 뒤에. 같은 브랜드 최대 4개, 100개
-        const cnt = {}; const ok = (p) => p && p.link && !/샌들|슬리퍼|반팔|쇼츠|jersey|저지|티셔츠|레인셀|키즈/i.test(p.name || "") && !BAN.has(nbr(p.brand));
+        const cnt = {}; const ok = (p) => p && p.link && !/샌들|슬리퍼|반팔|숏슬리브|쇼츠|반바지|jersey|저지|레인셀|키즈/i.test(p.name || "") && !(/티셔츠|\bTEE\b/i.test(p.name || "") && !/롱|긴팔|L\/S|long/i.test(p.name || "")) && !BAN.has(nbr(p.brand));
         const byRate = (a, b) => Number(b.rate) - Number(a.rate) || Number(b.rv) - Number(a.rv);
         const hy = R[k].filter((p) => ok(p) && HYPE.has(nbr(p.brand)) && Number(p.rate) >= 15).sort(byRate);
-        const etc = R[k].filter((p) => ok(p) && !HYPE.has(nbr(p.brand)) && Number(p.rate) >= 30 && Number(p.rv) >= 100).sort(byRate);
-        const L = [...hy, ...etc].filter((p) => (cnt[p.brand] = (cnt[p.brand] || 0) + 1) <= 4).slice(0, 100);
+        const etc = R[k].filter((p) => ok(p) && !HYPE.has(nbr(p.brand)) && Number(p.rate) >= 20 && Number(p.rv) >= 30).sort(byRate);
+        const L = [...hy, ...etc].filter((p) => (cnt[p.brand] = (cnt[p.brand] || 0) + 1) <= 6).slice(0, 300);
         for (let i = 1; i < L.length; i++) if (L[i].brand === L[i - 1].brand) { const j = L.findIndex((x, n) => n > i && x.brand !== L[i - 1].brand); if (j > 0) [L[i], L[j]] = [L[j], L[i]]; }
-        return { k, label: NAMES[k] || k, list: L };
+        // 카테고리별(ty)로도 나눔: 정해진 순서 + 기타는 맨 뒤
+        const CORD = ["니트·가디건", "맨투맨·후드", "셔츠", "롱슬리브", "와이드·카고", "데님", "슬랙스", "스웨트·트레이닝"];
+        const tys = [...new Set(L.map((p) => p.ty).filter(Boolean))].sort((x, y) => (CORD.indexOf(x) + 99) % 99 - (CORD.indexOf(y) + 99) % 99 || (x === "기타") - (y === "기타"));
+        const cats = tys.map((t) => ({ t, list: L.filter((p) => p.ty === t) })).filter((c) => c.list.length >= 4);
+        return { k, label: NAMES[k] || k, list: L, cats };
       }).filter((r) => r.list.length >= 4);
       let box = root.querySelector("#rdz");
       if (!rows.length || now >= endT || now >= T_END) { if (box) box.remove(); return; }
-      if (!box) { box = document.createElement("section"); box.id = "rdz"; box.className = "rdz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-rdall]"); if (b) { const r = (window.__rdRows || [])[Number(b.dataset.rdall)]; if (r && window.__openList) window.__openList("rd" + b.dataset.rdall, `⚡ ${r.label} 꿀템`, r.list, "", r.label + " 꿀템"); } }); }
+      if (!box) { box = document.createElement("section"); box.id = "rdz"; box.className = "rdz"; box.addEventListener("click", (e) => {
+        const c = e.target.closest("[data-rdcat]"); if (c) { const [i, t] = c.dataset.rdcat.split("|"); window.__rdCat = window.__rdCat || {}; window.__rdCat[i] = t; renderRd(); return; }
+        const b = e.target.closest("[data-rdall]"); if (b) { const r = (window.__rdRows || [])[Number(b.dataset.rdall)]; if (!r) return; const t = (window.__rdCat || {})[b.dataset.rdall] || ""; const cl = t && r.cats.find((x) => x.t === t); const L = cl ? cl.list : r.list; if (window.__openList) window.__openList("rd" + b.dataset.rdall + t, `⚡ ${r.label}${cl ? " · " + t : ""} 꿀템`, L, "", r.label + " 꿀템"); } }); }
       if (!box.parentNode) { const lv = root.querySelector("#lvz"); const bz = root.querySelector("#tab-bf"); if (lv) lv.after(box); else if (bz) bz.prepend(box); }
       window.__rdRows = rows;
       const ek = kp(endT);
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 지금은 <em>${esc(R.title || "1회차 아우터데이·킥스데이")}</em> 중 꿀템</p><small>${ek.m}/${ek.d}까지</small></div><div class="hotz-bar"><i></i></div>
-        ${rows.map((r, i) => `<div class="rd-row"><div class="rd-rh"><b>${esc(r.label)}</b><button type="button" class="rd-all" data-rdall="${i}">전체보기 →</button></div><div class="rd-strip">${r.list.slice(0, 10).map((p) => itemCard(p, 0)).join("")}</div></div>`).join("")}`;
+        ${rows.map((r, i) => { const sel = (window.__rdCat || {})[i] || ""; const cl = sel && r.cats.find((x) => x.t === sel); const L = cl ? cl.list : r.list;
+          return `<div class="rd-row"><div class="rd-rh"><b>${esc(r.label)}</b><small>${L.length}개</small><button type="button" class="rd-all" data-rdall="${i}">전체보기 →</button></div>
+          <div class="rd-cats"><button type="button" class="${sel ? "" : "on"}" data-rdcat="${i}|">전체</button>${r.cats.map((c) => `<button type="button" class="${sel === c.t ? "on" : ""}" data-rdcat="${i}|${esc(c.t)}">${esc(c.t)} <i>${c.list.length}</i></button>`).join("")}</div>
+          <div class="rd-grid">${L.slice(0, 10).map((p) => itemCard(p, 0)).join("")}</div></div>`; }).join("")}`;
     }
     function renderTs() {
       const T = BFD.ts || {}; const now = nowFn();
@@ -3321,7 +3330,8 @@ async function renderPublicSite(root) {
       const q = (x) => root.querySelector(x);
       // 블프 칸이 다시 그려지면 새로 생긴 것만 남기고 예전에 옮겨둔 건 지움
       const one = (sel) => { const L = [...root.querySelectorAll("#tab-bf " + sel)]; if (L.length < 2) return L[0] || null; const z = L.find((x) => x.closest(".bf-zone")) || L[L.length - 1]; L.forEach((x) => { if (x !== z) x.remove(); }); return z; };
-      [q("#lvz"), q("#cpz"), q("section.aw"), q("#rdz"), one("#bf-mycart"), q("#tsz"), q("#opz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), one("#bf-pad"), one("#bf-best"), q("#plz")].forEach((el) => {
+      const lvTop = (() => { try { const nw = nowFn(); return kp(nw).h >= 18 && !!q("#lvz"); } catch (e) { return false; } })();
+      [...(lvTop ? [q("#lvz"), q("#rdz")] : [q("#rdz"), q("#lvz")]), q("#cpz"), q("section.aw"), one("#bf-mycart"), q("#tsz"), q("#opz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), one("#bf-pad"), one("#bf-best"), q("#plz")].forEach((el) => {
         if (!el) return;
         // 원래 블프 칸 안에서 클릭을 받던 칸은 옮긴 뒤에도 클릭되게
         if (window.__bfZoneClick && !el.__bound && el.id !== "opz" && el.id !== "lvz" && el.id !== "rdz" && el.id !== "cpz" && el.id !== "tsz" && el.id !== "hotz" && el.id !== "plz" && !el.classList.contains("aw")) { el.__bound = true; el.addEventListener("click", window.__bfZoneClick); }
@@ -4331,6 +4341,28 @@ renderPublicSite(ROOT_EL);
 #app-root .bio-notice{margin:8px 0 0;padding:7px 10px;background:#fff4f3;border:1px solid #ffd2cf;border-radius:8px;font-size:11.5px;line-height:1.5;color:#3a3530;letter-spacing:-.2px}
 #app-root .bio-notice b{color:#ff3d3f;font-weight:800}
 #app-root .lvz .lv-wait{margin:8px 0 2px;font-size:12px;font-weight:800;color:#ff3d3f}
+#app-root .rdz{border:2px solid #141312;border-radius:14px;padding:14px 12px 12px;margin:4px 0 14px;background:#fff}
+#app-root .rdz .hotz-title{font-size:18px}
+#app-root .rdz .rd-rh{justify-content:flex-start;gap:8px}
+#app-root .rdz .rd-rh b{font-size:15px;padding:4px 12px}
+#app-root .rdz .rd-rh small{font-size:11px;color:#888}
+#app-root .rdz .rd-rh .rd-all{margin-left:auto}
+#app-root .rdz .rd-cats{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:2px 0 8px;padding-bottom:2px}
+#app-root .rdz .rd-cats::-webkit-scrollbar{display:none}
+#app-root .rdz .rd-cats button{flex:0 0 auto;border:1px solid #ddd;background:#fff;border-radius:999px;padding:6px 11px;font:inherit;font-size:12px;font-weight:800;color:#333;cursor:pointer;white-space:nowrap}
+#app-root .rdz .rd-cats button i{font-style:normal;color:#ff3d3f;font-size:10.5px;margin-left:2px}
+#app-root .rdz .rd-cats button.on{background:#141312;border-color:#141312;color:#fff}
+#app-root .rdz .rd-cats button.on i{color:#ffd84d}
+#app-root .rdz .rd-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+@media(max-width:560px){#app-root .rdz .rd-grid{grid-template-columns:repeat(3,minmax(0,1fr))}#app-root .rdz .rd-grid>.bf-item:nth-child(n+10){display:none}}
+#app-root .lvz{padding:8px 10px 8px !important;margin:2px 0 10px !important}
+#app-root .lvz .hotz-title{font-size:14px}
+#app-root .lvz .lv-sub{font-size:11px;margin:0 0 4px}
+#app-root .lvz .hotz-bar{display:none}
+#app-root .lvz .lv-wait{font-size:12px;margin:4px 0}
+#app-root .lvz .lv-strip>.bf-item{flex-basis:calc((100% - 40px)/6)}
+#app-root .lvz .lv-strip .nm{font-size:11px}
+@media(max-width:560px){#app-root .lvz .lv-strip>.bf-item{flex-basis:calc((100% - 24px)/4)}}
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
