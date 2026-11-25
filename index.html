@@ -2523,6 +2523,14 @@ async function renderPublicSite(root) {
       </div>
       <hr class="head-divider">
     </header>
+    ${QNA_ON ? `
+    <div class="qna-top" id="qna-top">
+      <button type="button" class="qna-top-btn" id="qna-top-btn" aria-expanded="false" aria-controls="qna-top-body">
+        <span class="qna-top-l"><b>💬 팔로워 무물 게시판 OPEN</b><span id="qna-top-sub">여러분 질문에 가성비 · 가심비 · 옷쟁이로 답했어요</span></span>
+        <span class="qna-top-r">눌러서 보기<i>⌄</i></span>
+      </button>
+      <div class="qna-top-body" id="qna-top-body"><div class="qna-top-in"><div class="qna-wrap"><input class="qna-q" type="search" placeholder="질문 검색 (예: 숏패딩, 데님, 키작)" aria-label="질문 검색"><div class="sp-chips qna-cat"></div><div class="qna-list"><p class="rec-loading">불러오는 중…</p></div></div></div></div>
+    </div>` : ""}
 
     ${LF_HTML}
     ${BF_ON ? `<div class="bf-mini"><button type="button" id="bf-mini"><span class="l"><b>🔥 무진장 블프</b>쿠폰·특가·꿀템 한 번에 정리</span><span class="r"><span id="bf-mini-cd"></span> →</span></button></div>` : ""}
@@ -2607,9 +2615,7 @@ async function renderPublicSite(root) {
       ${QNA_ON ? `
       <section id="tab-qna" class="section">
         <div class="qna-head"><p class="qna-t">💬 팔로워 무물 게시판</p><p class="qna-s">여러분이 남긴 질문에 광만두가 가성비 · 가심비 · 옷쟁이 3개씩 골라 답했어요</p></div>
-        <input class="qna-q" id="qna-q" type="search" placeholder="질문 검색 (예: 숏패딩, 데님, 키작)" aria-label="질문 검색">
-        <div class="sp-chips" id="qna-cat"></div>
-        <div id="qna-list"><p class="rec-loading">불러오는 중…</p></div>
+        <div class="qna-wrap"><input class="qna-q" type="search" placeholder="질문 검색 (예: 숏패딩, 데님, 키작)" aria-label="질문 검색"><div class="sp-chips qna-cat"></div><div class="qna-list"><p class="rec-loading">불러오는 중…</p></div></div>
       </section>` : ""}
       ${BR_ON ? `
       <section id="tab-brands" class="section">
@@ -3680,10 +3686,8 @@ async function renderPublicSite(root) {
       </div>`;
     }).join("") : `<p class="ep-empty">릴스 꿀템이 곧 올라와요 🎵</p>`;
 
-    // ---------- 무물 게시판 (site_data id='qna') ----------
-    if (QNA_ON && root.querySelector("#tab-qna")) {
-      const qBox = root.querySelector("#qna-list"), qIn = root.querySelector("#qna-q"), qCat = root.querySelector("#qna-cat");
-      let QD = null, qc = "전체"; const open = new Set();
+    // ---------- 무물 게시판 (site_data id='qna') — 상단 접이식 + 릴스 꿀템 탭 ----------
+    if (QNA_ON && root.querySelector(".qna-wrap")) {
       const won = (n) => Number(n).toLocaleString("ko-KR") + "원";
       const card = (x) => {
         const img = safeImg(x.img), fin = x.cp && x.cp < x.fp ? x.cp : x.fp;
@@ -3694,27 +3698,41 @@ async function renderPublicSite(root) {
           <p class="ep-prod-price">${x.np > fin ? `<s>${won(x.np)}</s> <i>${Math.round((1 - fin / x.np) * 100)}%</i> ` : ""}<b>${won(fin)}</b>${x.cp && x.cp < x.fp ? " <small>쿠폰가</small>" : ""}</p>
         </a>`;
       };
-      const draw = () => {
-        if (!QD) return;
-        const cats = ["전체", ...new Set(QD.items.map((x) => x.c))];
-        qCat.innerHTML = cats.map((c) => `<button type="button" data-v="${esc(c)}" class="${c === qc ? "active" : ""}">${esc(c)}</button>`).join("");
-        const k = qIn.value.trim().toLowerCase();
-        const list = QD.items.filter((x) => (qc === "전체" || x.c === qc) && (!k || (x.q + " " + (x.ms || []).join(" ")).toLowerCase().includes(k)));
-        qBox.innerHTML = list.length ? list.map((x) => `
-          <div class="qna-item${open.has(x.id) ? " open" : ""}" data-id="${esc(x.id)}">
-            <button type="button" class="qna-row"><span class="qna-qm">Q</span><span class="qna-qt">${esc(x.q)}${(x.ms || []).length > 1 ? `<small>같은 질문 ${x.ms.length}명</small>` : ""}</span><span class="qna-done">답변완료</span></button>
-            <div class="qna-ans">
-              ${(x.ms || []).length ? `<p class="qna-orig">${x.ms.map((m) => `“${esc(m)}”`).join(" ")}</p>` : ""}
-              ${x.a ? `<p class="qna-a"><b>A.</b> ${esc(x.a)}</p>` : ""}
-              <div class="qna-ps">${(x.p || []).map(card).join("")}</div>
-            </div>
-          </div>`).join("") : `<p class="ep-empty">맞는 질문이 없어요</p>`;
+      const mount = (w, QD) => {
+        const qBox = w.querySelector(".qna-list"), qIn = w.querySelector(".qna-q"), qCat = w.querySelector(".qna-cat");
+        let qc = "전체"; const open = new Set();
+        const draw = () => {
+          if (!QD) { qBox.innerHTML = `<p class="ep-empty">곧 올라와요</p>`; return; }
+          const cats = ["전체", ...new Set(QD.items.map((x) => x.c))];
+          qCat.innerHTML = cats.map((c) => `<button type="button" data-v="${esc(c)}" class="${c === qc ? "active" : ""}">${esc(c)}</button>`).join("");
+          const k = qIn.value.trim().toLowerCase();
+          const list = QD.items.filter((x) => (qc === "전체" || x.c === qc) && (!k || (x.q + " " + (x.ms || []).join(" ")).toLowerCase().includes(k)));
+          qBox.innerHTML = list.length ? list.map((x) => `
+            <div class="qna-item${open.has(x.id) ? " open" : ""}" data-id="${esc(x.id)}">
+              <button type="button" class="qna-row"><span class="qna-qm">Q</span><span class="qna-qt">${esc(x.q)}${(x.ms || []).length > 1 ? `<small>같은 질문 ${x.ms.length}명</small>` : ""}</span><span class="qna-done">답변완료</span></button>
+              <div class="qna-ans">
+                ${(x.ms || []).length ? `<p class="qna-orig">${x.ms.map((m) => `“${esc(m)}”`).join(" ")}</p>` : ""}
+                ${x.a ? `<p class="qna-a"><b>A.</b> ${esc(x.a)}</p>` : ""}
+                <div class="qna-ps">${(x.p || []).map(card).join("")}</div>
+              </div>
+            </div>`).join("") : `<p class="ep-empty">맞는 질문이 없어요</p>`;
+        };
+        qCat.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; qc = b.dataset.v; draw(); });
+        qIn.addEventListener("input", draw);
+        qBox.addEventListener("click", (e) => { const r = e.target.closest(".qna-row"); if (!r) return; const it = r.parentNode, id = it.dataset.id; if (open.has(id)) open.delete(id); else open.add(id); it.classList.toggle("open"); });
+        draw();
       };
-      qCat.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; qc = b.dataset.v; draw(); });
-      qIn.addEventListener("input", draw);
-      qBox.addEventListener("click", (e) => { const r = e.target.closest(".qna-row"); if (!r) return; const it = r.parentNode, id = it.dataset.id; if (open.has(id)) open.delete(id); else open.add(id); it.classList.toggle("open"); });
-      sdRow("qna").then(({ data }) => { QD = data && data.value && Array.isArray(data.value.items) ? data.value : null; if (QD) draw(); else qBox.innerHTML = `<p class="ep-empty">곧 올라와요</p>`; })
-        .catch(() => { qBox.innerHTML = `<p class="ep-empty">잠시 후 다시 눌러 주세요</p>`; });
+      const topBtn = root.querySelector("#qna-top-btn"), top = root.querySelector("#qna-top");
+      if (topBtn) topBtn.addEventListener("click", () => {
+        const on = !top.classList.contains("open"); top.classList.toggle("open", on); topBtn.setAttribute("aria-expanded", on ? "true" : "false");
+        if (on) setTimeout(() => top.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+      });
+      sdRow("qna").then(({ data }) => {
+        const QD = data && data.value && Array.isArray(data.value.items) ? data.value : null;
+        const sub = root.querySelector("#qna-top-sub");
+        if (sub && QD) sub.textContent = `질문 ${QD.total || QD.items.length}개 · 가성비 · 가심비 · 옷쟁이로 전부 답했어요`;
+        root.querySelectorAll(".qna-wrap").forEach((w) => mount(w, QD));
+      }).catch(() => root.querySelectorAll(".qna-wrap .qna-list").forEach((b) => { b.innerHTML = `<p class="ep-empty">잠시 후 다시 눌러 주세요</p>`; }));
     }
 
     // ---------- 나이대별 브랜드 (site_data id='brands') ----------
@@ -4431,6 +4449,19 @@ renderPublicSite(ROOT_EL);
 #app-root .rdz .rd-brands button.bd{background:#fff1f0;border-color:#ffc9c7;color:#d61f22}
 #app-root .rdz .rd-brands button.on{background:#141312;border-color:#141312;color:#fff}
 .ep-prod-price{margin:3px 0 4px;font-size:12px;line-height:1.3}
+#app-root .qna-top{margin:12px 16px 4px;border-radius:16px;background:#111;color:#fff;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+#app-root .qna-top-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:15px 16px;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-height:56px}
+#app-root .qna-top-l{display:flex;flex-direction:column;gap:3px}
+#app-root .qna-top-l b{font-size:16px;font-weight:900;letter-spacing:-.4px}
+#app-root .qna-top-l span{font-size:12px;color:#cfcfcf}
+#app-root .qna-top-r{flex:none;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:800;background:#ff3b30;border-radius:999px;padding:7px 11px}
+#app-root .qna-top-r i{font-style:normal;display:inline-block;transition:transform .3s}
+#app-root .qna-top.open .qna-top-r i{transform:rotate(180deg)}
+#app-root .qna-top-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s ease}
+#app-root .qna-top.open .qna-top-body{grid-template-rows:1fr}
+#app-root .qna-top-in{overflow:hidden;background:#fff;color:#111}
+#app-root .qna-top.open .qna-top-in{padding:14px 14px 6px}
+@media (prefers-reduced-motion: reduce){#app-root .qna-top-body,#app-root .qna-top-r i{transition:none}}
 #app-root .qna-head{background:#111;color:#fff;border-radius:16px;padding:16px 16px 14px;margin:4px 0 12px}
 #app-root .qna-t{margin:0;font-size:17px;font-weight:900;letter-spacing:-.4px}
 #app-root .qna-s{margin:4px 0 0;font-size:12px;color:#cfcfcf;line-height:1.45}
