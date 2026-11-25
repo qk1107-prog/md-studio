@@ -1309,6 +1309,8 @@ async function loadEpisodeItemsFromSupabase(episodeId) {
   const M = (window.__EPMAP || {})[episodeId];
   if (M) { const base = ["국밥", "힙함", "남친룩", "옷쟁이", "루키"]; (data || []).forEach((it) => { const i = base.indexOf(it.label); if (i >= 0 && M[i]) it.label = M[i]; }); }
   (data || []).forEach((it) => { const n = String(it.product_name || ""); if (n.startsWith("@착샷|")) { it.label = "착샷"; it.product_name = n.slice(4); } });
+  // "@p:정가,쿠폰가|" 로 시작하면 가격으로 떼어냄
+  (data || []).forEach((it) => { const m = String(it.product_name || "").match(/^@p:(\d+),(\d+)\|/); if (m) { it.price = +m[1]; it.sale = +m[2]; it.product_name = it.product_name.slice(m[0].length); } });
   return data || [];
 }
 
@@ -1344,6 +1346,11 @@ const EP_LABELS = [
   { key: "N3B", emoji: "🧥" },
   { key: "레더", emoji: "🖤" },
   { key: "통합", emoji: "🧩" },
+  { key: "니트", emoji: "🧶" },
+  { key: "후드", emoji: "🧥" },
+  { key: "롱슬리브", emoji: "👕" },
+  { key: "맨투맨", emoji: "🎽" },
+  { key: "집업", emoji: "🤐" },
   { key: "착샷", emoji: "📸" },
 ];
 
@@ -1655,6 +1662,7 @@ async function renderPublicSite(root) {
         <div class="ep-prod-info">
           <p class="ep-prod-brand">${esc(it.brand)}</p>
           <p class="ep-prod-name">${esc(it.product_name)}</p>
+          ${it.sale ? `<p class="ep-prod-price">${it.price > it.sale ? `<s>${Number(it.price).toLocaleString("ko-KR")}원</s> <i>${Math.round((1 - it.sale / it.price) * 100)}%</i> ` : ""}<b>${Number(it.sale).toLocaleString("ko-KR")}원</b> <small>쿠폰가</small></p>` : ""}
           <span class="ep-prod-btn">바로 보기</span>
         </div>
       </a>
@@ -2378,6 +2386,7 @@ async function renderPublicSite(root) {
         <div class="rec-prod-img">${img ? `<img src="${esc(img)}" alt="${esc(it.product_name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : "사진"}</div>
         <p class="rec-prod-brand">${esc(it.brand)}</p>
         <p class="rec-prod-name">${esc(it.product_name)}</p>
+        ${it.sale ? `<p class="ep-prod-price">${it.price > it.sale ? `<s>${Number(it.price).toLocaleString("ko-KR")}원</s> <i>${Math.round((1 - it.sale / it.price) * 100)}%</i> ` : ""}<b>${Number(it.sale).toLocaleString("ko-KR")}원</b> <small>쿠폰가</small></p>` : ""}
       </a>`;
   }
   async function fillRecRow(row) {
@@ -2388,7 +2397,7 @@ async function renderPublicSite(root) {
       try { items = await loadEpisodeItemsFromSupabase(ep.id); itemsCache.set(ep.id, items); }
       catch (e) { row.querySelector(".rec-scroll").innerHTML = `<p class="rec-loading">제품을 불러오지 못했어요.</p>`; return; }
     }
-    const labels = epOrder(items).filter((l) => (l.key === "옷쟁이" && !items.some((it) => /^(MA-1|M65|N3B|레더)$/.test(it.label))) || items.some((it) => it.label === l.key));
+    const labels = epOrder(items).filter((l) => (l.key === "옷쟁이" && !items.some((it) => /^(MA-1|M65|N3B|레더|니트|후드|롱슬리브|맨투맨|집업)$/.test(it.label))) || items.some((it) => it.label === l.key));
     const chips = row.querySelector(".rec-chips");
     const scroll = row.querySelector(".rec-scroll");
     if (!items.length) { scroll.innerHTML = `<p class="rec-loading">아직 등록된 제품이 없어요.</p>`; return; }
@@ -4375,6 +4384,11 @@ renderPublicSite(ROOT_EL);
 #app-root .rdz .rd-brands button{padding:5px 10px;font-size:11.5px;background:#f6f6f6;border-color:#eee}
 #app-root .rdz .rd-brands button.bd{background:#fff1f0;border-color:#ffc9c7;color:#d61f22}
 #app-root .rdz .rd-brands button.on{background:#141312;border-color:#141312;color:#fff}
+.ep-prod-price{margin:3px 0 4px;font-size:12px;line-height:1.3}
+.ep-prod-price s{color:#aaa;font-size:11px}
+.ep-prod-price i{font-style:normal;color:#ff3d3f;font-weight:900}
+.ep-prod-price b{font-weight:900}
+.ep-prod-price small{font-size:10px;color:#ff3d3f;font-weight:800}
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
