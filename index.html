@@ -3130,7 +3130,8 @@ async function renderPublicSite(root) {
         // 카테고리별(ty)로도 나눔: 정해진 순서 + 기타는 맨 뒤
         const CORD = ["니트·가디건", "맨투맨·후드", "셔츠", "롱슬리브", "와이드·카고", "데님", "슬랙스", "스웨트·트레이닝"];
         const tys = [...new Set(L.map((p) => p.ty).filter(Boolean))].sort((x, y) => (CORD.indexOf(x) + 99) % 99 - (CORD.indexOf(y) + 99) % 99 || (x === "기타") - (y === "기타"));
-        const cats = tys.map((t) => ({ t, list: L.filter((p) => p.ty === t) })).filter((c) => c.list.length >= 4);
+        const spread = (A) => { for (let i = 1; i < A.length; i++) if (A[i].brand === A[i - 1].brand) { const j = A.findIndex((x, n) => n > i && x.brand !== A[i - 1].brand); if (j > 0) [A[i], A[j]] = [A[j], A[i]]; } return A; };
+        const cats = tys.map((t) => ({ t, list: spread(L.filter((p) => p.ty === t)) })).filter((c) => c.list.length >= 4);
         return { k, label: NAMES[k] || k, list: L, cats };
       }).filter((r) => r.list.length >= 4);
       let box = root.querySelector("#rdz");
