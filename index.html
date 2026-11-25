@@ -3132,20 +3132,26 @@ async function renderPublicSite(root) {
         const tys = [...new Set(L.map((p) => p.ty).filter(Boolean))].sort((x, y) => (CORD.indexOf(x) + 99) % 99 - (CORD.indexOf(y) + 99) % 99 || (x === "기타") - (y === "기타"));
         const spread = (A) => { for (let i = 1; i < A.length; i++) if (A[i].brand === A[i - 1].brand) { const j = A.findIndex((x, n) => n > i && x.brand !== A[i - 1].brand); if (j > 0) [A[i], A[j]] = [A[j], A[i]]; } return A; };
         const cats = tys.map((t) => ({ t, list: spread(L.filter((p) => p.ty === t)) })).filter((c) => c.list.length >= 4);
-        return { k, label: NAMES[k] || k, list: L, cats };
+        // 브랜드별: 오늘 브랜드데이 쿠폰 있는 브랜드 🔥 먼저, 그다음 하입 브랜드, 상품 많은 순 (3개 이상)
+        const bdOn = (b) => { try { const nb = nbr(b); return ((COUPONS && COUPONS.list) || []).some((c) => /브랜드데이/.test(c.n || "") && nbr(String(c.n || "")).includes(nb)); } catch (e) { return false; } };
+        const bcnt = {}; L.forEach((p) => (bcnt[p.brand] = (bcnt[p.brand] || 0) + 1));
+        const brands = Object.keys(bcnt).filter((b) => bcnt[b] >= 3).map((b) => ({ b, d: bdOn(b) ? 1 : 0, h: HYPE.has(nbr(b)) ? 1 : 0, n: bcnt[b] })).sort((x, y) => y.d - x.d || y.h - x.h || y.n - x.n).slice(0, 40)
+          .map((x) => ({ t: "@" + x.b, name: x.b, day: x.d, list: L.filter((p) => p.brand === x.b) }));
+        return { k, label: NAMES[k] || k, list: L, cats: [...cats, ...brands], ncat: cats.length };
       }).filter((r) => r.list.length >= 4);
       let box = root.querySelector("#rdz");
       if (!rows.length || now >= endT || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "rdz"; box.className = "rdz"; box.addEventListener("click", (e) => {
         const c = e.target.closest("[data-rdcat]"); if (c) { const [i, t] = c.dataset.rdcat.split("|"); window.__rdCat = window.__rdCat || {}; window.__rdCat[i] = t; renderRd(); return; }
-        const b = e.target.closest("[data-rdall]"); if (b) { const r = (window.__rdRows || [])[Number(b.dataset.rdall)]; if (!r) return; const t = (window.__rdCat || {})[b.dataset.rdall] || ""; const cl = t && r.cats.find((x) => x.t === t); const L = cl ? cl.list : r.list; if (window.__openList) window.__openList("rd" + b.dataset.rdall + t, `⚡ ${r.label}${cl ? " · " + t : ""} 꿀템`, L, "", r.label + " 꿀템"); } }); }
+        const b = e.target.closest("[data-rdall]"); if (b) { const r = (window.__rdRows || [])[Number(b.dataset.rdall)]; if (!r) return; const t = (window.__rdCat || {})[b.dataset.rdall] || ""; const cl = t && r.cats.find((x) => x.t === t); const L = cl ? cl.list : r.list; if (window.__openList) window.__openList("rd" + b.dataset.rdall + t, `⚡ ${r.label}${cl ? " · " + (cl.name || t) : ""} 꿀템`, L, "", r.label + " 꿀템"); } }); }
       if (!box.parentNode) { const lv = root.querySelector("#lvz"); const bz = root.querySelector("#tab-bf"); if (lv) lv.after(box); else if (bz) bz.prepend(box); }
       window.__rdRows = rows;
       const ek = kp(endT);
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 지금은 <em>${esc(R.title || "1회차 아우터데이·킥스데이")}</em> 중 꿀템</p><small>${ek.m}/${ek.d}까지</small></div><div class="hotz-bar"><i></i></div>
         ${rows.map((r, i) => { const sel = (window.__rdCat || {})[i] || ""; const cl = sel && r.cats.find((x) => x.t === sel); const L = cl ? cl.list : r.list;
           return `<div class="rd-row"><div class="rd-rh"><b>${esc(r.label)}</b><button type="button" class="rd-all" data-rdall="${i}">전체보기 →</button></div>
-          <div class="rd-cats"><button type="button" class="${sel ? "" : "on"}" data-rdcat="${i}|">전체</button>${r.cats.map((c) => `<button type="button" class="${sel === c.t ? "on" : ""}" data-rdcat="${i}|${esc(c.t)}">${esc(c.t)}</button>`).join("")}</div>
+          <div class="rd-cats"><button type="button" class="${sel ? "" : "on"}" data-rdcat="${i}|">전체</button>${r.cats.slice(0, r.ncat).map((c) => `<button type="button" class="${sel === c.t ? "on" : ""}" data-rdcat="${i}|${esc(c.t)}">${esc(c.t)}</button>`).join("")}</div>
+          ${r.cats.length > r.ncat ? `<div class="rd-cats rd-brands"><span class="rd-bl">브랜드별</span>${r.cats.slice(r.ncat).map((c) => `<button type="button" class="${sel === c.t ? "on" : ""}${c.day ? " bd" : ""}" data-rdcat="${i}|${esc(c.t)}">${c.day ? "🔥" : ""}${esc(c.name)}</button>`).join("")}</div>` : ""}
           <div class="rd-grid">${L.slice(0, 15).map((p) => itemCard(p, 0)).join("")}</div></div>`; }).join("")}`;
     }
     function renderTs() {
@@ -4364,6 +4370,11 @@ renderPublicSite(ROOT_EL);
 #app-root .lvz .lv-strip>.bf-item{flex-basis:calc((100% - 40px)/6)}
 #app-root .lvz .lv-strip .nm{font-size:11px}
 @media(max-width:560px){#app-root .lvz .lv-strip>.bf-item{flex-basis:calc((100% - 24px)/4)}}
+#app-root .rdz .rd-brands{margin-top:-2px}
+#app-root .rdz .rd-brands .rd-bl{flex:0 0 auto;align-self:center;font-size:11px;font-weight:900;color:#888;margin-right:2px}
+#app-root .rdz .rd-brands button{padding:5px 10px;font-size:11.5px;background:#f6f6f6;border-color:#eee}
+#app-root .rdz .rd-brands button.bd{background:#fff1f0;border-color:#ffc9c7;color:#d61f22}
+#app-root .rdz .rd-brands button.on{background:#141312;border-color:#141312;color:#fff}
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
