@@ -1,16 +1,16 @@
 (() => {
 const HYPE = /노드랩스|9999아카이브|아캄|디미트리블랙|낫포너드|노이즈|도프제이슨|어나더 ?오피스|르아르|어널러코드|다이브인|오퍼스|이안아카이브|파타고니아|살로몬|아크테릭스|미세키|해칭룸|인더스트|비긴202|키뮤어|록히드마틴|낫온리포투데이|디스이즈네버댓|프리즘웍스|레테르코모|언지미크|유니폼브릿지|쿠어|닥터마틴|나이키|뉴발란스|노스페이스|포터리|파브레가|데꼬로소|엘리엇|브라운야드|인사일런스|아워레가시|스톤아일랜드/;
 const BAN = /엘칸토|식스핏|반스|지프|스칼렛또블랙/;
-const base = (n) => String(n).replace(/\[[^\]]*\]|\([^)]*\)|_[^_]*$|-\s*[^-]*$|\d+\s*COLOR|\d+col/gi, '').replace(/\s+/g, ' ').trim().slice(0, 18);
+const base = (n) => String(n).replace(/\[[^\]]*\]|\([^)]*\)|_[^_]*$|-\s*[^-]*$|\d+\s*COLOR|\d+col/gi, '').replace(/\s+/g, ' ').trim().slice(0, 10);
 const q = (arr, f) => arr.length ? arr[Math.min(arr.length - 1, Math.floor(arr.length * f))].fp : 0;
 window.__pick = function () {
   const out = {}; const used = {};
   for (const g of window.__G) {
     const [id, , , , , pref, max, opt] = g; const o = opt || {};
     const det = window.__det;
-    let c = (window.__cands[id] || []).map((x) => ({ ...x, d: det[x.p[0]] })).filter((x) => x.d && !x.d.bad && !x.d.so && x.d.fp > 0 && !BAN.test(x.p[1]));
+    let c = (window.__cands[id] || []).map((x) => ({ ...x, d: det[x.p[0]] })).filter((x) => x.d && !x.d.bad && !x.d.so && x.d.fp > 0 && !BAN.test(x.p[1]) && x.p[1] && x.d.fp >= 9900);
     c.forEach((x) => { x.fp = x.d.fp; x.sc = x.s + (HYPE.test(x.p[1]) ? 1 : 0) - 2 * (used[x.p[0]] || 0); });
-    if (pref && !o.brand) { const pf = c.filter((x) => pref.test(x.p[2])); if (pf.length >= 3) c = pf; }
+    if (pref) { const pf = c.filter((x) => pref.test(x.p[2])); if (pf.length >= 3) c = pf; }
     c.sort((a, b) => a.fp - b.fp);
     const usedB = new Set(), usedN = new Set();
     const ok = (x) => (o.brand ? true : !usedB.has(x.p[1])) && !usedN.has(base(x.p[2]));
@@ -18,15 +18,22 @@ window.__pick = function () {
     const best = (arr, tie) => arr.filter(ok).sort((a, b) => b.sc - a.sc || tie(a, b))[0];
     const cap = max || Infinity;
     const lo = c.filter((x) => x.fp <= Math.min(cap, Math.max(q(c, 0.35), c[0] ? c[0].fp : 0)));
-    const ga = best(lo.length ? lo : c.filter((x) => x.fp <= cap), (a, b) => a.fp - b.fp); if (ga) take(ga);
+    let ga = best(lo.length ? lo : c.filter((x) => x.fp <= cap), (a, b) => a.fp - b.fp); if (ga) take(ga);
     const hiCut = q(c, 0.7);
-    const hi = c.filter((x) => x.fp >= hiCut && x.fp <= 800000 && (!ga || x.fp > ga.fp));
+    const hi = c.filter((x) => x.fp >= hiCut && x.fp <= (max ? max * 1.3 : 450000) && (!ga || x.fp > ga.fp));
     const hiS = hi.map((x) => ({ ...x, sc: x.sc + (HYPE.test(x.p[1]) ? 2 : 0) }));
-    const ot = best(hiS, (a, b) => b.fp - a.fp); if (ot) take(ot);
+    let ot = best(hiS, (a, b) => b.fp - a.fp); if (ot) take(ot);
     const med = ga && ot ? (ga.fp + ot.fp) / 2 : q(c, 0.5);
     let mid = c.filter((x) => (!ga || x.fp >= ga.fp) && (!ot || x.fp <= ot.fp));
     if (max && mid.some((x) => x.fp <= cap && ok(x))) mid = mid.filter((x) => x.fp <= cap);
-    const gs = best(mid, (a, b) => Math.abs(a.fp - med) - Math.abs(b.fp - med)); if (gs) take(gs);
+    let gs = best(mid, (a, b) => Math.abs(a.fp - med) - Math.abs(b.fp - med)); if (gs) take(gs);
+    let three = [ga, gs, ot];
+    // 질문에 콕 집은 상품이 있으면 꼭 넣기 (가격 순서대로 다시 줄 세움)
+    const fx = window.__force && window.__force[id];
+    if (fx && fx.p && !three.some((x) => x && x.p[0] === fx.p[0])) { const fill = three.filter(Boolean); if (fill.length >= 3) { fill.sort((a, b) => Math.abs(a.fp - fx.fp) - Math.abs(b.fp - fx.fp)); three = three.map((x) => (x === fill[0] ? fx : x)); } else three = [...fill, fx]; }
+    three = three.filter(Boolean).sort((a, b) => a.fp - b.fp);
+    while (three.length < 3) three.push(null);
+    [ga, gs, ot] = three;
     [ga, gs, ot].forEach((x) => { if (x) used[x.p[0]] = (used[x.p[0]] || 0) + 1; });
     out[id] = [ga, gs, ot].map((x) => x && { id: x.p[0], b: x.p[1], n: x.p[2], l: x.p[3], img: x.p[4], fp: x.fp, np: x.d.np, sp: x.d.sp, brand: x.d.brand, comId: x.d.comId });
   }
