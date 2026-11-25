@@ -4,12 +4,13 @@ const BAN = /엘칸토|식스핏|반스|지프|스칼렛또블랙/;
 const base = (n) => String(n).replace(/\[[^\]]*\]|\([^)]*\)|_[^_]*$|-\s*[^-]*$|\d+\s*COLOR|\d+col/gi, '').replace(/\s+/g, ' ').trim().slice(0, 18);
 const q = (arr, f) => arr.length ? arr[Math.min(arr.length - 1, Math.floor(arr.length * f))].fp : 0;
 window.__pick = function () {
-  const out = {};
+  const out = {}; const used = {};
   for (const g of window.__G) {
-    const [id, , , , , , max, opt] = g; const o = opt || {};
+    const [id, , , , , pref, max, opt] = g; const o = opt || {};
     const det = window.__det;
     let c = (window.__cands[id] || []).map((x) => ({ ...x, d: det[x.p[0]] })).filter((x) => x.d && !x.d.bad && !x.d.so && x.d.fp > 0 && !BAN.test(x.p[1]));
-    c.forEach((x) => { x.fp = x.d.fp; x.sc = x.s + (HYPE.test(x.p[1]) ? 1 : 0); });
+    c.forEach((x) => { x.fp = x.d.fp; x.sc = x.s + (HYPE.test(x.p[1]) ? 1 : 0) - 2 * (used[x.p[0]] || 0); });
+    if (pref && !o.brand) { const pf = c.filter((x) => pref.test(x.p[2])); if (pf.length >= 3) c = pf; }
     c.sort((a, b) => a.fp - b.fp);
     const usedB = new Set(), usedN = new Set();
     const ok = (x) => (o.brand ? true : !usedB.has(x.p[1])) && !usedN.has(base(x.p[2]));
@@ -26,6 +27,7 @@ window.__pick = function () {
     let mid = c.filter((x) => (!ga || x.fp >= ga.fp) && (!ot || x.fp <= ot.fp));
     if (max && mid.some((x) => x.fp <= cap && ok(x))) mid = mid.filter((x) => x.fp <= cap);
     const gs = best(mid, (a, b) => Math.abs(a.fp - med) - Math.abs(b.fp - med)); if (gs) take(gs);
+    [ga, gs, ot].forEach((x) => { if (x) used[x.p[0]] = (used[x.p[0]] || 0) + 1; });
     out[id] = [ga, gs, ot].map((x) => x && { id: x.p[0], b: x.p[1], n: x.p[2], l: x.p[3], img: x.p[4], fp: x.fp, np: x.d.np, sp: x.d.sp, brand: x.d.brand, comId: x.d.comId });
   }
   window.__picks = out; return out;
@@ -49,6 +51,6 @@ window.__coupons = async function () {
   return all.length;
 };
 window.__review = function () {
-  return window.__G.map((g) => g[0] + ' | ' + (window.__picks[g[0]] || []).map((x, i) => x ? ['가', '심', '옷'][i] + ':' + x.b + ' ' + String(x.n).slice(0, 22) + ' ' + Math.round((x.cp || x.fp) / 1000) + 'k' : ['가', '심', '옷'][i] + ':-').join(' / ')).join('\n');
+  return window.__G.map((g) => g[0] + ' | ' + (window.__picks[g[0]] || []).map((x, i) => x ? ['가', '심', '옷'][i] + ':' + x.b + ' ' + String(x.n).slice(0, 16) + ' ' + Math.round((x.cp || x.fp) / 1000) + 'k' : ['가', '심', '옷'][i] + ':-').join(' / ')).join('\n');
 };
 })();
