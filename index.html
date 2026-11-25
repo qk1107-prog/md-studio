@@ -3118,7 +3118,7 @@ async function renderPublicSite(root) {
       const nbr = (x) => String(x || "").replace(/\s|맨$|우먼$/g, "").toLowerCase();
       const HYPE = new Set(["도프제이슨","드로우핏","엘무드","프리즘웍스","디미트리블랙","노이즈","아웃스탠딩","에스피오나지","미세키서울","탄산마그네슘","노이어","후브스","아캄","비긴202","낫포너드","파코서플라이","247시리즈","노매뉴얼","디스이즈네버댓","엘엠씨","더콜디스트모먼트","인사일런스","킨치","쿠어","일리고","언탭트 스튜디오","그레이버","나이키","아디다스","노스페이스","팀버랜드","뉴발란스","살로몬","아식스","닥터마틴","록히드마틴","노드랩스","9999아카이브","낫온리포투데이","패러다임 필름","플루크","호카","오니츠카타이거","컨버스","야세","로맨틱무브","커스텀에이드","어그",
         ...(((BFD.hot || {}).cats || []).find((c) => c.grp === "pick") || { items: [] }).items.map((p) => p.brand), ...((BFD.mycart || {}).items || []).map((p) => p.brand), ...(R.hype || [])].map(nbr));
-      const BAN = new Set(["엘칸토","식스핏","반스","슈펜","피노키","파스코로젠","락포트","지오지아","지이크","앤드지","폴햄","지오다노","베이직하우스","후아유","마인드브릿지","슈피트","힐탑", ...(R.ban || [])].map(nbr));
+      const BAN = new Set(["엘칸토","식스핏","반스","슈펜","피노키","파스코로젠","락포트","지오지아","지이크","앤드지","폴햄","지오다노","베이직하우스","후아유","마인드브릿지","슈피트","힐탑","지프","스칼렛또블랙", ...(R.ban || [])].map(nbr));
       const rows = Object.keys(R).filter((k) => Array.isArray(R[k]) && R[k].length >= 4).sort((a, b) => (Object.keys(NAMES).indexOf(a) + 99) % 99 - (Object.keys(NAMES).indexOf(b) + 99) % 99).map((k) => {
         // 광만두 결에 맞는 하입 브랜드 먼저(할인 큰 순), 흔한 브랜드는 빼고, 나머지는 뒤에. 같은 브랜드 최대 4개, 100개
         const cnt = {}; const ok = (p) => p && p.link && !/샌들|슬리퍼|반팔|숏슬리브|쇼츠|반바지|jersey|저지|레인셀|키즈/i.test(p.name || "") && !(/티셔츠|\bTEE\b/i.test(p.name || "") && !/롱|긴팔|L\/S|long/i.test(p.name || "")) && !BAN.has(nbr(p.brand));
@@ -3133,7 +3133,7 @@ async function renderPublicSite(root) {
         const spread = (A) => { for (let i = 1; i < A.length; i++) if (A[i].brand === A[i - 1].brand) { const j = A.findIndex((x, n) => n > i && x.brand !== A[i - 1].brand); if (j > 0) [A[i], A[j]] = [A[j], A[i]]; } return A; };
         const cats = tys.map((t) => ({ t, list: spread(L.filter((p) => p.ty === t)) })).filter((c) => c.list.length >= 4);
         // 브랜드별: 오늘 브랜드데이 쿠폰 있는 브랜드 🔥 먼저, 그다음 하입 브랜드, 상품 많은 순 (3개 이상)
-        const bdOn = (b) => { try { const nb = nbr(b); return ((COUPONS && COUPONS.list) || []).some((c) => /브랜드데이/.test(c.n || "") && nbr(String(c.n || "")).includes(nb)); } catch (e) { return false; } };
+        const bdOn = (b) => { try { const nb = nbr(b); return ((COUPONS && COUPONS.list) || []).some((c) => nb.length >= 2 && /브랜드데이/.test(c.n || "") && nbr(String(c.n || "")).startsWith(nb)); } catch (e) { return false; } };
         const bcnt = {}; L.forEach((p) => (bcnt[p.brand] = (bcnt[p.brand] || 0) + 1));
         const brands = Object.keys(bcnt).filter((b) => bcnt[b] >= 3).map((b) => ({ b, d: bdOn(b) ? 1 : 0, h: HYPE.has(nbr(b)) ? 1 : 0, n: bcnt[b] })).sort((x, y) => y.d - x.d || y.h - x.h || y.n - x.n).slice(0, 40)
           .map((x) => ({ t: "@" + x.b, name: x.b, day: x.d, list: L.filter((p) => p.brand === x.b) }));
