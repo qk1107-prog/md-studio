@@ -3063,7 +3063,7 @@ async function renderPublicSite(root) {
       const LV = BFD.lv || {}; const now = nowFn();
       const tm = (x) => x ? (typeof x === "number" ? x : Date.parse(x)) : 0;
       // 아래 "실시간 쿠폰" 칸의 쿠폰별 상품(site_data coupons)과 연동: l.cpn = ["쿠폰 이름 일부", ...]
-      if (!COUPONS && !window.__lvCp) { window.__lvCp = 1; loadCoupons().then(() => { if (COUPONS) renderLv(); }); }
+      if (!COUPONS && !window.__lvCp) { window.__lvCp = 1; loadCoupons().then(() => { if (COUPONS) { renderLv(); try { renderRd(); } catch (e) {} } }); }
       const cpItems = (l) => {
         const keys = [].concat(l.cpn || []).filter(Boolean); const cpb = l.cpb || ""; if ((!keys.length && !cpb) || !COUPONS || !COUPONS.list) return [];
         const y = new Date(now).getFullYear(); const best = new Map();
