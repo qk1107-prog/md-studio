@@ -3130,7 +3130,7 @@ async function renderPublicSite(root) {
           <div class="lv-strip">${L.map((p) => card(p, l)).join("")}</div></div>`; };
       const at = tm(LV.at);
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title"><span class="lv-dot"></span>실시간 <span class="lv-em">라이브 쿠폰</span><span class="cpz-live"><i></i>LIVE</span></p></div>
-        <p class="lv-sub">${at ? `<b class="lv-clock">${esc(hm(at))}</b> 기준 · ` : ""}라이브 쿠폰 뜰 때마다 바로 올려드려요 · <b>쿠폰 받고 구매하세요</b></p>
+        <p class="lv-sub">${at && Date.now() - Date.parse(at) < 6 * 3600e3 ? `<b class="lv-clock">${esc(hm(at))}</b> 기준 · ` : ""}라이브 쿠폰 뜰 때마다 바로 올려드려요 · <b>쿠폰 받고 구매하세요</b></p>
         <div class="hotz-bar"><i></i></div>
         ${curL.length ? "" : `<p class="lv-wait">🔴 오늘 라이브가 시작되면 여기에 바로 올라와요</p>`}${shown.map(row).join("")}`;
     }
@@ -3220,7 +3220,7 @@ async function renderPublicSite(root) {
         <div class="hotz-bar"><i></i></div>
         <div class="bf-grid">${shown.map(card).join("")}</div>`;
       const el = box.querySelector(".tsz-ago"), t = Date.parse(SRC.at || "");
-      if (el && t) { const k = kp(t); el.textContent = `${k.h}시 ${String(k.mi).padStart(2, "0")}분 업데이트 · 꼭 쿠폰 받고 구매하세요`; }
+      if (el && t) { const k = kp(t); el.textContent = `${k.d !== kp(Date.now()).d ? k.m + "/" + k.d + " " : ""}${k.h}시 ${String(k.mi).padStart(2, "0")}분 업데이트 · 꼭 쿠폰 받고 구매하세요`; }
     }
     // ---- 블프 플래너: 날짜별 혜택·라이브·시그니처 브랜드데이 + 브랜드 검색 (main.bf.plan) ----
     let planDay = null, planQ = "";
@@ -3329,7 +3329,7 @@ async function renderPublicSite(root) {
       const showAll = false;
       const cards = cur[2].slice(0, 8).map((p) => itemCard(Object.assign({}, p, { tag: p.pin ? p.tag : (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.pin ? p.comment : p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em><span class="opz-date">${kp(now).m}월 ${kp(now).d}일</span><span class="cpz-live"><i></i>LIVE</span></p><small>쿠폰까지 적용${k ? ` · ${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small>${cur[2].length > 8 ? `<button type="button" class="sec-all" data-r1all="${r1Tab}">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em><span class="opz-date">${kp(now).m}월 ${kp(now).d}일</span><span class="cpz-live"><i></i>LIVE</span></p><small>쿠폰까지 적용${k ? ` · ${k.d !== kp(Date.now()).d ? k.m + "/" + k.d + " " : ""}${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small>${cur[2].length > 8 ? `<button type="button" class="sec-all" data-r1all="${r1Tab}">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
         ${cur[3] ? `<p class="opz-sub">${esc(cur[3])}</p>` : ""}
         <div class="bf-grid">${cards}</div>`;
@@ -3437,7 +3437,7 @@ async function renderPublicSite(root) {
         <div class="hotz-bar"><i></i></div>
         <div class="bf-chips hotz-chips"><button type="button" data-hv="-1" class="${hotView === -1 ? "active" : ""}">🔥 실시간 HOT</button>${tsL.length ? `<button type="button" data-hv="-3" class="${hotView === -3 ? "active" : ""}">⏰ 타임세일</button>` : ""}${rise.length ? `<button type="button" data-hv="-2" class="${hotView === -2 ? "active" : ""}">📈 급상승</button>` : ""}${pkI >= 0 ? `<button type="button" data-hv="${pkI}" class="${hotView === pkI ? "active" : ""}">${esc(cats[pkI].cat)}</button>` : ""}<button type="button" data-hcat="1" class="hotz-catbtn${catOpen ? " on" : ""}">카테고리 보기 ${catOpen ? "▴" : "▾"}</button></div>
         ${catOpen ? `<div class="bf-chips hotz-cats">${cats.map((c, i) => (i === pkI ? "" : `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`)).join("")}</div>` : ""}
-        ${hotView === -3 ? `<p class="hotz-sub">⏰ 지금 타임세일·특가 중인 꿀템${Date.parse(window.__tsAt || "") ? ` · ${kp(Date.parse(window.__tsAt)).h}시 ${String(kp(Date.parse(window.__tsAt)).mi).padStart(2, "0")}분 업데이트` : ""} · 꼭 쿠폰 받고 구매하세요</p>` : ""}${hotView === -2 ? `<p class="hotz-sub">📈 지금 갑자기 많이 찾는 상품</p>` : ""}${hotView >= 0 && cats[hotView] ? `<p class="hotz-sub">${cats[hotView].grp === "pick" ? "패션 좀 아는 사람들이 요즘 주목하는 브랜드의 인기템" : esc((cats[hotView].grp ? cats[hotView].grp + " · " : "") + cats[hotView].cat) + " 지금 제일 많이 보는 상품"}</p>` : ""}
+        ${hotView === -3 ? `<p class="hotz-sub">⏰ 지금 타임세일·특가 중인 꿀템${Date.parse(window.__tsAt || "") ? ` · ${kp(Date.parse(window.__tsAt)).d !== kp(Date.now()).d ? kp(Date.parse(window.__tsAt)).m + "/" + kp(Date.parse(window.__tsAt)).d + " " : ""}${kp(Date.parse(window.__tsAt)).h}시 ${String(kp(Date.parse(window.__tsAt)).mi).padStart(2, "0")}분 업데이트` : ""} · 꼭 쿠폰 받고 구매하세요</p>` : ""}${hotView === -2 ? `<p class="hotz-sub">📈 지금 갑자기 많이 찾는 상품</p>` : ""}${hotView >= 0 && cats[hotView] ? `<p class="hotz-sub">${cats[hotView].grp === "pick" ? "패션 좀 아는 사람들이 요즘 주목하는 브랜드의 인기템" : esc((cats[hotView].grp ? cats[hotView].grp + " · " : "") + cats[hotView].cat) + " 지금 제일 많이 보는 상품"}</p>` : ""}
         <div class="bf-grid hotz-grid${fresh ? " hotz-in" : ""}">${list.map((p, i) => itemCard(p, 0).replace(/^(\s*<[a-z]+)/, `$1 style="--d:${Math.min(i, 20) * 50}ms"`)).join("")}</div>
         `;
       hotAgo();
