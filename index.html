@@ -1922,7 +1922,7 @@ async function renderPublicSite(root) {
     return couponsP;
   }
   const cpKind = (c) => (c.k === "C" ? "장바구니" : "상품");
-  const cpHotSet = () => { if (!COUPONS || !COUPONS.list) return new Set(); const L = COUPONS.list; const pct = (c) => (/%$/.test(c.v) ? parseFloat(c.v) : 0); const pool = L.slice(0, 60).filter((c) => pct(c) >= 10 || /만원|천원/.test(c.v)); const top = pool.slice().sort((a, b) => (b.up ? 1 : 0) - (a.up ? 1 : 0) || (b.bf || 0) - (a.bf || 0) || pct(b) - pct(a) || (b.cnt || 0) - (a.cnt || 0)).slice(0, 6); return new Set(top.map((c) => String(c.no))); };
+  const cpHotSet = () => { if (!COUPONS || !COUPONS.list) return new Set(); const L = COUPONS.list; const pct = (c) => (/%$/.test(c.v) ? parseFloat(c.v) : 0); const CMN = /에잇세컨즈|스파오|탑텐|지오다노|엘칸토|식스핏|지프|스칼렛또블랙/; const pool = L.filter((c) => !CMN.test(c.n || "")).slice(0, 80).filter((c) => pct(c) >= 10 || /만원|천원/.test(c.v)); const top = pool.slice().sort((a, b) => (b.up ? 1 : 0) - (a.up ? 1 : 0) || (b.bf || 0) - (a.bf || 0) || pct(b) - pct(a) || (b.cnt || 0) - (a.cnt || 0)).slice(0, 6); return new Set(top.map((c) => String(c.no))); };
   // ---- 대표 브랜드 프리오픈 쿠폰 강조 칸 (타임세일 TOP 10 바로 아래) : 티징 쿠폰이 있는 대표 브랜드만 자동으로 ----
   function renderSpot(L) {
     const BR = ["노스페이스", "아디다스", "나이키", "뉴발란스", "어그", "살로몬", "아크테릭스"];
@@ -2000,7 +2000,7 @@ async function renderPublicSite(root) {
     box.innerHTML = `<div class="cpz-head"><p class="cpz-title"><span class="cpz-fire">🔥</span> 실시간 지금 쓰기 좋은 쿠폰<span class="cpz-live"><i></i>LIVE</span><small>실시간 트래킹 · ${esc(cpTime(COUPONS.at))} 확인</small></p></div><p class="cpz-hint"><span>👇 쿠폰을 클릭하면 사용 가능한 제품 리스트로 넘어갑니다</span><a class="cpz-more" href="#cps">전체보기 →</a></p><div class="hotz-bar"><i></i></div>
       <div class="cpz-tick"><div class="cpz-tick-in">${tickItems.map((c) => `<a href="#cp=${esc(c.no)}"><b>${c.nw ? "NEW" : "🔥"} ${esc(c.v)}</b>${esc(c.n)}</a>`).join("")}</div></div>
       ${tz.length ? `<p class="cpz-sub">⚡ 티징 전용 쿠폰 <small>${tzDemo ? "미리보기 예시 · 19시에 실제 쿠폰으로 바뀌어요" : "11/20 19시 ~ 11/22 본편 전까지"}</small></p><div class="cpz-scroll cpz-one">${tz.map(cpChip).join("")}</div><p class="cpz-sub">🔥 지금 쓰기 좋은 쿠폰</p>` : ""}
-      <div class="cpz-scroll">${[...hot, ...rest].filter((c) => CP_OPENED || !c.tz).slice(0, 60).map(cpChip).join("")}</div>`;
+      <div class="cpz-scroll">${(() => { const CMN = /에잇세컨즈|스파오|탑텐|지오다노|엘칸토|식스핏|지프|스칼렛또블랙/; const nwF = rest.filter((c) => c.nw && !CMN.test(c.n || "")); const oth = rest.filter((c) => !nwF.includes(c)); return [...hot, ...nwF, ...oth.filter((c) => !CMN.test(c.n || "")), ...oth.filter((c) => CMN.test(c.n || ""))]; })().filter((c) => CP_OPENED || !c.tz).slice(0, 60).map(cpChip).join("")}</div>`;
     box.dataset.ready = "1";
     try { renderSpot(L); } catch (e) {}
     const t = root.querySelector("nav.tabs button.active");
