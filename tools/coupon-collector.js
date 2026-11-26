@@ -57,19 +57,19 @@ window.__cpRun = async () => {
   res.sort((a, b) => pick.indexOf(a.c) - pick.indexOf(b.c));
   const top = res.slice(0, 250);
   // 사이트에 보이는 쿠폰(앞쪽 70개 + 티징 전용·무진장 쿠폰 전부)은 '쿠폰 사용 가능 상품'을 30개까지 매시간 새로 채움
-  const rich = top.filter((r, i) => i < 40 || ((tzLike(r.c) || /티징|티저|TEAS/i.test(r.c.couponName)) && (r.c.totalIssuedCount || 0) >= 300) || planHit(r.c)).slice(0, 90);
+  const rich = top.filter((r, i) => i < 120 || ((tzLike(r.c) || /티징|티저|TEAS/i.test(r.c.couponName)) && (r.c.totalIssuedCount || 0) >= 300) || planHit(r.c)).slice(0, 170);
   for (let i = 0; i < rich.length; i += 8) {
     await Promise.all(rich.slice(i, i + 8).map(async (r) => {
       try {
-        // 쿠폰 사용 가능 상품: 2페이지(최대 120개)까지 받아서 전부 올림
+        // 쿠폰 사용 가능 상품: 5페이지(최대 300개)까지 받아서 전부 올림
         let raw = [];
-        for (let pg = 1; pg <= 2; pg++) {
+        for (let pg = 1; pg <= 5; pg++) {
           const j = await (await fetch(`https://api.musinsa.com/api2/coupon/plp/v1/goods?gf=M&sortCode=SALE_ONE_WEEK_COUNT&couponNo=${r.c.couponNo}&couponKind=${r.c.couponKind}&size=60&caller=COUPON&page=${pg}`, { credentials: "include" })).json();
           const part = (j.data && (j.data.list || j.data.goods)) || [];
           raw = raw.concat(part); if (part.length < 60) break;
         }
         const L = raw.filter((g) => !g.isSoldOut && g.genderCode !== "WOMEN" && !/키즈|KIDS/i.test(g.goodsName || ""));
-        if (L.length > r.goods.length) r.goods = L.slice(0, 120);
+        if (L.length > r.goods.length) r.goods = L.slice(0, 300);
       } catch (e) {}
     }));
   }
