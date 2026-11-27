@@ -2002,7 +2002,6 @@ async function renderPublicSite(root) {
   const cpChip = (c) => `<a class="cpz-chip k-${esc(c.k)}${CP_HOT.has(String(c.no)) ? " is-hot" : ""}${c.up ? " is-up" : ""}" href="#cp=${esc(c.no)}">${CP_HOT.has(String(c.no)) ? '<span class="cpz-hot">🔥 HOT</span>' : ""}${c.up ? `<span class="cpz-upb">＋상품 ${esc(c.up)}개 추가</span>` : ""}<span class="cpz-k">${c.nw ? '<em class="cpz-new">NEW</em> ' : ""}${c.tz ? '<em class="cpz-bf" style="background:#6a2ff0">티징</em>' : c.bf ? '<em class="cpz-bf">무진장</em>' : cpKind(c)}</span><span class="cpz-v">${esc(c.v)}</span><span class="cpz-n">${esc(c.n)}</span><span class="cpz-m">${esc([c.cond, c.exp ? "~" + c.exp : ""].filter(Boolean).join(" · "))}</span></a>`;
   const cpTime = (iso) => { try { const d = new Date(iso); const k = new Date(d.getTime() + 9 * 3600e3); return `${k.getUTCMonth() + 1}/${k.getUTCDate()} ${String(k.getUTCHours()).padStart(2, "0")}:${String(k.getUTCMinutes()).padStart(2, "0")}`; } catch (e) { return ""; } };
   function renderCouponStrip() {
-    { const _b = document.getElementById("cpz"); if (_b) _b.remove(); return; } // 무신사 안내(11/27): 자동 갱신 칸 중지 — 단순 진열만
     const box = root.querySelector("#cpz");
     if (!box || !COUPONS || !Array.isArray(COUPONS.list) || !COUPONS.list.length) return;
     const CP_GO = Date.UTC(2026, 10, 20, 10, 0); // 11/20 19:00 KST 공개
@@ -2023,7 +2022,7 @@ async function renderPublicSite(root) {
     const tzDemo = !tz.length && CP_PV && Date.now() < Date.parse("2026-11-20T10:00:00Z");
     if (tzDemo) { const b = L.find((c) => c.bf) || L[0]; tz = [Object.assign({}, b, { tz: true, nw: true, n: "[예시] 무진장 티징 전용 " + (b.k === "CART" ? "장바구니" : "상품") + " 쿠폰" })]; }
     const tickItems = [...tz, ...hot, ...nw.filter((c) => !CP_HOT.has(String(c.no))), ...rest].slice(0, 12);
-    box.innerHTML = `<div class="cpz-head"><p class="cpz-title"><span class="cpz-fire">🔥</span> 지금 쓰기 좋은 쿠폰<span class="cpz-live"><i></i>LIVE</span><small>트래킹 · ${esc(cpTime(COUPONS.at))} 확인</small></p></div><p class="cpz-hint"><span>👇 쿠폰을 클릭하면 사용 가능한 제품 리스트로 넘어갑니다</span><a class="cpz-more" href="#cps">전체보기 →</a></p><div class="hotz-bar"><i></i></div>
+    box.innerHTML = `<div class="cpz-head"><p class="cpz-title"><span class="cpz-fire">🎟️</span> 지금 쓰기 좋은 쿠폰<small>무신사 스토어 공개 쿠폰 · ${esc(cpTime(COUPONS.at).split(" ")[0])} 확인</small></p></div><p class="cpz-hint"><span>👇 쿠폰을 클릭하면 사용 가능한 제품 리스트로 넘어갑니다</span><a class="cpz-more" href="#cps">전체보기 →</a></p><div class="hotz-bar"><i></i></div>
       <div class="cpz-tick"><div class="cpz-tick-in">${tickItems.map((c) => `<a href="#cp=${esc(c.no)}"><b>${c.nw ? "NEW" : "🔥"} ${esc(c.v)}</b>${esc(c.n)}</a>`).join("")}</div></div>
       ${tz.length ? `<p class="cpz-sub">⚡ 티징 전용 쿠폰 <small>${tzDemo ? "미리보기 예시 · 19시에 실제 쿠폰으로 바뀌어요" : "11/20 19시 ~ 11/22 본편 전까지"}</small></p><div class="cpz-scroll cpz-one">${tz.map(cpChip).join("")}</div><p class="cpz-sub">🔥 지금 쓰기 좋은 쿠폰</p>` : ""}
       <div class="cpz-scroll">${(() => { const CMN = /에잇세컨즈|스파오|탑텐|지오다노|엘칸토|식스핏|지프|스칼렛또블랙/; const nwF = rest.filter((c) => c.nw && !CMN.test(c.n || "")); const oth = rest.filter((c) => !nwF.includes(c)); return [...hot, ...nwF, ...oth.filter((c) => !CMN.test(c.n || "")), ...oth.filter((c) => CMN.test(c.n || ""))]; })().filter((c) => CP_OPENED || !c.tz).slice(0, 60).map(cpChip).join("")}</div>`;
@@ -2062,7 +2061,7 @@ async function renderPublicSite(root) {
     const C = await loadCoupons();
     if (!C || !Array.isArray(C.list)) { history.replaceState(null, "", location.pathname + location.search); return; }
     const bd = cpOverlay("cps", "지금 쓰기 좋은 쿠폰", `
-      <div class="ep-hero"><h1 class="ep-hero-title"><span class="cpz-fire">🔥</span> 지금 쓰기 좋은 쿠폰</h1><p class="ep-note" style="margin:6px 0 0">무신사 쿠폰함 ${C.list.length}개 · ${esc(cpTime(C.at))} 확인 · 1시간마다 업데이트돼요</p></div>
+      <div class="ep-hero"><h1 class="ep-hero-title"><span class="cpz-fire">🔥</span> 지금 쓰기 좋은 쿠폰</h1><p class="ep-note" style="margin:6px 0 0">무신사 스토어 공개 쿠폰 ${C.list.length}개 · ${esc(cpTime(C.at).split(" ")[0])} 확인 · 사용 전 무신사에서 꼭 확인하세요</p></div>
       <div class="cpz-filter"><button data-f="" class="on">전체</button><button data-f="C">장바구니 쿠폰</button><button data-f="P">상품 쿠폰</button><input type="search" placeholder="브랜드·쿠폰 검색 (예: 아디다스)" aria-label="쿠폰 검색"></div>
       <div class="cpz-all" id="cpz-all"></div>`);
     if (!bd) return;
@@ -2361,6 +2360,8 @@ async function renderPublicSite(root) {
     else if (location.hash === "#bp") openPicks();
     else if (location.hash === "#lf" || location.hash === "#lf2") openLongform(location.hash.slice(1));
     else if (location.hash === "#lu") openLineup();
+    else if (location.hash === "#cps") openCoupons();
+    else if (/^#cp=\d+/.test(location.hash)) openCoupon(location.hash.slice(4));
     else if (/^#spa=/.test(location.hash)) openSpotAll(decodeURIComponent(location.hash.slice(5)));
     else if (/^#cl=/.test(location.hash)) openCol(decodeURIComponent(location.hash.slice(4)));
     else if (/^#br=/.test(location.hash)) openCat("br:" + decodeURIComponent(location.hash.slice(4)));
