@@ -3519,7 +3519,7 @@ async function renderPublicSite(root) {
           <span class="qna-tier t-${esc(x.t)}">${esc(x.t)}</span>
           <div class="qna-pimg">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}</div>
           <p class="qna-pb">${esc(x.b)}</p><p class="qna-pn">${esc(x.n)}</p>
-          <p class="ep-prod-price">${x.np > fin ? `<s>${won(x.np)}</s> <i>${Math.round((1 - fin / x.np) * 100)}%</i> ` : ""}<b>${won(fin)}</b>${x.cp && x.cp < x.fp ? " <small>쿠폰가</small>" : ""}</p>
+          ${fin > 0 ? `<p class="ep-prod-price">${x.np > fin ? `<s>${won(x.np)}</s> <i>${Math.round((1 - fin / x.np) * 100)}%</i> ` : ""}<b>${won(fin)}</b>${x.cp && x.cp < x.fp ? " <small>쿠폰가</small>" : ""}</p>` : `<p class="ep-prod-price"><small>가격은 무신사에서 확인</small></p>`}
         </a>`;
       };
       const mount = (w, QD) => {
