@@ -2954,6 +2954,7 @@ async function renderPublicSite(root) {
 
     // 시그니처특가 (카테고리별, 카드 태그 = 예정 할인율 구간)
     function sigSec(live, day) {
+      if (!(live && day.sig && day.sig.length) && !(BFD.sigPreview || []).length) return ""; // 큐레이터 전용 자료에서 온 시그니처 추천 목록은 내림(11/27)
       const groups = (live && day.sig && day.sig.length) ? [{ label: "오늘 꿀템", items: day.sig }] :
         (BFD.sigPreview || []).map((g) => ({ label: g.label === "기타" ? "그 외" : g.label.replace(" 할인", "").replace(/ /g, ""), items: g.items.map((p) => Object.assign({}, p, { tag: p.band || g.label.replace(" 할인", "").replace(/ /g, "") })) }));
       return `<div class="bf-sec" id="bf-sig">${secHead("✨", "시그니처특가", live ? "블프 기간 내내 이 가격" : "카테고리별 · 후기 많은 순", "꿀템 선별")}${curated("시그니처특가 1,500여 개 중 후기·할인율 좋은 꿀템만 골랐어요")}
@@ -3543,7 +3544,6 @@ async function renderPublicSite(root) {
             <div class="bf-hub-head"><p class="bf-h">⚡ 오늘의 꿀템 정리 <small>${c.m}.${pad(c.d)}</small></p>${stamp()}</div>
             <div class="bf-tiles">
               ${tile("bf-hot", "🔥", "하루특가", "오늘 자정 종료", cd(mid), false, hotAll.length)}
-              ${tile("bf-sig", "✨", "시그니처특가", "블프 내내 이 가격", cd(T_END), false, (day.sig || []).length || (BFD.sigPreview || []).reduce((a, g) => a + g.items.length, 0))}
               ${tile("bf-brand", "🏷️", "브랜드특가", "오늘의 브랜드", cd(mid), false, brands.length)}
             </div>
           </div>
