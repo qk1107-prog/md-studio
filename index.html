@@ -2663,14 +2663,12 @@ async function renderPublicSite(root) {
 
       <section id="tab-starter" class="section">
         <p class="tab-intro">실패 없는 기본 세트 — 아우터·상의·하의·신발 한 번에</p>
-        <p class="tab-fresh"><i></i>매일 새로운 코디가 수십 개씩 업데이트돼요</p>
         <div class="sp-chips" id="sp-chips"></div>
         <div id="sp-list"></div>
       </section>
 
       <section id="tab-levelup" class="section">
         <p class="tab-intro">기본템이 준비됐다면, 다음은 퀄리티 좋은 코디로</p>
-        <p class="tab-fresh"><i></i>매일 새로운 코디가 수십 개씩 업데이트돼요</p>
         <div class="sp-chips" id="lp-chips"></div>
         <div id="lp-list"></div>
       </section>
@@ -2842,7 +2840,7 @@ async function renderPublicSite(root) {
     function stamp() {
       const u = BFD.updatedAt ? Date.parse(BFD.updatedAt) : 0;
       const t = preview ? nowFn() - 35 * 6e4 : u;
-      if (!t) return `<span class="bf-stamp"><i></i>매일 업데이트</span>`;
+      if (!t) return ``;
       const p = kp(t);
       return `<span class="bf-stamp"><i></i>${p.m}.${pad(p.d)}(${p.w}) ${pad(p.h)}:${pad(p.mi)} 업데이트</span>`;
     }
