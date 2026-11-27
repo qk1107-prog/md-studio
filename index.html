@@ -1436,6 +1436,29 @@ async function renderPublicSite(root) {
   // 편마다 섹션 이름 바꾸기: pick_comment 가 "@labels:MA-1,M65,N3B,레더,루키" 면 국밥·힙함·남친룩·옷쟁이·루키 자리를 그 이름으로
   try { (EPISODES || []).forEach((e) => { const m = String(e.pick_comment || "").match(/^@labels:(.+)$/); if (m) { window.__EPMAP = window.__EPMAP || {}; window.__EPMAP[e.id] = m[1].split(",").map((x) => x.trim()); e.pick_comment = ""; } }); } catch (e) {}
   try { mdGate(ADMIN && ADMIN.gate); } catch (e) {}
+  // 데이터를 못 불러오면(서버 점검·한도 등) 빈 화면 대신 재정비 대기 화면 · ?maint=1 미리보기
+  if (!ADMIN || /[?&]maint=1/.test(location.search)) {
+    try {
+      const st = document.createElement("style");
+      st.textContent = `#md-maint{position:fixed;inset:0;z-index:99999;background:#f6f4f0;display:flex;align-items:center;justify-content:center;padding:24px;font-family:inherit}
+#md-maint .mm-card{width:100%;max-width:380px;background:#fff;border:1px solid #ece7e0;border-radius:22px;box-shadow:0 12px 40px rgba(20,19,18,.10);padding:30px 22px 24px;text-align:center;color:#141312}
+#md-maint .mm-brand{font-size:12px;font-weight:800;letter-spacing:.18em;color:#141312;margin-bottom:18px}
+#md-maint .mm-lk{font-size:30px;margin-bottom:8px}
+#md-maint h3{margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+#md-maint p{margin:0 0 16px;font-size:14px;line-height:1.6;color:#6f6a62}
+#md-maint .mm-bd{display:inline-block;background:#141312;color:#c6ff3d;font-weight:800;font-size:13px;padding:7px 15px;border-radius:999px}
+#md-maint .mm-busy{margin:14px 0 0;font-size:12px;color:#8b857c}
+#md-maint .mm-busy i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff3d3f;margin-right:6px;vertical-align:1px;animation:mmb 1s infinite}
+#md-maint a{display:inline-block;margin-top:16px;font-size:12px;color:#6f6a62;text-decoration:none;border-bottom:1px solid #d9d3c9;padding-bottom:1px}
+@keyframes mmb{50%{opacity:.25}}`;
+      document.head.appendChild(st);
+      const ov = document.createElement("div"); ov.id = "md-maint";
+      ov.innerHTML = `<div class="mm-card"><div class="mm-brand">MD STUDIO</div><div class="mm-lk">🛠️</div><h3>잠깐 재정비 중이에요</h3><p>재정비 후 바로 오픈 준비 중입니다.<br>잠시만 기다려 주세요!</p><span class="mm-bd">블프 꿀템 · 쿠폰 업데이트 중</span><p class="mm-busy"><i></i>준비되면 이 화면이 자동으로 열려요</p><a href="https://www.instagram.com/k__man_do/" target="_blank" rel="noopener">인스타 @k__man_do 에서 소식 보기 →</a></div>`;
+      document.body.appendChild(ov);
+      try { const it = document.getElementById("md-intro"); if (it) it.remove(); } catch (e) {}
+      if (!/[?&]maint=1/.test(location.search)) setInterval(async () => { try { const r = await fetch("/api/sd?id=main&r=" + Date.now()); if (r.ok) location.reload(); } catch (e) {} }, 60000);
+    } catch (e) {}
+  }
 
   const STICKER_POPS = { "NEW": "#ff3d3f", "HOT": "#ff5a2e", "NEW DROP": "#ff5a2e", "COLLAB": "#c6ff3d", "LIMITED": "#2ee6d6", "SOLD OUT": "#ff3d9a" };
 
