@@ -1230,6 +1230,7 @@
 .lv-strip>.bf-item{flex:0 0 calc((100% - 24px)/4);scroll-snap-align:start;min-width:0}
 @media(max-width:560px){.lv-strip>.bf-item{flex-basis:calc((100% - 16px)/3)}}
 .lv-pasth{margin:14px 0 2px;font-size:12px;font-weight:800;color:#666}
+  .cpz-live, .bf-dot { display: none !important; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1948,6 +1949,7 @@ async function renderPublicSite(root) {
   const cpHotSet = () => { if (!COUPONS || !COUPONS.list) return new Set(); const L = COUPONS.list; const pct = (c) => (/%$/.test(c.v) ? parseFloat(c.v) : 0); const CMN = /에잇세컨즈|스파오|탑텐|지오다노|엘칸토|식스핏|지프|스칼렛또블랙/; const pool = L.filter((c) => !CMN.test(c.n || "")).slice(0, 80).filter((c) => pct(c) >= 10 || /만원|천원/.test(c.v)); const top = pool.slice().sort((a, b) => (b.up ? 1 : 0) - (a.up ? 1 : 0) || (b.bf || 0) - (a.bf || 0) || pct(b) - pct(a) || (b.cnt || 0) - (a.cnt || 0)).slice(0, 6); return new Set(top.map((c) => String(c.no))); };
   // ---- 대표 브랜드 프리오픈 쿠폰 강조 칸 (타임세일 TOP 10 바로 아래) : 티징 쿠폰이 있는 대표 브랜드만 자동으로 ----
   function renderSpot(L) {
+    { const _b = document.getElementById("spz"); if (_b) _b.remove(); return; } // 무신사 안내(11/27): 자동 갱신 칸 중지 — 단순 진열만
     const BR = ["노스페이스", "아디다스", "나이키", "뉴발란스", "어그", "살로몬", "아크테릭스"];
     const won2 = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
     const SP = (() => { try { return ((ADMIN && ADMIN.bf && ADMIN.bf.spot) || {}).brands || []; } catch (e) { return []; } })();
@@ -2000,6 +2002,7 @@ async function renderPublicSite(root) {
   const cpChip = (c) => `<a class="cpz-chip k-${esc(c.k)}${CP_HOT.has(String(c.no)) ? " is-hot" : ""}${c.up ? " is-up" : ""}" href="#cp=${esc(c.no)}">${CP_HOT.has(String(c.no)) ? '<span class="cpz-hot">🔥 HOT</span>' : ""}${c.up ? `<span class="cpz-upb">＋상품 ${esc(c.up)}개 추가</span>` : ""}<span class="cpz-k">${c.nw ? '<em class="cpz-new">NEW</em> ' : ""}${c.tz ? '<em class="cpz-bf" style="background:#6a2ff0">티징</em>' : c.bf ? '<em class="cpz-bf">무진장</em>' : cpKind(c)}</span><span class="cpz-v">${esc(c.v)}</span><span class="cpz-n">${esc(c.n)}</span><span class="cpz-m">${esc([c.cond, c.exp ? "~" + c.exp : ""].filter(Boolean).join(" · "))}</span></a>`;
   const cpTime = (iso) => { try { const d = new Date(iso); const k = new Date(d.getTime() + 9 * 3600e3); return `${k.getUTCMonth() + 1}/${k.getUTCDate()} ${String(k.getUTCHours()).padStart(2, "0")}:${String(k.getUTCMinutes()).padStart(2, "0")}`; } catch (e) { return ""; } };
   function renderCouponStrip() {
+    { const _b = document.getElementById("cpz"); if (_b) _b.remove(); return; } // 무신사 안내(11/27): 자동 갱신 칸 중지 — 단순 진열만
     const box = root.querySelector("#cpz");
     if (!box || !COUPONS || !Array.isArray(COUPONS.list) || !COUPONS.list.length) return;
     const CP_GO = Date.UTC(2026, 10, 20, 10, 0); // 11/20 19:00 KST 공개
@@ -2020,7 +2023,7 @@ async function renderPublicSite(root) {
     const tzDemo = !tz.length && CP_PV && Date.now() < Date.parse("2026-11-20T10:00:00Z");
     if (tzDemo) { const b = L.find((c) => c.bf) || L[0]; tz = [Object.assign({}, b, { tz: true, nw: true, n: "[예시] 무진장 티징 전용 " + (b.k === "CART" ? "장바구니" : "상품") + " 쿠폰" })]; }
     const tickItems = [...tz, ...hot, ...nw.filter((c) => !CP_HOT.has(String(c.no))), ...rest].slice(0, 12);
-    box.innerHTML = `<div class="cpz-head"><p class="cpz-title"><span class="cpz-fire">🔥</span> 실시간 지금 쓰기 좋은 쿠폰<span class="cpz-live"><i></i>LIVE</span><small>실시간 트래킹 · ${esc(cpTime(COUPONS.at))} 확인</small></p></div><p class="cpz-hint"><span>👇 쿠폰을 클릭하면 사용 가능한 제품 리스트로 넘어갑니다</span><a class="cpz-more" href="#cps">전체보기 →</a></p><div class="hotz-bar"><i></i></div>
+    box.innerHTML = `<div class="cpz-head"><p class="cpz-title"><span class="cpz-fire">🔥</span> 지금 쓰기 좋은 쿠폰<span class="cpz-live"><i></i>LIVE</span><small>트래킹 · ${esc(cpTime(COUPONS.at))} 확인</small></p></div><p class="cpz-hint"><span>👇 쿠폰을 클릭하면 사용 가능한 제품 리스트로 넘어갑니다</span><a class="cpz-more" href="#cps">전체보기 →</a></p><div class="hotz-bar"><i></i></div>
       <div class="cpz-tick"><div class="cpz-tick-in">${tickItems.map((c) => `<a href="#cp=${esc(c.no)}"><b>${c.nw ? "NEW" : "🔥"} ${esc(c.v)}</b>${esc(c.n)}</a>`).join("")}</div></div>
       ${tz.length ? `<p class="cpz-sub">⚡ 티징 전용 쿠폰 <small>${tzDemo ? "미리보기 예시 · 19시에 실제 쿠폰으로 바뀌어요" : "11/20 19시 ~ 11/22 본편 전까지"}</small></p><div class="cpz-scroll cpz-one">${tz.map(cpChip).join("")}</div><p class="cpz-sub">🔥 지금 쓰기 좋은 쿠폰</p>` : ""}
       <div class="cpz-scroll">${(() => { const CMN = /에잇세컨즈|스파오|탑텐|지오다노|엘칸토|식스핏|지프|스칼렛또블랙/; const nwF = rest.filter((c) => c.nw && !CMN.test(c.n || "")); const oth = rest.filter((c) => !nwF.includes(c)); return [...hot, ...nwF, ...oth.filter((c) => !CMN.test(c.n || "")), ...oth.filter((c) => CMN.test(c.n || ""))]; })().filter((c) => CP_OPENED || !c.tz).slice(0, 60).map(cpChip).join("")}</div>`;
@@ -2358,8 +2361,6 @@ async function renderPublicSite(root) {
     else if (location.hash === "#bp") openPicks();
     else if (location.hash === "#lf" || location.hash === "#lf2") openLongform(location.hash.slice(1));
     else if (location.hash === "#lu") openLineup();
-    else if (location.hash === "#cps") openCoupons();
-    else if (/^#cp=\d+/.test(location.hash)) openCoupon(location.hash.slice(4));
     else if (/^#spa=/.test(location.hash)) openSpotAll(decodeURIComponent(location.hash.slice(5)));
     else if (/^#cl=/.test(location.hash)) openCol(decodeURIComponent(location.hash.slice(4)));
     else if (/^#br=/.test(location.hash)) openCat("br:" + decodeURIComponent(location.hash.slice(4)));
@@ -2905,7 +2906,7 @@ async function renderPublicSite(root) {
         <div class="bf-pick-banner"><b>수만 개의 블프 상품 중 <em>광만두가 괜찮은 것만</em> 골랐어요</b><span>직접 보고, 입어보고, 고른 것만 올려요</span></div>
         ${gridBlock("pick", arr, false, false)}</div>`;
     }
-    // ---- 실시간 알림 (예약 작업이 bf.alerts 에 채움) ----
+    // ---- 알림 (예약 작업이 bf.alerts 에 채움) ----
     function alertSec() {
       return ""; // 라이브 쿠폰 칸(#lvz)으로 대체
       const A = Array.isArray(BFD.alerts) ? BFD.alerts : [];
@@ -3095,21 +3096,22 @@ async function renderPublicSite(root) {
     }
     function navSec(live) {
       const MC = BFD.mycart || {}; const mcOn = MC.on && (MC.items || []).length && (!MC.from || nowFn() >= Date.parse(MC.from) || preview);
-      const L = live ? [...(mcOn ? [["bf-mycart", "🛒 주인장 장바구니"]] : []), ["opz", "시그니처·하루특가·브랜드데이"], ["bf-pad", "블프 겨울 준비"], ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
+      const L = live ? [...(mcOn ? [["bf-mycart", "🛒 주인장 장바구니"]] : []), ["opz", "⭐ 베스트 픽"], ["bf-pad", "블프 겨울 준비"], ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-live", "라이브"]]
         : [["bf-pad", "🧥 블프 겨울 준비"], ["bf-sig", "✨ 시그니처특가"], ["bf-tease", "⚡ 프리오픈"], ["bf-bday", "🏷️ 브랜드특가"],  ["bf-benefit", "쿠폰 정리"], ["bf-best", "작년 BEST"], ["bf-tips", "활용법"], ["bf-live", "라이브"]];
       return `<div class="bf-jump">${L.map(([id, t], i) => `<button type="button" data-go="${id}"${i < 4 ? ` class="k${i}"` : ""}>${t}</button>`).join("")}</div>`;
     }
 
     let phase = "";
-    // ---- 실시간 제일 인기 있는 아이템 (쿠폰 줄 바로 아래, main.bf.hot = {at, cats:[{cat, items}]}) ----
-    // ---- 실시간 지금 타임세일 중 꿀템 (쿠폰 줄 바로 아래 한 줄, main.bf.ts = {at, items}) ----
+    // ---- 제일 인기 있는 아이템 (쿠폰 줄 바로 아래, main.bf.hot = {at, cats:[{cat, items}]}) ----
+    // ---- 지금 타임세일 중 꿀템 (쿠폰 줄 바로 아래 한 줄, main.bf.ts = {at, items}) ----
     let tsOpen = false;
     // 라이브 쿠폰 칸: main.bf.lv = { at, brand, coupon, rate, live, end, items:[{brand,name,img,link,price,sale,rate}] }
     // 라이브가 뜨면 보고방이 채우고, end(쿠폰 끝나는 시각)가 지나면 자동으로 사라져요. 블프 탭 맨 위에 보여요.
     function renderLv() {
+      { const _b = document.getElementById("lvz"); if (_b) _b.remove(); return; } // 무신사 안내(11/27): 자동 갱신 칸 중지 — 단순 진열만
       const LV = BFD.lv || {}; const now = nowFn();
       const tm = (x) => x ? (typeof x === "number" ? x : Date.parse(x)) : 0;
-      // 아래 "실시간 쿠폰" 칸의 쿠폰별 상품(site_data coupons)과 연동: l.cpn = ["쿠폰 이름 일부", ...]
+      // 아래 "쿠폰" 칸의 쿠폰별 상품(site_data coupons)과 연동: l.cpn = ["쿠폰 이름 일부", ...]
       if (!COUPONS && !window.__lvCp) { window.__lvCp = 1; loadCoupons().then(() => { if (COUPONS) { renderLv(); try { renderRd(); } catch (e) {} } }); }
       const cpItems = (l) => {
         const keys = [].concat(l.cpn || []).filter(Boolean); const cpb = l.cpb || ""; if ((!keys.length && !cpb) || !COUPONS || !COUPONS.list) return [];
@@ -3152,7 +3154,7 @@ async function renderPublicSite(root) {
         return `<div class="lv-row"><div class="lv-rh">${badge}<b>${esc(l.brand)}</b><small>${esc(l.coupon || "")}${ek ? ` · ${ek.m}/${ek.d} ${ek.h}시까지` : ""}</small>${L.length > 4 ? `<button type="button" class="lv-all" data-lvall="${i}">${L.length}개 전체보기 →</button>` : ""}</div>
           <div class="lv-strip">${L.map((p) => card(p, l)).join("")}</div></div>`; };
       const at = tm(LV.at);
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title"><span class="lv-dot"></span>실시간 <span class="lv-em">라이브 쿠폰</span><span class="cpz-live"><i></i>LIVE</span></p></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title"><span class="lv-dot"></span><span class="lv-em">라이브 쿠폰</span><span class="cpz-live"><i></i>LIVE</span></p></div>
         <p class="lv-sub">${at && Date.now() - Date.parse(at) < 6 * 3600e3 ? `<b class="lv-clock">${esc(hm(at))}</b> 기준 · ` : ""}라이브 쿠폰 뜰 때마다 바로 올려드려요 · <b>쿠폰 받고 구매하세요</b></p>
         <div class="hotz-bar"><i></i></div>
         ${curL.length ? "" : `<p class="lv-wait">🔴 오늘 라이브가 시작되면 여기에 바로 올라와요</p>`}${shown.map(row).join("")}`;
@@ -3202,6 +3204,7 @@ async function renderPublicSite(root) {
           <div class="rd-grid">${L.slice(0, 15).map((p) => itemCard(p, 0)).join("")}</div></div>`; }).join("")}`;
     }
     function renderTs() {
+      { const _b = document.getElementById("tsz"); if (_b) _b.remove(); return; } // 무신사 안내(11/27): 자동 갱신 칸 중지 — 단순 진열만
       const T = BFD.ts || {}; const now = nowFn();
       // 블프 보고방이 매시 정각 main.bf.dm 에 올린 목록(2시간 안)이면 그것만 순서 그대로, 아니면 bf.ts(자동 수집)로 대신
       const DM = BFD.dm || {}; const dmFresh = !!(DM.at && (DM.items || []).length && now - Date.parse(DM.at) < 2 * 36e5);
@@ -3220,7 +3223,7 @@ async function renderPublicSite(root) {
       window.__tsItems = (items.length < 3 || now >= T_END) ? [] : items.map((p) => Object.assign({}, p, { tag: String(p.kind || "타임세일").replace("무진장 프리오픈", "무진장 특가").replace("무진장 프리쿠폰", "무진장 쿠폰특가"), comment: /쿠폰/.test(p.kind || "") ? `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` : (p.comment || "") }));
       return;
       const cp = cpA();
-      if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsall]")) { window.__openList && window.__openList("ts", "⏰ 실시간 타임세일 중 꿀템", window.__tsItems || [], "", "실시간 타임세일 중 꿀템"); } }); }
+      if (!box) { box = document.createElement("section"); box.id = "tsz"; box.className = "tsz"; box.addEventListener("click", (e) => { if (e.target.closest("[data-tsall]")) { window.__openList && window.__openList("ts", "⏰ 타임세일 중 꿀템", window.__tsItems || [], "", "타임세일 중 꿀템"); } }); }
       const opA = cp;
       if (opA) { if (opA.nextSibling !== box) opA.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
@@ -3239,7 +3242,7 @@ async function renderPublicSite(root) {
         </a>`;
       };
       const shown = items.slice(0, 8); window.__tsItems = items.map((p) => Object.assign({}, p, { tag: String(p.kind || "타임세일").replace("무진장 프리오픈", "무진장 특가").replace("무진장 프리쿠폰", "무진장 쿠폰특가"), comment: /쿠폰/.test(p.kind || "") ? `쿠폰 적용가 ${Number(p.sale || 0).toLocaleString("ko-KR")}원` : (p.comment || "") }));
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 실시간 <em class="ts-em">타임세일 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago"></small>${items.length > 8 ? `<button type="button" class="sec-all" data-tsall="1">전체보기 →</button>` : ""}</div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ <em class="ts-em">타임세일 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="tsz-ago"></small>${items.length > 8 ? `<button type="button" class="sec-all" data-tsall="1">전체보기 →</button>` : ""}</div>
         <div class="hotz-bar"><i></i></div>
         <div class="bf-grid">${shown.map(card).join("")}</div>`;
       const el = box.querySelector(".tsz-ago"), t = Date.parse(SRC.at || "");
@@ -3248,6 +3251,7 @@ async function renderPublicSite(root) {
     // ---- 블프 플래너: 날짜별 혜택·라이브·시그니처 브랜드데이 + 브랜드 검색 (main.bf.plan) ----
     let planDay = null, planQ = "";
     function renderPlan() {
+      { const _b = document.getElementById("plz"); if (_b) _b.remove(); return; } // 무신사 안내(11/27): 자동 갱신 칸 중지 — 단순 진열만
       const PL = BFD.plan || {}; const lives = (PL.lives || []).filter((l) => l && l.t); const bds = PL.bd || [];
       let box = root.querySelector("#plz");
       const now = nowFn();
@@ -3258,7 +3262,7 @@ async function renderPublicSite(root) {
       }
       const anchor = (root.querySelector("#opz") && (root.querySelector("#tab-bf > #bf-best") || root.querySelector("#bf-pad"))) || root.querySelector("#hotz") || root.querySelector("#spz") || root.querySelector("#tsz") || root.querySelector("#cpz");
       if (anchor) { if (anchor.nextSibling !== box) anchor.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
-      // 프리오픈·티징 특가 칸은 본편 전까지 중간(실시간 HOT 바로 아래)으로 올리기
+      // 프리오픈·티징 특가 칸은 본편 전까지 중간(HOT 바로 아래)으로 올리기
       { const tzs = [...root.querySelectorAll("#bf-tease")]; const fresh = tzs.find((e) => !e.classList.contains("mv")) || tzs[0]; tzs.forEach((e) => { if (e !== fresh) e.remove(); }); if (fresh && box.parentNode) { fresh.classList.add("mv"); if (box.previousElementSibling !== fresh) box.before(fresh); } }
       const md = (t) => { const k = kp(t); return pad(k.m) + "-" + pad(k.d); };
       const DAYS = ["11-21", "11-22", "11-23", "11-24", "11-25", "11-26", "11-27", "11-28", "11-29", "11-30", "12-01", "12-02"];
@@ -3352,7 +3356,7 @@ async function renderPublicSite(root) {
       const showAll = false;
       const cards = cur[2].slice(0, 8).map((p) => itemCard(Object.assign({}, p, { tag: p.pin ? p.tag : (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.pin ? p.comment : p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 오늘의 <em class="plz-em">꿀템 정리</em><span class="opz-date">${kp(now).m}월 ${kp(now).d}일</span><span class="cpz-live"><i></i>LIVE</span></p><small>쿠폰까지 적용${k ? ` · ${k.d !== kp(Date.now()).d ? k.m + "/" + k.d + " " : ""}${k.h}시 ${pad(k.mi)}분 업데이트` : ""}</small>${cur[2].length > 8 ? `<button type="button" class="sec-all" data-r1all="${r1Tab}">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⭐ 광만두 <em class="plz-em">베스트 픽</em></p><small>꿀템 중 꿀템만 골라놨어요 · 가격·쿠폰은 무신사에서 꼭 확인하세요</small>${cur[2].length > 8 ? `<button type="button" class="sec-all" data-r1all="${r1Tab}">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
         ${cur[3] ? `<p class="opz-sub">${esc(cur[3])}</p>` : ""}
         <div class="bf-grid">${cards}</div>`;
@@ -3360,7 +3364,7 @@ async function renderPublicSite(root) {
       // 블프 겨울 준비·하루특가·브랜드특가를 꿀템 정리 바로 밑으로
       orderBF();
     }
-    // 본편 순서: 블프 카드 → 주인장 BEST PICK → 실시간 쿠폰 → 타임세일 꿀템 → 핫한 아이템 꿀템 → 오늘의 꿀템 정리 → 블프 겨울 준비 → 나머지
+    // 본편 순서: 블프 카드 → 주인장 BEST PICK → 쿠폰 → 타임세일 꿀템 → 핫한 아이템 꿀템 → 오늘의 꿀템 정리 → 블프 겨울 준비 → 나머지
     // 꿀템 정리에 합친 시그니처·하루특가·브랜드특가 칸은 아래에서 숨김
     // 전체보기(.sec-all)가 있는 칸마다 상품 목록 아래에 "더보기" 버튼 (누르면 전체보기와 같은 화면)
     function addMore() {
@@ -3423,17 +3427,18 @@ async function renderPublicSite(root) {
     window.__openList = (key, label, list, sub, pageTitle) => openR1(key, [[key, label, list, sub]], pageTitle);
     let hotView = -1, hotOpen = false, hotCat = false;
     function renderHot() {
+      { const _b = document.getElementById("hotz"); if (_b) _b.remove(); return; } // 무신사 안내(11/27): 자동 갱신 칸 중지 — 단순 진열만
       const H = BFD.hot || {}; const cats = (H.cats || []).filter((c) => c && (c.items || []).length);
       let box = root.querySelector("#hotz");
       if (!cats.length || nowFn() >= T_END) { if (box) box.remove(); return; }
       const cp = cpA();
-      if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { const lab = hotView === -3 ? "⏰ 타임세일" : hotView === -2 ? "📈 급상승" : hotView >= 0 && cats[hotView] ? cats[hotView].cat : "🔥 실시간 HOT"; window.__openList && window.__openList("hotall", "🔥 지금 가장 핫한 아이템 · " + lab, window.__hotFull || [], "", "지금 가장 핫한 아이템"); return; } const keep = () => { const y0 = box.getBoundingClientRect().top; return () => window.scrollBy(0, box.getBoundingClientRect().top - y0); }; const cb = e.target.closest("[data-hcat]"); if (cb) { const fix = keep(); hotCat = !hotCat; renderHot(); fix(); return; } const b = e.target.closest("[data-hv]"); if (!b) return; const fx = keep(); hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); orderBF(); fx(); }); }
+      if (!box) { box = document.createElement("section"); box.id = "hotz"; box.className = "hotz"; box.addEventListener("click", (e) => { const m = e.target.closest("[data-hmore]"); if (m) { const lab = hotView === -3 ? "⏰ 타임세일" : hotView === -2 ? "📈 급상승" : hotView >= 0 && cats[hotView] ? cats[hotView].cat : "🔥 HOT"; window.__openList && window.__openList("hotall", "🔥 지금 가장 핫한 아이템 · " + lab, window.__hotFull || [], "", "지금 가장 핫한 아이템"); return; } const keep = () => { const y0 = box.getBoundingClientRect().top; return () => window.scrollBy(0, box.getBoundingClientRect().top - y0); }; const cb = e.target.closest("[data-hcat]"); if (cb) { const fix = keep(); hotCat = !hotCat; renderHot(); fix(); return; } const b = e.target.closest("[data-hv]"); if (!b) return; const fx = keep(); hotView = Number(b.dataset.hv); hotOpen = false; renderHot(); orderBF(); fx(); }); }
       const anchor = root.querySelector("#spz") || root.querySelector("#tsz") || cp;
       if (anchor && anchor.nextSibling !== box) anchor.after(box);
       else if (!cp && !box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       // 순위·출처 표시 없이 카테고리를 섞어서 (1등끼리 먼저, 같은 브랜드 연속 X)
       const base = []; for (let r = 0; r < 4; r++) cats.forEach((c) => { if (c.grp !== "pick" && c.items[r]) base.push(c.items[r]); });
-      // 광만두님 픽 브랜드는 실시간 HOT에 넉넉히(두 칸에 한 번꼴로) 섞기
+      // 광만두님 픽 브랜드는 HOT에 넉넉히(두 칸에 한 번꼴로) 섞기
       const pk = (cats.find((c) => c.grp === "pick") || {}).items || [];
       const mix = []; let pi = 0; base.forEach((x, i) => { mix.push(x); if (i % 2 === 1 && pi < Math.min(pk.length, 24)) mix.push(pk[pi++]); });
       for (let i = 1; i < mix.length; i++) if (mix[i].brand && mix[i].brand === mix[i - 1].brand) { const j = mix.findIndex((x, k) => k > i && x.brand !== mix[i - 1].brand); if (j > 0) [mix[i], mix[j]] = [mix[j], mix[i]]; }
@@ -3447,7 +3452,7 @@ async function renderPublicSite(root) {
       const rise = (H.rise || []).filter((x) => x && x.link);
       if (hotView === -2 && !rise.length) hotView = -1;
       const tsL = window.__tsItems || []; if (hotView === -3 && !tsL.length) hotView = -1;
-      // 실시간 HOT 첫 화면에 타임세일을 한 칸 걸러 하나씩 섞기 — 10분마다 시작 위치가 돌아가서 들어올 때마다 달라 보임
+      // HOT 첫 화면에 타임세일을 한 칸 걸러 하나씩 섞기 — 10분마다 시작 위치가 돌아가서 들어올 때마다 달라 보임
       const mixTs = (() => { if (!tsL.length) return mix; const rot = Math.floor(nowFn() / 6e5) % tsL.length; const tsR = [...tsL.slice(rot), ...tsL.slice(0, rot)].slice(0, 16).map((p) => Object.assign({}, p, { __ts: 1 })); const seen = new Set(tsR.map((p) => p.link)); const out = []; let ti = 0; mix.filter((x) => !seen.has(x.link)).forEach((x, i) => { if (i % 2 === 0 && ti < tsR.length) out.push(tsR[ti++]); out.push(x); });
         for (let i = 1; i < out.length; i++) if (out[i].brand && out[i].brand === out[i - 1].brand) { const j = out.findIndex((x, k) => k > i && x.brand !== out[i - 1].brand && (!out[i + 1] || x.brand !== out[i + 1].brand)); if (j > 0) [out[i], out[j]] = [out[j], out[i]]; } return out; })();
       const full = (hotView === -3 ? tsL : hotView === -2 ? rise : hotView < 0 || !cats[hotView] ? mixTs : cats[hotView].items);
@@ -3458,7 +3463,7 @@ async function renderPublicSite(root) {
       const fresh = box.dataset.sig !== sig; box.dataset.sig = sig;
       box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🔥 지금 가장 핫한 <em>아이템 중 꿀템</em><span class="cpz-live"><i></i>LIVE</span></p><small class="hotz-ago" data-hotat="${esc(H.at || "")}"></small>${full.length > LIM ? `<button type="button" class="sec-all" data-hmore="1">전체보기 →</button>` : ""}</div>
         <div class="hotz-bar"><i></i></div>
-        <div class="bf-chips hotz-chips"><button type="button" data-hv="-1" class="${hotView === -1 ? "active" : ""}">🔥 실시간 HOT</button>${tsL.length ? `<button type="button" data-hv="-3" class="${hotView === -3 ? "active" : ""}">⏰ 타임세일</button>` : ""}${rise.length ? `<button type="button" data-hv="-2" class="${hotView === -2 ? "active" : ""}">📈 급상승</button>` : ""}${pkI >= 0 ? `<button type="button" data-hv="${pkI}" class="${hotView === pkI ? "active" : ""}">${esc(cats[pkI].cat)}</button>` : ""}<button type="button" data-hcat="1" class="hotz-catbtn${catOpen ? " on" : ""}">카테고리 보기 ${catOpen ? "▴" : "▾"}</button></div>
+        <div class="bf-chips hotz-chips"><button type="button" data-hv="-1" class="${hotView === -1 ? "active" : ""}">🔥 HOT</button>${tsL.length ? `<button type="button" data-hv="-3" class="${hotView === -3 ? "active" : ""}">⏰ 타임세일</button>` : ""}${rise.length ? `<button type="button" data-hv="-2" class="${hotView === -2 ? "active" : ""}">📈 급상승</button>` : ""}${pkI >= 0 ? `<button type="button" data-hv="${pkI}" class="${hotView === pkI ? "active" : ""}">${esc(cats[pkI].cat)}</button>` : ""}<button type="button" data-hcat="1" class="hotz-catbtn${catOpen ? " on" : ""}">카테고리 보기 ${catOpen ? "▴" : "▾"}</button></div>
         ${catOpen ? `<div class="bf-chips hotz-cats">${cats.map((c, i) => (i === pkI ? "" : `<button type="button" data-hv="${i}" class="${hotView === i ? "active" : ""}">${esc(c.cat)}</button>`)).join("")}</div>` : ""}
         ${hotView === -3 ? `<p class="hotz-sub">⏰ 지금 타임세일·특가 중인 꿀템${Date.parse(window.__tsAt || "") ? ` · ${kp(Date.parse(window.__tsAt)).d !== kp(Date.now()).d ? kp(Date.parse(window.__tsAt)).m + "/" + kp(Date.parse(window.__tsAt)).d + " " : ""}${kp(Date.parse(window.__tsAt)).h}시 ${String(kp(Date.parse(window.__tsAt)).mi).padStart(2, "0")}분 업데이트` : ""} · 꼭 쿠폰 받고 구매하세요</p>` : ""}${hotView === -2 ? `<p class="hotz-sub">📈 지금 갑자기 많이 찾는 상품</p>` : ""}${hotView >= 0 && cats[hotView] ? `<p class="hotz-sub">${cats[hotView].grp === "pick" ? "패션 좀 아는 사람들이 요즘 주목하는 브랜드의 인기템" : esc((cats[hotView].grp ? cats[hotView].grp + " · " : "") + cats[hotView].cat) + " 지금 제일 많이 보는 상품"}</p>` : ""}
         <div class="bf-grid hotz-grid${fresh ? " hotz-in" : ""}">${list.map((p, i) => itemCard(p, 0).replace(/^(\s*<[a-z]+)/, `$1 style="--d:${Math.min(i, 20) * 50}ms"`)).join("")}</div>
@@ -3472,9 +3477,9 @@ async function renderPublicSite(root) {
     }
     function hotAgo() {
       const el = root.querySelector("#hotz .hotz-ago"); if (!el) return;
-      const t = Date.parse(el.dataset.hotat || ""); if (!t) { el.textContent = "실시간 트래픽 반영 중"; return; }
+      const t = Date.parse(el.dataset.hotat || ""); if (!t) { el.textContent = "트래픽 반영 중"; return; }
       const m = Math.max(0, Math.round((Date.now() - t) / 6e4));
-      el.textContent = `실시간 트래픽 반영 · ${m < 1 ? "방금" : m < 60 ? m + "분 전" : Math.floor(m / 60) + "시간 전"} 업데이트`;
+      el.textContent = `트래픽 반영 · ${m < 1 ? "방금" : m < 60 ? m + "분 전" : Math.floor(m / 60) + "시간 전"} 업데이트`;
     }
     function liftCard() {
       const card = zone.querySelector(":scope > .bf-card"), bfSec = root.querySelector("#tab-bf");
@@ -3529,7 +3534,7 @@ async function renderPublicSite(root) {
         const endLeft = Math.ceil((T_END - now) / 864e5);
         const hotGroups = (hotA.length || hotB.length) ? [{ label: "🍚 가성비", sub: hotA.length, items: hotA }, { label: "💸 가심비", sub: hotB.length, items: hotB }] : [{ label: "오늘의 하루특가", sub: hotAll.length, items: hotAll }];
         zone.innerHTML = `${flag}<div class="bf-card">
-            <div class="bf-top"><span class="bf-tag"><span class="bf-dot"></span>BLACK FRIDAY LIVE</span><span class="bf-dday" style="font-size:15px">종료 D-${endLeft}</span></div>
+            <div class="bf-top"><span class="bf-tag"><span class="bf-dot"></span>BLACK FRIDAY BEST PICK</span><span class="bf-dday" style="font-size:15px">종료 D-${endLeft}</span></div>
             <p class="bf-title">무진장 <em>DAY ${dayNo}</em> · ${c.m}.${pad(c.d)}(${c.w})${sched ? ` <span class="bf-title-sub">${esc(sched[1])}</span>` : ""}</p>
             <div class="bf-cdrow"><p><b>오늘 특가 종료까지</b>매일 새로 업데이트</p><span class="bf-clock">${cd(mid)}</span></div>
             ${periodGrid(now)}
@@ -4255,7 +4260,7 @@ renderPublicSite(ROOT_EL);
 @keyframes shSweep { 0%, 55% { left: -60%; } 100% { left: 130%; } }
 @media (prefers-reduced-motion: reduce) { #app-root nav.tabs button.active, #app-root .nv-dot::after, #app-root .subbar-in, #app-root .tab-slider > .section.tab-in, #app-root .bf-short button::after { animation: none; } #app-root .subbar-in .thumb { transition: none; } }
 
-/* ---- 실시간 타임세일 중 꿀템 ---- */
+/* ---- 타임세일 중 꿀템 ---- */
 #app-root .tsz { margin: 4px 0 14px; }
 #app-root .tsz .hotz-head { align-items: center; }
 #app-root .ts-em { font-style: normal; color: #141312; background: #ffe14d; padding: 1px 7px 2px; border-radius: 6px; margin-left: 2px; }
