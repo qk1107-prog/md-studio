@@ -4529,6 +4529,7 @@ renderPublicSite(ROOT_EL);
     const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNidXlkamt2dnpibHV5b2hka2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MjYxMDIsImV4cCI6MjEwNTIwMjEwMn0.dYpj7w5zpyrWeF4YgQ19U6rN3x0pxZwVo8QNiosV4KI";
     const mark=()=>{try{localStorage.setItem("mds_wish_seen",String(Date.now()));}catch(e){}};
     setTimeout(function(){
+      if(document.getElementById("md-maint")) return; // 재정비 화면일 땐 팝업 안 띄움
       const w=document.createElement("div"); w.id="mds-wish";
       w.innerHTML='<div class="w-card" role="dialog" aria-label="블프 위시리스트" style="position:relative">'+
         '<button class="w-x" aria-label="닫기">×</button>'+
