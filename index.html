@@ -3082,7 +3082,7 @@ async function renderPublicSite(root) {
       if (!box.parentNode) { const lv = root.querySelector("#lvz"); const bz = root.querySelector("#tab-bf"); if (lv) lv.after(box); else if (bz) bz.prepend(box); }
       window.__rdRows = rows;
       const ek = kp(endT);
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⚡ 지금은 <em>${esc(R.title || "1회차 아우터데이·킥스데이")}</em> 중 꿀템</p><small>${ek.m}/${ek.d}까지</small></div><div class="hotz-bar"><i></i></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⭐ 광만두 <em>카테고리별 꿀템</em></p></div><div class="hotz-bar"><i></i></div>
         ${rows.map((r, i) => { const sel = (window.__rdCat || {})[i] || ""; const cl = sel && r.cats.find((x) => x.t === sel); const L = cl ? cl.list : r.list;
           return `<div class="rd-row"><div class="rd-rh"><b>${esc(r.label)}</b><button type="button" class="rd-all" data-rdall="${i}">전체보기 →</button></div>
           <div class="rd-cats"><button type="button" class="${sel ? "" : "on"}" data-rdcat="${i}|">전체</button>${r.cats.slice(0, r.ncat).map((c) => `<button type="button" class="${sel === c.t ? "on" : ""}" data-rdcat="${i}|${esc(c.t)}">${esc(c.t)}</button>`).join("")}</div>
@@ -3422,7 +3422,7 @@ async function renderPublicSite(root) {
         zone.innerHTML = `${flag}<div class="bf-card">
             <div class="bf-top"><span class="bf-tag"><span class="bf-dot"></span>BLACK FRIDAY BEST PICK</span><span class="bf-dday" style="font-size:15px">종료 D-${endLeft}</span></div>
             <p class="bf-title">무진장 <em>DAY ${dayNo}</em> · ${c.m}.${pad(c.d)}(${c.w})${sched ? ` <span class="bf-title-sub">${esc(sched[1])}</span>` : ""}</p>
-            <div class="bf-cdrow"><p><b>오늘 특가 종료까지</b>매일 새로 업데이트</p><span class="bf-clock">${cd(mid)}</span></div>
+            
             ${periodGrid(now)}
           </div>
           <div class="bf-hub">
