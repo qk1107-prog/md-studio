@@ -2558,8 +2558,8 @@ async function renderPublicSite(root) {
     ${QNA_ON ? `
     <div class="qna-top" id="qna-top">
       <button type="button" class="qna-top-btn" id="qna-top-btn" aria-expanded="false" aria-controls="qna-top-body">
-        <span class="qna-top-l"><b>💬 팔로워 무물 게시판 OPEN</b><span id="qna-top-sub">여러분 질문에 가성비 · 가심비 · 옷쟁이로 답했어요</span></span>
-        <span class="qna-top-r">눌러서 보기<i>⌄</i></span>
+        <span class="qna-top-l"><b><em class="qna-spark">✨</em> 블프 팔로워 무물 게시판 OPEN</b></span>
+        <span class="qna-top-r"><span id="qna-top-lab">전체보기</span><i>⌄</i></span>
       </button>
       <div class="qna-top-body" id="qna-top-body"><div class="qna-top-in"><div class="qna-wrap"><input class="qna-q" type="search" placeholder="질문 검색 (예: 숏패딩, 데님, 키작)" aria-label="질문 검색"><div class="sp-chips qna-cat"></div><div class="qna-list"><p class="rec-loading">불러오는 중…</p></div></div></div></div>
     </div>` : ""}
@@ -3530,13 +3530,13 @@ async function renderPublicSite(root) {
           const cats = ["전체", ...new Set(QD.items.map((x) => x.c))];
           qCat.innerHTML = cats.map((c) => `<button type="button" data-v="${esc(c)}" class="${c === qc ? "active" : ""}">${esc(c)}</button>`).join("");
           const k = qIn.value.trim().toLowerCase();
-          const list = QD.items.filter((x) => (qc === "전체" || x.c === qc) && (!k || (x.q + " " + (x.ms || []).join(" ")).toLowerCase().includes(k)));
+          const all = QD.items.filter((x) => (qc === "전체" || x.c === qc) && (!k || (x.q + " " + (x.ms || []).join(" ")).toLowerCase().includes(k)));
+          const tp = w.closest("#qna-top"); const list = tp && !tp.classList.contains("open") ? QD.items.slice(0, 4) : all;
           qBox.innerHTML = list.length ? list.map((x) => `
             <div class="qna-item${open.has(x.id) ? " open" : ""}" data-id="${esc(x.id)}">
-              <button type="button" class="qna-row"><span class="qna-qm">Q</span><span class="qna-qt">${esc(x.q)}${(x.ms || []).length > 1 ? `<small>같은 질문 ${x.ms.length}명</small>` : ""}</span><span class="qna-done">답변완료</span></button>
+              <button type="button" class="qna-row"><span class="qna-qm">Q</span><span class="qna-qt">${esc(x.q)}${(x.ms || []).length > 1 ? `<small>같은 질문 ${x.ms.length}명</small>` : ""}</span><span class="qna-done">추천 3</span></button>
               <div class="qna-ans">
-                ${(x.ms || []).length ? `<p class="qna-orig">${x.ms.map((m) => `“${esc(m)}”`).join(" ")}</p>` : ""}
-                ${x.a ? `<p class="qna-a"><b>A.</b> ${esc(x.a)}</p>` : ""}
+                ${(x.ms || []).length > 1 ? `<p class="qna-orig">${x.ms.map((m) => `“${esc(m)}”`).join(" ")}</p>` : ""}
                 <div class="qna-ps">${(x.p || []).map(card).join("")}</div>
               </div>
             </div>`).join("") : `<p class="ep-empty">맞는 질문이 없어요</p>`;
@@ -3544,17 +3544,17 @@ async function renderPublicSite(root) {
         qCat.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; qc = b.dataset.v; draw(); });
         qIn.addEventListener("input", draw);
         qBox.addEventListener("click", (e) => { const r = e.target.closest(".qna-row"); if (!r) return; const it = r.parentNode, id = it.dataset.id; if (open.has(id)) open.delete(id); else open.add(id); it.classList.toggle("open"); });
-        draw();
+        w.__draw = draw; draw();
       };
       const topBtn = root.querySelector("#qna-top-btn"), top = root.querySelector("#qna-top");
       if (topBtn) topBtn.addEventListener("click", () => {
         const on = !top.classList.contains("open"); top.classList.toggle("open", on); topBtn.setAttribute("aria-expanded", on ? "true" : "false");
-        if (on) setTimeout(() => top.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+        const lab = root.querySelector("#qna-top-lab"); if (lab) lab.textContent = on ? "접기" : "전체보기";
+        const tw = top.querySelector(".qna-wrap"); if (tw && tw.__draw) tw.__draw();
+        setTimeout(() => top.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
       });
       sdRow("qna").then(({ data }) => {
         const QD = data && data.value && Array.isArray(data.value.items) ? data.value : null;
-        const sub = root.querySelector("#qna-top-sub");
-        if (sub && QD) sub.textContent = `질문 ${QD.total || QD.items.length}개 · 가성비 · 가심비 · 옷쟁이로 전부 답했어요`;
         root.querySelectorAll(".qna-wrap").forEach((w) => mount(w, QD));
       }).catch(() => root.querySelectorAll(".qna-wrap .qna-list").forEach((b) => { b.innerHTML = `<p class="ep-empty">잠시 후 다시 눌러 주세요</p>`; }));
     }
@@ -4284,10 +4284,17 @@ renderPublicSite(ROOT_EL);
 #app-root .qna-top-r{flex:none;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:800;background:#ff3b30;border-radius:999px;padding:7px 11px}
 #app-root .qna-top-r i{font-style:normal;display:inline-block;transition:transform .3s}
 #app-root .qna-top.open .qna-top-r i{transform:rotate(180deg)}
-#app-root .qna-top-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s ease}
+#app-root .qna-top-body{display:grid;grid-template-rows:1fr}
 #app-root .qna-top.open .qna-top-body{grid-template-rows:1fr}
 #app-root .qna-top-in{overflow:hidden;background:#fff;color:#111}
-#app-root .qna-top.open .qna-top-in{padding:14px 14px 6px}
+#app-root .qna-top-in{padding:10px 14px 6px}
+#app-root .qna-top:not(.open) .qna-q,#app-root .qna-top:not(.open) .qna-cat{display:none}
+#app-root .qna-top-btn{position:relative;overflow:hidden}
+#app-root .qna-top-btn::after{content:"";position:absolute;top:0;bottom:0;left:-40%;width:35%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-18deg);animation:qnaShine 2.8s ease-in-out infinite;pointer-events:none}
+@keyframes qnaShine{0%{left:-40%}55%,100%{left:120%}}
+#app-root .qna-spark{font-style:normal;display:inline-block;animation:qnaTw 1.4s ease-in-out infinite}
+@keyframes qnaTw{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.35) rotate(12deg);opacity:.65}}
+@media (prefers-reduced-motion: reduce){#app-root .qna-top-btn::after,#app-root .qna-spark{animation:none}}
 @media (prefers-reduced-motion: reduce){#app-root .qna-top-body,#app-root .qna-top-r i{transition:none}}
 #app-root .qna-head{background:#111;color:#fff;border-radius:16px;padding:16px 16px 14px;margin:4px 0 12px}
 #app-root .qna-t{margin:0;font-size:17px;font-weight:900;letter-spacing:-.4px}
