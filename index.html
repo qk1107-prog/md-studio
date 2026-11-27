@@ -1230,6 +1230,13 @@
 .lv-strip>.bf-item{flex:0 0 calc((100% - 24px)/4);scroll-snap-align:start;min-width:0}
 @media(max-width:560px){.lv-strip>.bf-item{flex-basis:calc((100% - 16px)/3)}}
 .lv-pasth{margin:14px 0 2px;font-size:12px;font-weight:800;color:#666}
+  #app-root .bf-lvs { display: grid; gap: 6px; margin-top: 8px; }
+  #app-root .bf-lvs-r { display: flex; gap: 10px; align-items: center; padding: 9px 11px; border: 1px solid #e7e2da; border-radius: 10px; background: #fff; }
+  #app-root .bf-lvs-r .d { flex: 0 0 64px; font-size: 11.5px; font-weight: 900; color: #ff3d3f; letter-spacing: -.3px; }
+  #app-root .bf-lvs-r .t { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  #app-root .bf-lvs-r b { font-size: 13px; font-weight: 800; color: #141312; }
+  #app-root .bf-lvs-r em { font-style: normal; font-size: 11.5px; color: #6b655d; line-height: 1.4; }
+  #app-root .bf-lvs-go { display: block; margin-top: 10px; padding: 11px; text-align: center; border-radius: 10px; background: #141312; color: #fff; font-size: 12.5px; font-weight: 800; text-decoration: none; }
   .cpz-live, .bf-dot { display: none !important; }
 </style>
 
@@ -2961,7 +2968,15 @@ async function renderPublicSite(root) {
     const W = {};
     let liveMode = "big", liveAll = false;
     function liveList(todayKey) { return ""; } // 무신사 요청(11/27): 플레이북 기반 내용 삭제
-    function liveSec(todayKey) { return ""; } // 무신사 요청(11/27): 플레이북 기반 내용 삭제
+    // 무신사 라이브: 무신사 스토어 블프 페이지(특가 탭 > 무신사 라이브)에 공개된 내용만. main.bf.liveStore = { at, items:[{b, d, x}] }
+    function liveSec(todayKey) {
+      const LS = BFD.liveStore || {}; const L = (LS.items || []).filter((l) => l && l.b); if (!L.length) return "";
+      const k = LS.at ? kp(Date.parse(LS.at)) : null;
+      return `<div class="bf-sec" id="bf-live">${secHead("📺", "무신사 라이브", `무신사 스토어 공개 일정${k ? ` · ${k.m}/${k.d} 확인` : ""}`)}
+        <div class="bf-lvs">${L.map((l) => `<div class="bf-lvs-r"><span class="d">${esc(l.d || "")}</span><span class="t"><b>${esc(l.b)}</b><em>${esc(l.x || "")}</em></span></div>`).join("")}</div>
+        <a class="bf-lvs-go" href="https://www.musinsa.com/campaign/mujinjangsale/special#live" target="_blank" rel="noopener">무신사에서 라이브 일정·시간 확인하기 →</a>
+      </div>`;
+    }
 
     // 작년 무진장 BEST
     const BEST_TABS = (BFD.bestTabs && Object.keys(BFD.bestTabs).length) ? Object.entries(BFD.bestTabs).filter(([, a]) => a && a.length) : [];
@@ -2974,7 +2989,7 @@ async function renderPublicSite(root) {
     }
     function navSec(live) {
       const MC = BFD.mycart || {}; const mcOn = MC.on && (MC.items || []).length && (!MC.from || nowFn() >= Date.parse(MC.from) || preview);
-      const L = [...(mcOn ? [["bf-mycart", "🛒 주인장 장바구니"]] : []), ["opz", "⭐ 베스트 픽"], ["bf-pad", "겨울 준비"]];
+      const L = [...(mcOn ? [["bf-mycart", "🛒 주인장 장바구니"]] : []), ["opz", "⭐ 베스트 픽"], ["bf-pad", "겨울 준비"], ...((BFD.liveStore || {}).items ? [["bf-live", "📺 라이브"]] : [])];
       return `<div class="bf-jump">${L.map(([id, t], i) => `<button type="button" data-go="${id}"${i < 4 ? ` class="k${i}"` : ""}>${t}</button>`).join("")}</div>`;
     }
 
