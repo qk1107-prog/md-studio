@@ -3150,6 +3150,22 @@ async function renderPublicSite(root) {
     // ---- 블프 플래너: 날짜별 혜택·라이브·시그니처 브랜드데이 + 브랜드 검색 (main.bf.plan) ----
     let planDay = null, planQ = "";
     function renderPlan() { const _b = document.getElementById("plz"); if (_b) _b.remove(); }
+    // ---- 블프 마지막 총정리: 가장 많이 팔린 것 TOP 10 / 가장 인기 많은 것 TOP 10 (main.bf.final) ----
+    const FN_SEL = { sold: 0, pop: 0 };
+    function renderFinal() {
+      const F = BFD.final || {}; const tab = root.querySelector("#tab-bf"); if (!tab) return;
+      const on = preview || /[?&]awards=1/.test(location.search) || Date.now() >= Date.parse(F.from || "2099-01-01");
+      [["sold", "가장 많이 팔린 것", "🏆", "블프 기간 광만두 링크로 실제로 많이 구매된 순서예요"], ["pop", "가장 인기 많은 것", "👀", "블프 기간 MD STUDIO에서 가장 많이 눌러본 순서예요"]].forEach(([k, t, ic, sub]) => {
+        const G = (F[k] || []).filter((g) => (g.items || []).length);
+        let box = root.querySelector("#fnz-" + k);
+        if (!on || !G.length) { if (box) box.remove(); return; }
+        if (!box) { box = document.createElement("section"); box.id = "fnz-" + k; box.className = "hotz fnz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-fn]"); if (b) { FN_SEL[k] = Number(b.dataset.fn); renderFinal(); } }); tab.prepend(box); }
+        const sel = Math.min(FN_SEL[k] || 0, G.length - 1);
+        box.innerHTML = `<div class="hotz-head"><p class="hotz-title">${ic} 블프 마지막 총정리 · <em class="plz-em">${t} TOP 10</em></p><small>${sub}</small></div>
+          <div class="opz-tabs">${G.map((g, i) => `<button type="button" data-fn="${i}" class="${i === sel ? "on" : ""}">${esc(g.cat)}</button>`).join("")}</div>
+          <div class="bf-grid">${G[sel].items.slice(0, 10).map((p, i) => itemCard(p, i + 1)).join("")}</div>`;
+      });
+    }
     // ---------- 본편: 쿠폰 바로 아래 '오늘의 꿀템 정리' (하루특가·브랜드특가·회차 아우터·킥스) ----------
     let r1Tab = "sold";
     function renderR1() {
@@ -3208,10 +3224,10 @@ async function renderPublicSite(root) {
       // 블프 칸이 다시 그려지면 새로 생긴 것만 남기고 예전에 옮겨둔 건 지움
       const one = (sel) => { const L = [...root.querySelectorAll("#tab-bf " + sel)]; if (L.length < 2) return L[0] || null; const z = L.find((x) => x.closest(".bf-zone")) || L[L.length - 1]; L.forEach((x) => { if (x !== z) x.remove(); }); return z; };
       const lvTop = (() => { try { const nw = nowFn(); return kp(nw).h >= 18 && !!q("#lvz"); } catch (e) { return false; } })();
-      [...(lvTop ? [q("#lvz"), q("#rdz")] : [q("#rdz"), q("#lvz")]), q("#cpz"), q("section.aw"), one("#bf-mycart"), q("#tsz"), q("#opz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), one("#bf-pad"), one("#bf-best")].forEach((el) => {
+      [q("#fnz-sold"), q("#fnz-pop"), ...(lvTop ? [q("#lvz"), q("#rdz")] : [q("#rdz"), q("#lvz")]), q("#cpz"), q("section.aw"), one("#bf-mycart"), q("#tsz"), q("#opz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), one("#bf-pad"), one("#bf-best")].forEach((el) => {
         if (!el) return;
         // 원래 블프 칸 안에서 클릭을 받던 칸은 옮긴 뒤에도 클릭되게
-        if (window.__bfZoneClick && !el.__bound && el.id !== "opz" && el.id !== "lvz" && el.id !== "rdz" && el.id !== "cpz" && el.id !== "tsz" && el.id !== "hotz" && el.id !== "plz" && !el.classList.contains("aw")) { el.__bound = true; el.addEventListener("click", window.__bfZoneClick); }
+        if (window.__bfZoneClick && !el.__bound && el.id !== "opz" && el.id !== "lvz" && el.id !== "rdz" && el.id !== "cpz" && el.id !== "tsz" && el.id !== "hotz" && el.id !== "plz" && el.id !== "fnz-sold" && el.id !== "fnz-pop" && !el.classList.contains("aw")) { el.__bound = true; el.addEventListener("click", window.__bfZoneClick); }
         if (ref) { if (ref.nextSibling !== el) ref.after(el); } else if (tab.firstChild !== el) tab.prepend(el);
         ref = el;
       });
@@ -3308,7 +3324,7 @@ async function renderPublicSite(root) {
       top.replaceChildren(card);
     }
     function render() {
-      setTimeout(() => { try { renderLv(); } catch (e) {} try { renderRd(); } catch (e) {} renderTs(); renderHot(); try { renderPlan(); } catch (e) {} try { renderR1(); } catch (e) {} try { orderBF(); } catch (e) {} }, 0);
+      setTimeout(() => { try { renderLv(); } catch (e) {} try { renderRd(); } catch (e) {} renderTs(); renderHot(); try { renderPlan(); } catch (e) {} try { renderFinal(); } catch (e) {} try { renderR1(); } catch (e) {} try { orderBF(); } catch (e) {} }, 0);
       // 페이지를 열어둔 채로 있어도 보고방(매시 정각)·이 방(매시 25분) 업데이트가 바로 보이게 3분마다 다시 받기
       if (!window.__tsPoll) window.__tsPoll = setInterval(() => {
         if (document.hidden) return;
@@ -4185,6 +4201,9 @@ renderPublicSite(ROOT_EL);
 #app-root .lf-bar.two .lf-tx strong { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 11px; line-height: 1.28; }
 #app-root .opz-tabs { display: flex; gap: 6px; overflow-x: auto; margin: 4px 0 6px; scrollbar-width: none; }
 #app-root .opz-tabs::-webkit-scrollbar { display: none; }
+#app-root .fnz { margin-bottom: 16px; }
+#app-root .fnz .bf-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 560px) { #app-root .fnz .bf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 #app-root .opz-tabs button { flex: none; border: 1.5px solid #141312; background: #fff; color: #141312; border-radius: 999px; padding: 8px 13px; font-size: 13px; font-weight: 800; }
 #app-root .opz-tabs button.on { background: #141312; color: #fff; }
 #app-root .opz-tabs button i { font-style: normal; font-size: 11px; margin-left: 4px; color: #ff3d3f; }
