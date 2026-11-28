@@ -1877,15 +1877,15 @@ async function renderPublicSite(root) {
     return m ? m[1] : "";
   }
   function openLongform(key) {
-    key = key === "lf2" ? "lf2" : "lf";
-    const L = (ADMIN && (key === "lf2" ? ADMIN.longform2 : ADMIN.longform)) || {};
+    key = key === "lf3" ? "lf3" : key === "lf2" ? "lf2" : "lf";
+    const L = (ADMIN && (key === "lf3" ? ADMIN.longform3 : key === "lf2" ? ADMIN.longform2 : ADMIN.longform)) || {};
     const url = safeUrl(L.url || "");
     const vid = ytId(url);
     const existing = root.querySelector("#ep-backdrop");
     if (existing && existing.dataset.ep === key) return;
     if (existing) existing.remove();
     const items = (Array.isArray(L.items) ? L.items : []).map((it) => ({ brand: it.brand, product_name: it.name, curator_url: it.link, image_url: it.img }));
-    const thumb = safeImg(L.thumbWide || "") || (key === "lf2" ? "/img/longform2-thumb-wide.jpg" : "/img/longform-thumb-wide.jpg");
+    const thumb = safeImg(L.thumbWide || "") || (key === "lf3" ? "/img/longform3-thumb-wide.jpg" : key === "lf2" ? "/img/longform2-thumb-wide.jpg" : "/img/longform-thumb-wide.jpg");
     const video = vid
       ? `<div class="lf-video"><iframe src="https://www.youtube-nocookie.com/embed/${esc(vid)}?rel=0&playsinline=1" title="${esc(L.title || "광만두 유튜브")}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`
       : `<div class="lf-video lf-soon"><img src="${esc(thumb)}" alt=""><span>영상 곧 공개</span></div>`;
@@ -2367,7 +2367,7 @@ async function renderPublicSite(root) {
     else if (/^#sp=(?:[MF]\d0\.)?\d+_\d+/.test(location.hash)) openPack(location.hash.slice(4));
     else if (/^#lp=(?:[MF]\d0\.)?\d+_\d+/.test(location.hash)) openPack(location.hash.slice(4), true);
     else if (location.hash === "#bp") openPicks();
-    else if (location.hash === "#lf" || location.hash === "#lf2") openLongform(location.hash.slice(1));
+    else if (location.hash === "#lf" || location.hash === "#lf2" || location.hash === "#lf3") openLongform(location.hash.slice(1));
     else if (location.hash === "#lu") openLineup();
     else if (location.hash === "#cps") openCoupons();
     else if (/^#cp=[0-9A-Za-z_-]+/.test(location.hash)) openCoupon(location.hash.slice(4));
@@ -2532,11 +2532,14 @@ async function renderPublicSite(root) {
   const LF2_ON = LF_PV || (LF2.on !== false && safeUrl(LF2.url || "") && (!LF2.from || Date.now() >= Date.parse(LF2.from)));
   const lfCard = (href, th, label, title, n) => `<a class="lf-card" href="${href}"><span class="lf-th"><img src="${esc(th)}" alt="" loading="lazy"><i>▶</i></span><span class="lf-tx"><b>${label}</b><strong>${esc(title)}</strong><em>${n ? `제품 ${n}개 보기 →` : "보러가기 →"}</em></span></a>`;
   const LF1_ON = ((LF_URL || LF_ITEMS.length) && (LF.on !== false)) || LF_PV;
-  const LF_HTML = LF1_ON || LF2_ON
-    ? (LF2_ON && LF1_ON
-      ? `<div class="lf-bar two">${lfCard("#lf2", safeImg(LF2.thumb || "") || "/img/longform2-thumb.jpg", "NEW · 2편", LF2.title || "MZ 겨울 패딩", LF2_ITEMS.length)}${lfCard("#lf", safeImg(LF.thumb || "") || "/img/longform-thumb.jpg", "1편", LF.title || "무신사 블프 총정리", LF_ITEMS.length)}</div>`
-      : `<div class="lf-bar">${LF2_ON ? lfCard("#lf2", safeImg(LF2.thumb || "") || "/img/longform2-thumb.jpg", "NEW 영상 · 2편", LF2.title || "MZ 겨울 패딩", LF2_ITEMS.length) : ""}${LF1_ON ? lfCard("#lf", safeImg(LF.thumb || "") || "/img/longform-thumb.jpg", "NEW 영상", LF.title || "무신사 블프 총정리", LF_ITEMS.length) : ""}</div>`)
-    : "";
+  // 3편(main.longform3 = {url, title, from, items}) — 공개 시각 지나고 유튜브 링크가 있어야 보임(?awards=1 미리보기는 항상)
+  const LF3 = (ADMIN && ADMIN.longform3) || {};
+  const LF3_ITEMS = Array.isArray(LF3.items) ? LF3.items : [];
+  const LF3_ON = LF_PV || (LF3.on !== false && safeUrl(LF3.url || "") && (!LF3.from || Date.now() >= Date.parse(LF3.from)));
+  const LF_CARDS = [LF3_ON && ["#lf3", safeImg(LF3.thumb || "") || "/img/longform3-thumb.jpg", "3편", LF3.title || "MZ 겨울 아우터", LF3_ITEMS.length], LF2_ON && ["#lf2", safeImg(LF2.thumb || "") || "/img/longform2-thumb.jpg", "2편", LF2.title || "MZ 겨울 패딩", LF2_ITEMS.length], LF1_ON && ["#lf", safeImg(LF.thumb || "") || "/img/longform-thumb.jpg", "1편", LF.title || "무신사 블프 총정리", LF_ITEMS.length]].filter(Boolean);
+  if (LF_CARDS.length) LF_CARDS[0][2] = LF_CARDS.length > 1 ? "NEW · " + LF_CARDS[0][2] : "NEW 영상 · " + LF_CARDS[0][2];
+  if (LF_CARDS.length === 1 && LF_CARDS[0][0] === "#lf") LF_CARDS[0][2] = "NEW 영상";
+  const LF_HTML = LF_CARDS.length ? `<div class="lf-bar${LF_CARDS.length > 1 ? " two" : ""}${LF_CARDS.length > 2 ? " three" : ""}">${LF_CARDS.map((c) => lfCard(...c)).join("")}</div>` : "";
   const BF_LOCKED = BF_ON && !BF_PREVIEW && !(((ADMIN && ADMIN.bf) || {}).on) && Date.now() < BF_UNLOCK_AT;
 
   root.innerHTML = `
@@ -4464,6 +4467,10 @@ renderPublicSite(ROOT_EL);
 #app-root #tab-bf .r1-subs button.on{background:#E4FF1A;color:#141312}
 #app-root #tab-bf .r1-subs button i{font-style:normal;color:#ff3d3f;font-size:11px}
 @media (max-width:600px){#app-root #tab-bf .r1-subs button{font-size:11px;padding:5px 9px}}
+#app-root .lf-bar.two.three { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+#app-root .lf-bar.three .lf-card { gap: 5px; padding: 4px 5px 4px 4px; }
+#app-root .lf-bar.three .lf-th { width: 38px; height: 38px; flex: none; }
+#app-root .lf-bar.three .lf-tx strong { font-size: 10.5px; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
