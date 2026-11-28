@@ -3031,6 +3031,7 @@ async function renderPublicSite(root) {
       const pastL = [...lives.filter((l) => !onNow(l)).sort((a, b) => (tm(b.start) || 0) - (tm(a.start) || 0)), ...(Array.isArray(BFD.lvPast) ? BFD.lvPast : []).map((l) => { const sn = new Set(); return Object.assign({}, l, { items: [...(l.items || []).map((p) => Object.assign({ cp: l.rate }, p)), ...cpItems(l)].filter((p) => p && p.link && !sn.has(p.link) && sn.add(p.link)) }); })]
         .filter((l) => !(tm(l.end) && tm(l.end) <= now) && (l.items || []).some((p) => p && p.link)).filter((l, i, a) => a.findIndex((x) => x.brand === l.brand) === i).map((l) => Object.assign({}, l, { __past: 1 }));
       const pastMix = []; // 끝난 방송은 안 보여줌 (광만두님 요청 11/25)
+      if (!curL.length) { const _b = root.querySelector("#lvz"); if (_b) _b.remove(); return; } // 지금 라이브 쿠폰이 없으면 칸 숨김
       let box = root.querySelector("#lvz");
       if ((!curL.length && !lives.some((l) => tm(l.start) && now < tm(l.start) && kp(tm(l.start)).d === kp(now).d) && kp(now).h < 18) || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "lvz"; box.className = "lvz sec-rel"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-lvall]"); if (b) { const l = (window.__lvLives || [])[Number(b.dataset.lvall)]; if (l && window.__openList) window.__openList("lv" + b.dataset.lvall, `🔴 ${l.brand} 라이브 쿠폰`, l.list, l.coupon || "", `${l.brand} 라이브 쿠폰`); } }); }
