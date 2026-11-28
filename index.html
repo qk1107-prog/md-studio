@@ -3212,7 +3212,7 @@ async function renderPublicSite(root) {
         const sel = Math.min(FN_SEL[k] || 0, G.length - 1);
         box.innerHTML = `<div class="hotz-head"><p class="hotz-title">${ic} 블프 마지막 총정리 · <em class="plz-em">${t} TOP 10</em></p><small>${sub}</small></div>
           <div class="opz-tabs">${G.map((g, i) => `<button type="button" data-fn="${i}" class="${i === sel ? "on" : ""}">${esc(g.cat)}</button>`).join("")}</div>
-          <div class="bf-grid">${G[sel].items.slice(0, 10).map((p, i) => itemCard(p, i + 1)).join("")}</div>`;
+          <div class="bf-grid">${G[sel].items.slice(0, 10).map((p, i) => itemCard(Object.assign({}, p, { tag: p.tag || (discPct(p) ? "-" + discPct(p) + "%" : "") }), i + 1)).join("")}</div>`;
       });
     }
     // ---------- 본편: 쿠폰 바로 아래 '오늘의 꿀템 정리' (하루특가·브랜드특가·회차 아우터·킥스) ----------
