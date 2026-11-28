@@ -3114,7 +3114,7 @@ async function renderPublicSite(root) {
       const ek = kp(endT);
       const TL = { beauty: "💄 뷰티", acc: "🧣 잡화", outer: "🧥 아우터", kicks: "👟 신발", top: "👕 상의", bottom: "👖 하의" };
       const r = rows[rdSel];
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">💄 뷰티·잡화데이 · 광만두 <em>카테고리별 꿀템</em></p><small>가격·쿠폰은 무신사에서 꼭 확인하세요</small><button type="button" class="sec-all" data-rdall="${rdSel}">전체보기 →</button></div><div class="hotz-bar"><i></i></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">💄 뷰티·잡화데이 <em>꿀템</em></p><small>가격·쿠폰은 무신사에서 꼭 확인하세요</small><button type="button" class="sec-all" data-rdall="${rdSel}">전체보기 →</button></div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${rows.map((x, i) => `<button type="button" data-rdsel="${i}" class="${i === rdSel ? "on" : ""}">${TL[x.k] || esc(x.label)}<i>${x.list.length}</i></button>`).join("")}</div>
         <div class="bf-grid">${r.list.slice(0, 12).map((p) => itemCard(p, 0)).join("")}</div>`;
     }
@@ -3232,18 +3232,30 @@ async function renderPublicSite(root) {
       const T = [["sig", "💎 시그니처특가", sgU, ""], ["brand", "🏷️ 브랜드데이", brU, ""], ["top", "👕 상의", catL("top", "top"), ""], ["bottom", "👖 하의", catL("bottom", "bottom"), ""], ["outer", "🧥 아우터", catL("outer", "outer"), ""], ["kicks", "👟 킥스", catL("kicks", "kicks"), ""]].filter((t) => t[2].length);
       if (0) T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(withAds(t[2], new Date().getHours(), [3, 7, 11, 15]), 0, 0, false, (BFD.collabPin || {}).opz || "멜란지"); });
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
-      if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
+      if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const sb = e.target.closest("[data-r1sub]"); if (sb) { window.__r1Sub = window.__r1Sub || {}; window.__r1Sub[r1Tab] = sb.dataset.r1sub; renderR1(); return; } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all, window.__r1Cur); }); }
       const cp = cpA();
       if (cp) { if (cp.nextSibling !== box) cp.after(box); } else if (!box.parentNode) { const bz = root.querySelector("#tab-bf"); if (bz) bz.prepend(box); }
       if (!T.find((t) => t[0] === r1Tab)) r1Tab = T[0][0];
       const cur = T.find((t) => t[0] === r1Tab);
+      // 세부 카테고리 (상의면 니트·맨투맨…, 시그니처·브랜드데이면 상의·하의…)
+      const SUBR = { top: [["니트·가디건", /니트|가디건|스웨터|KNIT|CARDIGAN/i], ["맨투맨·후드", /맨투맨|후드|스웻|스웨트셔츠|HOOD|SWEAT/i], ["롱슬리브·티", /롱슬리브|긴팔|티셔츠|\bTEE\b|L\/S|LONG SLEEVE/i], ["셔츠", /셔츠|SHIRT/i]],
+        bottom: [["데님", /데님|청바지|DENIM|JEAN/i], ["슬랙스", /슬랙스|SLACKS|트라우저|TROUSER/i], ["스웨트·트레이닝", /스웨트|트레이닝|조거|SWEAT|JOGGER/i], ["와이드·카고", /와이드|카고|WIDE|CARGO|팬츠|PANT/i]],
+        outer: [["패딩", /패딩|다운|푸퍼|PADDING|DOWN|PUFFER/i], ["코트", /코트|COAT/i], ["플리스·무스탕", /플리스|후리스|FLEECE|보아|무스탕|시어링/i], ["자켓", /자켓|재킷|블루종|점퍼|바람막이|JACKET|트러커|아노락/i]],
+        kicks: [["스니커즈", /스니커즈|운동화|러닝|SNEAKER|슈퍼스타|삼바|가젤|덩크|에어포스|캠퍼스|스페지알/i], ["부츠", /부츠|BOOT|어그|UGG/i], ["로퍼·구두", /로퍼|더비|구두|LOAFER|DERBY|모크|옥스포드/i]] };
+      const CATN = { top: "👕 상의", bottom: "👖 하의", outer: "🧥 아우터", kicks: "👟 킥스", acc: "🧣 잡화", beauty: "💄 뷰티", etc: "✨ 기타" };
+      const subOf = (p, key) => { if (key === "sig" || key === "brand") return CATN[bfCat(p)] || "✨ 기타"; const R2 = SUBR[key]; if (!R2) return ""; if (p.ty && R2.some((x) => x[0] === p.ty)) return p.ty; const t = (p.name || ""); const h = R2.find((x) => x[1].test(t)); return h ? h[0] : "기타"; };
+      window.__r1Sub = window.__r1Sub || {};
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const showAll = false;
-      const cards = cur[2].slice(0, 12).map((p) => itemCard(Object.assign({}, p, { tag: p.pin ? p.tag : (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.pin ? p.comment : p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
+      const subs = (() => { const c = {}; cur[2].forEach((p) => { const k = subOf(p, r1Tab); if (k) c[k] = (c[k] || 0) + 1; }); const ord = r1Tab === "sig" || r1Tab === "brand" ? Object.values(CATN) : [...(SUBR[r1Tab] || []).map((x) => x[0]), "기타"]; return ord.filter((k) => c[k]).map((k) => [k, c[k]]); })();
+      let sel = window.__r1Sub[r1Tab] || ""; if (sel && !subs.find((x) => x[0] === sel)) sel = "";
+      const curL = sel ? cur[2].filter((p) => subOf(p, r1Tab) === sel) : cur[2];
+      window.__r1Cur = [[r1Tab, cur[1] + (sel ? " · " + sel : ""), curL, ""]];
+      const cards = curL.slice(0, 12).map((p) => itemCard(Object.assign({}, p, { tag: p.pin ? p.tag : (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.pin ? p.comment : p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⭐ 광만두 <em class="plz-em">베스트 픽</em></p><small>가격·쿠폰은 무신사에서 꼭 확인하세요</small>${cur[2].length > 12 ? `<button type="button" class="sec-all" data-r1all="${r1Tab}">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⭐ 광만두 <em class="plz-em">베스트 픽</em></p><small>가격·쿠폰은 무신사에서 꼭 확인하세요</small>${curL.length > 12 ? `<button type="button" class="sec-all" data-r1all="${r1Tab}">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
-        ${cur[3] ? `<p class="opz-sub">${esc(cur[3])}</p>` : ""}
+        ${subs.length > 1 ? `<div class="r1-subs"><button type="button" data-r1sub="" class="${sel ? "" : "on"}">전체</button>${subs.map(([n, c]) => `<button type="button" data-r1sub="${esc(n)}" class="${sel === n ? "on" : ""}">${esc(n)} <i>${c}</i></button>`).join("")}</div>` : ""}
         <div class="bf-grid">${cards}</div>`;
       window.__r1T = T;
       // 블프 겨울 준비·하루특가·브랜드특가를 꿀템 정리 바로 밑으로
@@ -4445,6 +4457,13 @@ renderPublicSite(ROOT_EL);
 #app-root #tab-bf .bf-item .pt s{font-size:8.5px;letter-spacing:-.3px}
 #app-root #tab-bf .bf-item .pr{font-size:10.5px!important;letter-spacing:-.6px}
 }
+#app-root #tab-bf .hotz-title em{white-space:nowrap}
+#app-root #tab-bf .r1-subs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:2px 0 10px;padding-bottom:2px}
+#app-root #tab-bf .r1-subs::-webkit-scrollbar{display:none}
+#app-root #tab-bf .r1-subs button{flex:none;border:0;background:#f1eee9;color:#4a463f;border-radius:8px;padding:6px 10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+#app-root #tab-bf .r1-subs button.on{background:#E4FF1A;color:#141312}
+#app-root #tab-bf .r1-subs button i{font-style:normal;color:#ff3d3f;font-size:11px}
+@media (max-width:600px){#app-root #tab-bf .r1-subs button{font-size:11px;padding:5px 9px}}
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
