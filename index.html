@@ -2490,7 +2490,7 @@ async function renderPublicSite(root) {
   // 가격 표시: 정가 취소선 + 블프 할인가. 시안은 ?mock=1(예시가) / ?mock=q(???)
   // 나이대별 브랜드 탭: 미리보기(?awards=1)이거나 관리자에서 켰을 때(main.brandsOn)만
   // 무물 게시판: 미리보기(?awards=1 · ?mock)는 항상, 방문자는 일요일(11/29) 0시부터
-  const QNA_ON = /[?&](awards=1|mock)/.test(location.search) || Date.now() >= Date.UTC(2099, 0, 1); // 광만두님이 말할 때 오픈
+  const QNA_ON = /[?&](awards=1|mock)/.test(location.search) || Date.now() >= Date.UTC(2026, 10, 28, 17, 0); // 11/29 02시 오픈
   const BR_ON = (() => { try { if (new URLSearchParams(location.search).get("awards") === "1") return true; } catch (e) {} return !!(ADMIN && ADMIN.brandsOn) && Date.now() >= Date.UTC(2026, 10, 20, 10, 0); })();
   const AW_MOCK = (() => { try { return new URLSearchParams(location.search).get("mock") || ""; } catch (e) { return ""; } })();
   const won = (n) => Number(n).toLocaleString("ko-KR");
@@ -3200,7 +3200,7 @@ async function renderPublicSite(root) {
     const FN_SEL = { sold: 0, pop: 0 };
     function renderFinal() {
       const F = BFD.final || {}; const tab = root.querySelector("#tab-bf"); if (!tab) return;
-      const on = preview || /[?&]awards=1/.test(location.search) || Date.now() >= Date.parse("2099-01-01"); // 광만두님이 말할 때 오픈
+      const on = preview || /[?&]awards=1/.test(location.search) || Date.now() >= Date.UTC(2026, 10, 28, 17, 0); // 11/29 02시 오픈
       [["sold", "가장 많이 팔린 것", "🏆", "블프 기간 광만두 링크로 실제로 많이 구매된 순서예요"], ["pop", "가장 인기 많은 것", "👀", "블프 기간 MD STUDIO에서 가장 많이 눌러본 순서예요"]].forEach(([k, t, ic, sub]) => {
         const G = (F[k] || []).filter((g) => (g.items || []).length);
         let box = root.querySelector("#fnz-" + k);
