@@ -1958,7 +1958,6 @@ async function renderPublicSite(root) {
   const cpHotSet = () => { if (!COUPONS || !COUPONS.list) return new Set(); const L = COUPONS.list; const pct = (c) => (/%$/.test(c.v) ? parseFloat(c.v) : 0); const CMN = /에잇세컨즈|스파오|탑텐|지오다노|엘칸토|식스핏|지프|스칼렛또블랙/; const pool = L.filter((c) => !CMN.test(c.n || "")).slice(0, 80).filter((c) => pct(c) >= 10 || /만원|천원/.test(c.v)); const top = pool.slice().sort((a, b) => (b.up ? 1 : 0) - (a.up ? 1 : 0) || (b.bf || 0) - (a.bf || 0) || pct(b) - pct(a) || (b.cnt || 0) - (a.cnt || 0)).slice(0, 6); return new Set(top.map((c) => String(c.no))); };
   // ---- 대표 브랜드 프리오픈 쿠폰 강조 칸 (타임세일 TOP 10 바로 아래) : 티징 쿠폰이 있는 대표 브랜드만 자동으로 ----
   function renderSpot(L) {
-    { const _b = document.getElementById("spz"); if (_b) _b.remove(); return; } // 무신사 안내(11/27): 자동 갱신 칸 중지 — 단순 진열만
     const BR = ["노스페이스", "아디다스", "나이키", "뉴발란스", "어그", "살로몬", "아크테릭스"];
     const won2 = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
     const SP = (() => { try { return ((ADMIN && ADMIN.bf && ADMIN.bf.spot) || {}).brands || []; } catch (e) { return []; } })();
@@ -3007,8 +3006,7 @@ async function renderPublicSite(root) {
     // 라이브 쿠폰 칸: main.bf.lv = { at, brand, coupon, rate, live, end, items:[{brand,name,img,link,price,sale,rate}] }
     // 라이브가 뜨면 보고방이 채우고, end(쿠폰 끝나는 시각)가 지나면 자동으로 사라져요. 블프 탭 맨 위에 보여요.
     function renderLv() {
-      { const _b = document.getElementById("lvz"); if (_b) _b.remove(); return; } // 무신사 안내(11/27): 자동 갱신 칸 중지 — 단순 진열만
-      const LV = BFD.lv || {}; const now = nowFn();
+        const LV = BFD.lv || {}; const now = nowFn();
       const tm = (x) => x ? (typeof x === "number" ? x : Date.parse(x)) : 0;
       // 아래 "쿠폰" 칸의 쿠폰별 상품(site_data coupons)과 연동: l.cpn = ["쿠폰 이름 일부", ...]
       if (!COUPONS && !window.__lvCp) { window.__lvCp = 1; loadCoupons().then(() => { if (COUPONS) { renderLv(); try { renderRd(); } catch (e) {} } }); }
@@ -3107,8 +3105,7 @@ async function renderPublicSite(root) {
           <div class="rd-grid">${L.slice(0, 10).map((p) => itemCard(p, 0)).join("")}</div></div>`; }).join("")}`;
     }
     function renderTs() {
-      { const _b = document.getElementById("tsz"); if (_b) _b.remove(); return; } // 무신사 안내(11/27): 자동 갱신 칸 중지 — 단순 진열만
-      const T = BFD.ts || {}; const now = nowFn();
+        const T = BFD.ts || {}; const now = nowFn();
       // 블프 보고방이 매시 정각 main.bf.dm 에 올린 목록(2시간 안)이면 그것만 순서 그대로, 아니면 bf.ts(자동 수집)로 대신
       const DM = BFD.dm || {}; const dmFresh = !!(DM.at && (DM.items || []).length && now - Date.parse(DM.at) < 2 * 36e5);
       const SRC = dmFresh ? DM : T;
@@ -3250,8 +3247,7 @@ async function renderPublicSite(root) {
     window.__openList = (key, label, list, sub, pageTitle) => openR1(key, [[key, label, list, sub]], pageTitle);
     let hotView = -1, hotOpen = false, hotCat = false;
     function renderHot() {
-      { const _b = document.getElementById("hotz"); if (_b) _b.remove(); return; } // 무신사 안내(11/27): 자동 갱신 칸 중지 — 단순 진열만
-      const H = BFD.hot || {}; const cats = (H.cats || []).filter((c) => c && (c.items || []).length);
+        const H = BFD.hot || {}; const cats = (H.cats || []).filter((c) => c && (c.items || []).length);
       let box = root.querySelector("#hotz");
       if (!cats.length || nowFn() >= T_END) { if (box) box.remove(); return; }
       const cp = cpA();
