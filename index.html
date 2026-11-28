@@ -3184,7 +3184,7 @@ async function renderPublicSite(root) {
       if (!box) { box = document.createElement("section"); box.id = "dz"; box.className = "hotz opz dz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-dz]"); if (b) { dzSel = b.dataset.dz; renderDz(); return; } const m = e.target.closest("[data-dzall]"); if (m) { const t = (window.__dzTabs || []).find((x) => x[0] === dzSel); if (t && window.__openList) window.__openList("dz" + dzSel, "⏰ 오늘의 하루특가 · " + t[1], t[2], "오늘 자정에 끝나요", "하루특가"); } }); }
       window.__dzTabs = tabs;
       const cards = cur[2].slice(0, 12).map((p) => itemCard(Object.assign({}, p, { tag: (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : ""), comment: p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 오늘의 <em class="plz-em">하루특가</em></p><small>${k.m}.${pad(k.d)} 오늘 자정 종료 · ${hh}시간 ${mm}분 남음 · 오늘 살 만한 것만 골랐어요 · 가격·쿠폰은 무신사에서 꼭 확인하세요</small>${cur[2].length > 12 ? `<button type="button" class="sec-all" data-dzall="1">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 오늘의 <em class="plz-em">하루특가</em></p><small>가격·쿠폰은 무신사에서 꼭 확인하세요</small>${cur[2].length > 12 ? `<button type="button" class="sec-all" data-dzall="1">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${tabs.map((t) => `<button type="button" data-dz="${t[0]}" class="${t[0] === dzSel ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
         <div class="bf-grid">${cards}</div>`;
       if (!box.parentNode) tab.prepend(box);
