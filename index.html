@@ -1133,6 +1133,8 @@
   #app-root .bf-rd span { display: block; font-size: 9px; color: #d9d4cc; margin-top: 1px; }
   #app-root .bf-rd em { display: block; font-style: normal; font-size: 8.5px; color: #a8a29a; margin-top: 2px; line-height: 1.25; }
   #app-root .bf-rd.on span, #app-root .bf-rd.on em { color: #fff; }
+  #app-root .bf-rounds4 { grid-template-columns: repeat(4, 1fr); margin-top: 12px; }
+  #app-root .bf-rd.on b { color: #fff; }
   #app-root .bf-cps { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
   #app-root .bf-cp { display: flex; align-items: center; gap: 10px; padding: 11px 2px; border-bottom: 1px solid var(--line); }
   #app-root .bf-cp.off { opacity: .4; }
@@ -2709,7 +2711,7 @@ async function renderPublicSite(root) {
     const KST = 9 * 3600 * 1000;
     const at = (y, mo, d, h, mi) => Date.UTC(y, mo - 1, d, h, mi || 0) - KST;
     const T_TEASE = at(2026, 11, 20, 19), T_OPEN = at(2026, 11, 22, 19), T_END = at(2026, 12, 3, 0);
-    const SCHEDULE = [];
+    const SCHEDULE = [["11-22", "아우터·킥스데이"], ["11-23", "아우터·킥스데이"], ["11-24", "아우터·킥스데이"], ["11-25", "상의·하의데이"], ["11-26", "상의·하의데이"], ["11-27", "상의·하의데이"], ["11-28", "뷰티·잡화데이"], ["11-29", "뷰티·잡화데이"], ["11-30", "무배당발·무탠다드데이"], ["12-01", "무배당발·무탠다드데이"]];
     const SIM = { pre: at(2026, 11, 19, 21, 30), live: at(2026, 11, 24, 14, 20) };
     const offset = preview ? SIM[preview] - Date.now() : 0;
     const nowFn = () => Date.now() + offset;
@@ -2844,7 +2846,12 @@ async function renderPublicSite(root) {
     }
 
     function daysStrip(now) { return ""; } // 무신사 요청(11/27): 플레이북 기반 내용 삭제
-    function periodGrid(now) { return ""; } // 무신사 요청(11/27): 플레이북 기반 내용 삭제
+    // 무신사 스토어 무진장 스페셜 페이지에 공개된 '무진장 카테고리 데이' 일정만 사용 (플레이북 내용 X)
+    function periodGrid(now) {
+      const c = kp(now); const md = `${pad(c.m)}-${pad(c.d)}`;
+      const R = [["11.22~24", "아우터·킥스", md >= "11-22" && md <= "11-24"], ["11.25~27", "상의·하의", md >= "11-25" && md <= "11-27"], ["11.28~29", "뷰티·잡화", md >= "11-28" && md <= "11-29"], ["11.30~12.1", "무배당발·무탠다드", md === "11-30" || md === "12-01"]];
+      return `<div class="bf-rounds bf-rounds4">${R.map(([d, x, on]) => `<div class="bf-rd${on ? " on" : ""}"><b>${d}</b><em>${x}</em></div>`).join("")}</div>`;
+    }
     function stamp() {
       const u = BFD.updatedAt ? Date.parse(BFD.updatedAt) : 0;
       const t = preview ? nowFn() - 35 * 6e4 : u;
@@ -3146,31 +3153,7 @@ async function renderPublicSite(root) {
     }
     // ---- 블프 플래너: 날짜별 혜택·라이브·시그니처 브랜드데이 + 브랜드 검색 (main.bf.plan) ----
     let planDay = null, planQ = "";
-    // 무신사 스토어(무진장 스페셜 페이지)에 공개된 '무진장 카테고리 데이' 일정만 사용
-    const PLAN_CAT = [["11-22", "11-24", ["아우터데이", "킥스데이"]], ["11-25", "11-27", ["상의데이", "하의데이"]], ["11-28", "11-29", ["뷰티데이", "잡화데이"]], ["11-30", "12-01", ["무배당발데이", "무탠다드데이"]]];
-    function renderPlan() {
-      const tab = root.querySelector("#tab-bf"); if (!tab) return;
-      let box = document.getElementById("plz");
-      if (!box) { box = document.createElement("div"); box.id = "plz"; box.className = "bf-sec plz-sec"; tab.prepend(box); box.addEventListener("click", (e) => { const d = e.target.closest("[data-pday]"); if (d) { planDay = d.dataset.pday; renderPlan(); } }); }
-      const DAYS = []; for (let t = Date.UTC(2026, 10, 22); t <= Date.UTC(2026, 11, 1); t += 864e5) { const d = new Date(t); DAYS.push(String(d.getUTCMonth() + 1).padStart(2, "0") + "-" + String(d.getUTCDate()).padStart(2, "0")); }
-      const n = kp(nowFn()); const today = String(n.m).padStart(2, "0") + "-" + String(n.d).padStart(2, "0");
-      if (!planDay) planDay = DAYS.includes(today) ? today : (today < DAYS[0] ? DAYS[0] : DAYS[DAYS.length - 1]);
-      const cat = (d) => { const r = PLAN_CAT.find((x) => d >= x[0] && d <= x[1]); return r ? r[2] : []; };
-      const wk = (d) => "일월화수목금토"[new Date(Date.UTC(2026, +d.slice(0, 2) - 1, +d.slice(3))).getUTCDay()];
-      const rng = (d) => { const r = PLAN_CAT.find((x) => d >= x[0] && d <= x[1]); return r ? `${+r[0].slice(0, 2)}.${+r[0].slice(3)} - ${+r[1].slice(0, 2)}.${+r[1].slice(3)}` : ""; };
-      const chips = DAYS.map((d) => `<button type="button" class="plz-day${d === planDay ? " on" : ""}${d < today ? " past" : ""}" data-pday="${d}"><small>${d === today ? "오늘" : wk(d)}</small><b>${+d.slice(3)}</b><i>${cat(d).length ? '<u class="r"></u>' : ""}<u class="k"></u></i></button>`).join("");
-      const bd = (((BFD.days || {})["2026-" + planDay] || {}).brands || []).map((b) => b.brand).filter(Boolean);
-      const C = cat(planDay);
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">🗓️ 무진장 <em class="plz-em">날짜별 일정</em></p><small>무신사 스토어 공개 일정 · 날짜를 눌러보세요</small></div>
-        <div class="plz-days">${chips}</div>
-        <div class="plz-card"><p class="plz-h">${+planDay.slice(0, 2)}월 ${+planDay.slice(3)}일 (${wk(planDay)})${planDay === today ? " · 오늘" : ""}</p>
-          <div class="plz-tags">${C.map((c) => `<span class="plz-tag r">${esc(c)}</span>`).join("")}<span class="plz-tag k">하루특가 · 자정까지</span><span class="plz-tag g">시그니처 브랜드데이</span></div>
-          ${C.length ? `<p class="plz-note">카테고리 데이 ${esc(rng(planDay))} · ${esc(C.join(" · "))} 상품 집중 할인</p>` : ""}
-          ${bd.length ? `<p class="plz-h">이날 브랜드데이 <span>${bd.length}개</span></p><p class="plz-note">${bd.map(esc).join(" · ")}</p>` : ""}
-        </div>`;
-      const on = box.querySelector(".plz-day.on"), sc = box.querySelector(".plz-days");
-      if (on && sc && box.dataset.sc !== planDay) { box.dataset.sc = planDay; sc.scrollLeft = Math.max(0, on.offsetLeft - sc.clientWidth / 2 + 23); }
-    }
+    function renderPlan() { const _b = document.getElementById("plz"); if (_b) _b.remove(); }
     // ---------- 본편: 쿠폰 바로 아래 '오늘의 꿀템 정리' (하루특가·브랜드특가·회차 아우터·킥스) ----------
     let r1Tab = "sold";
     function renderR1() {
@@ -3229,7 +3212,7 @@ async function renderPublicSite(root) {
       // 블프 칸이 다시 그려지면 새로 생긴 것만 남기고 예전에 옮겨둔 건 지움
       const one = (sel) => { const L = [...root.querySelectorAll("#tab-bf " + sel)]; if (L.length < 2) return L[0] || null; const z = L.find((x) => x.closest(".bf-zone")) || L[L.length - 1]; L.forEach((x) => { if (x !== z) x.remove(); }); return z; };
       const lvTop = (() => { try { const nw = nowFn(); return kp(nw).h >= 18 && !!q("#lvz"); } catch (e) { return false; } })();
-      [q("#plz"), ...(lvTop ? [q("#lvz"), q("#rdz")] : [q("#rdz"), q("#lvz")]), q("#cpz"), q("section.aw"), one("#bf-mycart"), q("#tsz"), q("#opz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), one("#bf-pad"), one("#bf-best")].forEach((el) => {
+      [...(lvTop ? [q("#lvz"), q("#rdz")] : [q("#rdz"), q("#lvz")]), q("#cpz"), q("section.aw"), one("#bf-mycart"), q("#tsz"), q("#opz"), q("#hotz"), one(".bf-alerts"), one(".bf-hub"), one(".bf-jump"), one("#bf-pad"), one("#bf-best")].forEach((el) => {
         if (!el) return;
         // 원래 블프 칸 안에서 클릭을 받던 칸은 옮긴 뒤에도 클릭되게
         if (window.__bfZoneClick && !el.__bound && el.id !== "opz" && el.id !== "lvz" && el.id !== "rdz" && el.id !== "cpz" && el.id !== "tsz" && el.id !== "hotz" && el.id !== "plz" && !el.classList.contains("aw")) { el.__bound = true; el.addEventListener("click", window.__bfZoneClick); }
