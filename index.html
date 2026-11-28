@@ -3167,7 +3167,7 @@ async function renderPublicSite(root) {
       const br = []; const bl = (day.brands || []).map((b) => (b.items || []).slice()); for (let r = 0; r < 12; r++) bl.forEach((L) => { if (L[r]) br.push(L[r]); });
       const sg = []; const sl = (BFD.sigPreview || []).map((g) => (g.items || []).filter((p) => !noDeal(p))); for (let r = 0; r < 80; r++) sl.forEach((L) => { if (L[r] && !(sg.length && sg[sg.length - 1].brand === L[r].brand)) sg.push(L[r]); else if (L[r]) sg.push(L[r]); });
       const SO = ((BFD.sold || {}).items || []).filter((p) => !noDeal(p));
-      const T = [["sold", "🔥 HOT", SO, ""], ["sig", "💎 시그니처특가", sg, ""], ["hot", "⏰ 하루특가", hot, ""], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), ""]].filter((t) => t[2].length);
+      const T = [["hot", "⏰ 하루특가", hot, ""], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), ""], ["sig", "💎 시그니처특가", sg, ""], ["sold", "🔥 HOT", SO, ""], ["beauty", "💄 뷰티", (R.beauty || []).filter((p) => !noDeal(p)), "광만두가 쓰는 것 포함"], ["acc", "🧣 잡화", (R.acc || []).filter((p) => !noDeal(p)), "잡화데이 인기템"], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), ""], ["top", "👕 상의", (R.top || []).filter((p) => !noDeal(p)), ""], ["bottom", "👖 하의", (R.bottom || []).filter((p) => !noDeal(p)), ""], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), ""]].filter((t) => t[2].length);
       T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(withAds(t[2], new Date().getHours(), [3, 7, 11, 15]), 0, 0, false, (BFD.collabPin || {}).opz || "멜란지"); });
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
@@ -3179,7 +3179,7 @@ async function renderPublicSite(root) {
       const showAll = false;
       const cards = cur[2].slice(0, 8).map((p) => itemCard(Object.assign({}, p, { tag: p.pin ? p.tag : (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.pin ? p.comment : p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 오늘의 <em class="plz-em">특가 픽</em></p><small>하루특가·브랜드데이·시그니처특가 중 골라놨어요 · 가격·쿠폰은 무신사에서 꼭 확인하세요</small>${cur[2].length > 8 ? `<button type="button" class="sec-all" data-r1all="${r1Tab}">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⏰ 오늘의 <em class="plz-em">특가 픽</em></p><small>하루특가·브랜드데이·시그니처특가·카테고리별 꿀템 · 가격·쿠폰은 무신사에서 꼭 확인하세요</small>${cur[2].length > 8 ? `<button type="button" class="sec-all" data-r1all="${r1Tab}">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
         ${cur[3] ? `<p class="opz-sub">${esc(cur[3])}</p>` : ""}
         <div class="bf-grid">${cards}</div>`;
