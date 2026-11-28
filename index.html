@@ -4472,6 +4472,13 @@ renderPublicSite(ROOT_EL);
 #app-root .lf-bar.three .lf-th { width: 38px; height: 38px; flex: none; }
 #app-root .lf-bar.three .lf-tx strong { font-size: 10.5px; }
 #app-root .lf-bar.three .lf-tx em { font-size: 9px; white-space: nowrap; letter-spacing: -0.3px; }
+/* 롱폼 3개: 3편·2편 두 장이 메인, 오른쪽으로 넘기면 1편(무진장) */
+#app-root .lf-bar.two.three { display: flex; grid-template-columns: none; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+#app-root .lf-bar.two.three::-webkit-scrollbar { display: none; }
+#app-root .lf-bar.three .lf-card { flex: 0 0 calc((100% - 8px) / 2 - 14px); scroll-snap-align: start; gap: 7px; padding: 5px 8px 5px 5px; }
+#app-root .lf-bar.three .lf-th { width: 44px; height: 44px; }
+#app-root .lf-bar.three .lf-tx strong { font-size: 11px; }
+#app-root .lf-bar.three .lf-tx em { font-size: 9.5px; white-space: nowrap; letter-spacing: 0; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
