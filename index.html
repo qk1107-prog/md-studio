@@ -3054,7 +3054,7 @@ async function renderPublicSite(root) {
     // 지금 회차 칸: main.bf.r1 = { at, title?, end?, outer:[...], kicks:[...] } — 종류마다 한 줄(4개) + 100개 전체보기. 라이브 쿠폰 칸 바로 아래.
     function renderRd() {
       const R = BFD.r1 || {}; const now = nowFn();
-      const NAMES = { beauty: "💄 뷰티 (광만두가 쓰는 것)", acc: "🧣 잡화", outer: "아우터", kicks: "신발", top: "상의", bottom: "하의" };
+      const NAMES = { beauty: "💄 뷰티 (광만두가 쓰는 것 포함)", acc: "🧣 잡화", outer: "아우터", kicks: "신발", top: "상의", bottom: "하의" };
       const endT = Date.parse(R.end || "2026-11-24T23:59:59+09:00");
       const nbr = (x) => String(x || "").replace(/\s|맨$|우먼$/g, "").toLowerCase();
       const HYPE = new Set(["도프제이슨","드로우핏","엘무드","프리즘웍스","디미트리블랙","노이즈","아웃스탠딩","에스피오나지","미세키서울","탄산마그네슘","노이어","후브스","아캄","비긴202","낫포너드","파코서플라이","247시리즈","노매뉴얼","디스이즈네버댓","엘엠씨","더콜디스트모먼트","인사일런스","킨치","쿠어","일리고","언탭트 스튜디오","그레이버","나이키","아디다스","노스페이스","팀버랜드","뉴발란스","살로몬","아식스","닥터마틴","록히드마틴","노드랩스","9999아카이브","낫온리포투데이","패러다임 필름","플루크","호카","오니츠카타이거","컨버스","야세","로맨틱무브","커스텀에이드","어그",
@@ -3156,7 +3156,7 @@ async function renderPublicSite(root) {
       const br = []; const bl = (day.brands || []).map((b) => (b.items || []).slice()); for (let r = 0; r < 12; r++) bl.forEach((L) => { if (L[r]) br.push(L[r]); });
       const sg = []; const sl = (BFD.sigPreview || []).map((g) => (g.items || []).filter((p) => !noDeal(p))); for (let r = 0; r < 80; r++) sl.forEach((L) => { if (L[r] && !(sg.length && sg[sg.length - 1].brand === L[r].brand)) sg.push(L[r]); else if (L[r]) sg.push(L[r]); });
       const SO = ((BFD.sold || {}).items || []).filter((p) => !noDeal(p));
-      const T = [["beauty", "💄 뷰티", (R.beauty || []).filter((p) => !noDeal(p)), "광만두가 직접 쓰는 뷰티템"], ["acc", "🧣 잡화", (R.acc || []).filter((p) => !noDeal(p)), "잡화데이 인기템"], ["sold", "🔥 HOT", SO, ""], ["sig", "💎 시그니처특가", sg, ""], ["hot", "⏰ 하루특가", hot, ""], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), ""], ["top", "👕 상의", (R.top || []).filter((p) => !noDeal(p)), ""], ["bottom", "👖 하의", (R.bottom || []).filter((p) => !noDeal(p)), ""], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), ""], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), ""]].filter((t) => t[2].length);
+      const T = [["beauty", "💄 뷰티", (R.beauty || []).filter((p) => !noDeal(p)), "광만두가 쓰는 것 포함"], ["acc", "🧣 잡화", (R.acc || []).filter((p) => !noDeal(p)), "잡화데이 인기템"], ["sold", "🔥 HOT", SO, ""], ["sig", "💎 시그니처특가", sg, ""], ["hot", "⏰ 하루특가", hot, ""], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), ""], ["top", "👕 상의", (R.top || []).filter((p) => !noDeal(p)), ""], ["bottom", "👖 하의", (R.bottom || []).filter((p) => !noDeal(p)), ""], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), ""], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), ""]].filter((t) => t[2].length);
       T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(withAds(t[2], new Date().getHours(), [3, 7, 11, 15]), 0, 0, false, (BFD.collabPin || {}).opz || "멜란지"); });
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
