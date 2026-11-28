@@ -1902,7 +1902,7 @@ async function renderPublicSite(root) {
           <div class="lf-hero">
             ${video}
             <span class="lf-badge">▶ NEW 영상</span>
-            <h1 class="lf-title">${esc(L.title || "무신사 블프 총정리")}</h1>
+            <h1 class="lf-title">${esc(L.title || (key === "lf3" ? "MZ 겨울 아우터" : key === "lf2" ? "MZ 겨울 패딩" : "무신사 블프 총정리"))}</h1>
             ${url ? `<a class="ep-replay lf-yt" href="${esc(url)}" target="_blank" rel="noopener">유튜브에서 보기 →</a>` : ""}
           </div>
           <div id="ep-sections">${items.length ? `
