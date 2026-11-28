@@ -3544,7 +3544,7 @@ async function renderPublicSite(root) {
   }));
   renderRecList();
   root.querySelector("#ep-list").addEventListener("click", (e) => {
-    if (e.target.closest('a[href^="#ep="], a[href^="#st="], a[href^="#ct="], a[href^="#ca="], a[href^="#br="], a[href^="#sp="], a[href^="#lp="], a[href="#bp"], a[href="#lf"], a[href="#lf2"], a[href="#lu"]')) openedFromList = true;
+    if (e.target.closest('a[href^="#ep="], a[href^="#st="], a[href^="#ct="], a[href^="#ca="], a[href^="#br="], a[href^="#sp="], a[href^="#lp="], a[href="#bp"], a[href="#lf"], a[href="#lf2"], a[href="#lf3"], a[href="#lu"]')) openedFromList = true;
   });
 
   // ---------- 실착: 분류(타이트 컷 → 전체 컷)마다 9개 + 더보기 ----------
@@ -3981,7 +3981,7 @@ async function renderPublicSite(root) {
     }
   } catch (e) {}
   window.addEventListener("hashchange", routeFromHash);
-  if (/^#(ep|st|ct|ca|br|sp|lp|look|looks|cp|spa|cl)=/.test(location.hash) || location.hash === "#bp" || location.hash === "#lf" || location.hash === "#lf2" || location.hash === "#lu" || location.hash === "#cps") routeFromHash();
+  if (/^#(ep|st|ct|ca|br|sp|lp|look|looks|cp|spa|cl)=/.test(location.hash) || location.hash === "#bp" || location.hash === "#lf" || location.hash === "#lf2" || location.hash === "#lf3" || location.hash === "#lu" || location.hash === "#cps") routeFromHash();
   loadCoupons().then(renderCouponStrip);
   finishIntro();
 
@@ -4471,6 +4471,7 @@ renderPublicSite(ROOT_EL);
 #app-root .lf-bar.three .lf-card { gap: 5px; padding: 4px 5px 4px 4px; }
 #app-root .lf-bar.three .lf-th { width: 38px; height: 38px; flex: none; }
 #app-root .lf-bar.three .lf-tx strong { font-size: 10.5px; }
+#app-root .lf-bar.three .lf-tx em { font-size: 9px; white-space: nowrap; letter-spacing: -0.3px; }
 </style>
 <script>
 // ---------- 블프 위시리스트 팝업 (들어올 때마다, 바로 닫을 수 있음) ----------
