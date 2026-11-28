@@ -2736,6 +2736,7 @@ async function renderPublicSite(root) {
     const NOWP = BFD.now || {};
     const PRE_LABEL = PRE_KEY ? `${Number(PRE_KEY.slice(5, 7))}/${Number(PRE_KEY.slice(8, 10))}` : "";
     const priceNow = (p, id) => {
+      if (p && p.u && Number(p.sale)) return Number(p.sale); // 오늘 새로 확인한 가격
       if (NOWP[id] && NOWP[id][0]) return Number(NOWP[id][0]);
       if (preview === "live" && PRE[id] && p.rate) return Math.round(PRE[id][0] * (1 - p.rate / 100) / 100) * 100; // 시안용 예상가
       return 0;
@@ -2791,7 +2792,7 @@ async function renderPublicSite(root) {
           const nor = PRE[id] ? Number(PRE[id][1]) : 0;
           const base = nor > cur ? nor : pre;
           const pctN = Math.round((1 - cur / base) * 100);
-          return `<p class="pt"><s>${esc(won(base))}</s><b class="pbf">블프가</b></p><p class="pr"><i>${pctN}%</i>${esc(won(cur))}</p><p class="preal">직전가보다 -${pct}%</p>`;
+          return `<p class="pt"><s>${esc(won(base))}</s><b class="pbf">블프가</b></p><p class="pr"><i>${pctN}%</i>${esc(won(cur))}</p><p class="preal">직전가 ${esc(won(pre))}보다 -${pct}%</p>`;
         }
         if (nowFn() >= T_OPEN) {
           // 직전가랑 같으면 '같아요' 대신 정가 대비 할인율 + 쿠폰가로
@@ -2806,7 +2807,7 @@ async function renderPublicSite(root) {
       let nor = PRE[id] ? Number(PRE[id][1]) : 0;
       if (!nor && p.rate) nor = Math.round(p.sale / (1 - p.rate / 100) / 100) * 100;
       const pct = nor > p.sale ? Math.round((1 - p.sale / nor) * 100) : 0;
-      return `${pct ? `<p class="pt"><s>${esc(won(nor))}</s></p>` : ""}<p class="pr">${pct ? `<i>${pct}%</i>` : ""}${esc(won(p.sale))}</p>`;
+      return `${pct ? `<p class="pt"><s>${esc(won(nor))}</s>${p.u && nowFn() >= T_OPEN ? `<b class="pbf">블프가</b>` : ""}</p>` : ""}<p class="pr">${pct ? `<i>${pct}%</i>` : ""}${esc(won(p.sale))}</p>`;
     }
     function realBadge(p) {
       const id = gidOf(p), pre = PRE[id] ? Number(PRE[id][0]) : 0;
@@ -3227,7 +3228,7 @@ async function renderPublicSite(root) {
       const seen = new Set(); const uniq = (A) => A.filter((p) => { const id = String(p.i || p.link); if (seen.has(id)) return false; seen.add(id); return true; });
       const RA = window.__rdAll || []; const rl = (k) => ((RA.find((r) => r.k === k) || {}).list || (R[k] || []).filter((p) => !noDeal(p)));
       const sgU = uniq(sg.slice()); const brU = uniq(br.filter((p) => !noDeal(p)));
-      const catL = (k, ck) => { seen.clear(); return uniq([...rl(k), ...sgU.filter((p) => bfCat(p) === ck), ...brU.filter((p) => bfCat(p) === ck)]); };
+      const catL = (k, ck) => { seen.clear(); const A = uniq([...rl(k), ...sgU.filter((p) => bfCat(p) === ck), ...brU.filter((p) => bfCat(p) === ck)]); const isF = (p) => p.u || sgU.includes(p) || brU.includes(p); return [...A.filter(isF), ...A.filter((p) => !isF(p)).map((p) => Object.assign({}, p, { comment: p.comment || "가격 변동 가능 · 무신사에서 확인" }))]; };
       const T = [["sig", "💎 시그니처특가", sgU, ""], ["brand", "🏷️ 브랜드데이", brU, ""], ["top", "👕 상의", catL("top", "top"), ""], ["bottom", "👖 하의", catL("bottom", "bottom"), ""], ["outer", "🧥 아우터", catL("outer", "outer"), ""], ["kicks", "👟 킥스", catL("kicks", "kicks"), ""]].filter((t) => t[2].length);
       if (0) T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(withAds(t[2], new Date().getHours(), [3, 7, 11, 15]), 0, 0, false, (BFD.collabPin || {}).opz || "멜란지"); });
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
