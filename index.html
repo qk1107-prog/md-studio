@@ -3100,6 +3100,8 @@ async function renderPublicSite(root) {
           .map((x) => ({ t: "@" + x.b, name: x.b, day: x.d, list: L.filter((p) => p.brand === x.b) }));
         return { k, label: NAMES[k] || k, list: L, cats: [...cats, ...brands], ncat: cats.length };
       }).filter((r) => r.list.length >= 4);
+      window.__rdAll = rows.slice();
+      rows.splice(0, rows.length, ...rows.filter((r) => r.k === "beauty" || r.k === "acc"));
       let box = root.querySelector("#rdz");
       if (!rows.length || now >= endT || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "rdz"; box.className = "rdz"; box.addEventListener("click", (e) => {
@@ -3111,7 +3113,7 @@ async function renderPublicSite(root) {
       const ek = kp(endT);
       const TL = { beauty: "💄 뷰티", acc: "🧣 잡화", outer: "🧥 아우터", kicks: "👟 신발", top: "👕 상의", bottom: "👖 하의" };
       const r = rows[rdSel];
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⭐ 광만두 <em>카테고리별 꿀템</em></p><small>카테고리를 누르면 그 꿀템만 쫙 나와요</small><button type="button" class="sec-all" data-rdall="${rdSel}">전체보기 →</button></div><div class="hotz-bar"><i></i></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">💄 뷰티·잡화데이 · 광만두 <em>카테고리별 꿀템</em></p><small>가격·쿠폰은 무신사에서 꼭 확인하세요</small><button type="button" class="sec-all" data-rdall="${rdSel}">전체보기 →</button></div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${rows.map((x, i) => `<button type="button" data-rdsel="${i}" class="${i === rdSel ? "on" : ""}">${TL[x.k] || esc(x.label)}<i>${x.list.length}</i></button>`).join("")}</div>
         <div class="bf-grid">${r.list.slice(0, 12).map((p) => itemCard(p, 0)).join("")}</div>`;
     }
@@ -3163,6 +3165,11 @@ async function renderPublicSite(root) {
     let planDay = null, planQ = "";
     function renderPlan() { const _b = document.getElementById("plz"); if (_b) _b.remove(); }
     // ---- 블프 마지막 총정리: 가장 많이 팔린 것 TOP 10 / 가장 인기 많은 것 TOP 10 (main.bf.final) ----
+    const BF_CAT = (() => {
+      return [["beauty", "💄 뷰티", /크림|세럼|토너|선크림|선스틱|쿠션|립밤|립 |틴트|클렌|샴푸|바디|향수|퍼퓸|마스크|팩|로션|에센스|앰플|패드|왁스|헤어|미스트|스킨|올인원/], ["acc", "🧣 잡화", /삭스|양말|머플러|목도리|비니|모자|볼캡|캡\b|장갑|가방|백팩|토트|크로스백|벨트|지갑|시계|목걸이|반지|팔찌|키링|안경|선글라스|워머|귀마개|우산|파우치|넥워머|링$| 링|햇|\bHAT\b|BEANIE|\bCAP\b|\bBAG\b/i], ["kicks", "👟 신발", /스니커즈|슈즈|부츠|로퍼|운동화|러닝화|더비|첼시|뮬|슈퍼스타|삼바|가젤|덩크|에어포스|클로그|어그|캠퍼스|스페지알|슬립온|슬라이드|에샤페|SNEAKER|BOOTS|LOAFER|\b\d{3,4}\b.*(뉴발란스|NB)|^(뉴발란스|나이키|아디다스|푸마|아식스|살로몬|호카|컨버스|닥터마틴|오니츠카타이거)$/], ["outer", "🧥 아우터", /패딩|자켓|재킷|코트|점퍼|파카|베스트|블루종|무스탕|플리스|후리스|다운|바람막이|아노락|트러커|숏패딩|롱패딩|PARKA|PADDING|PUFFER|JACKET|WINDBREAKER|\bDOWN\b|COAT|VEST|FLEECE/i], ["bottom", "👖 하의", /팬츠|바지|청바지|데님|슬랙스|트라우저|조거|카고|치노|스웨트팬츠|PANTS?\b|JEANS?\b|DENIM|TROUSERS?|SLACKS/i], ["top", "👕 상의", /니트|가디건|맨투맨|후드|셔츠|티셔츠|롱슬리브|스웨트|폴로|터틀|집업|스웻|헨리넥|크루넥|탑|긴팔|롱 슬리브|\bTEE\b|LONG SLEEVE|\bLS\b|KNIT|CARDIGAN|HOODIE|SWEATSHIRT|SHIRT/i]];
+    })();
+    function bfCat(p) { const CAT = BF_CAT;
+       const t = (p.name || "") + " "; for (const id of ["acc", "kicks", "outer", "bottom", "top", "beauty"]) { const re = CAT.find((c) => c[0] === id)[2]; if (id === "kicks" ? (re.test(t) || re.test(String(p.brand || "").trim()) && !/양말|삭스|티셔츠|팬츠|자켓|후드|맨투맨|가방/.test(t)) : re.test(t)) return id; } return "etc"; }
     // ---------- 오늘의 하루특가: 오늘 자정에 끝나는 특가만, 카테고리 탭 ----------
     let dzSel = "all";
     function renderDz() {
@@ -3172,8 +3179,7 @@ async function renderPublicSite(root) {
       const L = (day.hot || [...(day.hotA || []), ...(day.hotB || [])]).filter((p) => p && p.link && !noDeal(p) && !BAN.test(String(p.brand || "").trim()) && !/샌들|슬리퍼|반팔|쇼츠|반바지|키즈/.test(p.name || ""));
       let box = root.querySelector("#dz"); const tab = root.querySelector("#tab-bf");
       if ((!(now >= T_OPEN) && !preview) || now >= T_END || L.length < 4 || !tab) { if (box) box.remove(); return; }
-      const CAT = [["beauty", "💄 뷰티", /크림|세럼|토너|선크림|선스틱|쿠션|립밤|립 |틴트|클렌|샴푸|바디|향수|퍼퓸|마스크|팩|로션|에센스|앰플|패드|왁스|헤어|미스트|스킨|올인원/], ["acc", "🧣 잡화", /삭스|양말|머플러|목도리|비니|모자|볼캡|캡\b|장갑|가방|백팩|토트|크로스백|벨트|지갑|시계|목걸이|반지|팔찌|키링|안경|선글라스|워머|귀마개|우산|파우치|넥워머|링$| 링|햇|\bHAT\b|BEANIE|\bCAP\b|\bBAG\b/i], ["kicks", "👟 신발", /스니커즈|슈즈|부츠|로퍼|운동화|러닝화|더비|첼시|뮬|슈퍼스타|삼바|가젤|덩크|에어포스|클로그|어그|캠퍼스|스페지알|슬립온|슬라이드|에샤페|SNEAKER|BOOTS|LOAFER|\b\d{3,4}\b.*(뉴발란스|NB)|^(뉴발란스|나이키|아디다스|푸마|아식스|살로몬|호카|컨버스|닥터마틴|오니츠카타이거)$/], ["outer", "🧥 아우터", /패딩|자켓|재킷|코트|점퍼|파카|베스트|블루종|무스탕|플리스|후리스|다운|바람막이|아노락|트러커|숏패딩|롱패딩|PARKA|PADDING|PUFFER|JACKET|WINDBREAKER|\bDOWN\b|COAT|VEST|FLEECE/i], ["bottom", "👖 하의", /팬츠|바지|청바지|데님|슬랙스|트라우저|조거|카고|치노|스웨트팬츠|PANTS?\b|JEANS?\b|DENIM|TROUSERS?|SLACKS/i], ["top", "👕 상의", /니트|가디건|맨투맨|후드|셔츠|티셔츠|롱슬리브|스웨트|폴로|터틀|집업|스웻|헨리넥|크루넥|탑|긴팔|롱 슬리브|\bTEE\b|LONG SLEEVE|\bLS\b|KNIT|CARDIGAN|HOODIE|SWEATSHIRT|SHIRT/i]];
-      const catOf = (p) => { const t = (p.name || "") + " "; for (const id of ["acc", "kicks", "outer", "bottom", "top", "beauty"]) { const re = CAT.find((c) => c[0] === id)[2]; if (id === "kicks" ? (re.test(t) || re.test(String(p.brand || "").trim()) && !/양말|삭스|티셔츠|팬츠|자켓|후드|맨투맨|가방/.test(t)) : re.test(t)) return id; } return "etc"; };
+      const CAT = BF_CAT; const catOf = bfCat;
       const G = {}; L.forEach((p) => { const c = catOf(p); (G[c] = G[c] || []).push(p); });
       const tabs = [["all", "🔥 전체", L], ...CAT.filter(([id]) => (G[id] || []).length).map(([id, t]) => [id, t, G[id]]), ...((G.etc || []).length ? [["etc", "✨ 기타", G.etc]] : [])];
       if (!tabs.find((t) => t[0] === dzSel)) dzSel = "all";
@@ -3218,8 +3224,12 @@ async function renderPublicSite(root) {
       const br = []; const bl = (day.brands || []).map((b) => (b.items || []).slice()); for (let r = 0; r < 12; r++) bl.forEach((L) => { if (L[r]) br.push(L[r]); });
       const sg = []; const sl = (BFD.sigPreview || []).map((g) => (g.items || []).filter((p) => !noDeal(p))); for (let r = 0; r < 80; r++) sl.forEach((L) => { if (L[r] && !(sg.length && sg[sg.length - 1].brand === L[r].brand)) sg.push(L[r]); else if (L[r]) sg.push(L[r]); });
       const SO = ((BFD.sold || {}).items || []).filter((p) => !noDeal(p));
-      const T = [["beauty", "💄 뷰티", (R.beauty || []).filter((p) => !noDeal(p)), "광만두가 쓰는 것 포함"], ["acc", "🧣 잡화", (R.acc || []).filter((p) => !noDeal(p)), "잡화데이 인기템"], ["sold", "🔥 HOT", SO, ""], ["sig", "💎 시그니처특가", sg, ""], ["hot", "⏰ 하루특가", hot, ""], ["brand", "🏷️ 브랜드데이", br.filter((p) => !noDeal(p)), ""], ["top", "👕 상의", (R.top || []).filter((p) => !noDeal(p)), ""], ["bottom", "👖 하의", (R.bottom || []).filter((p) => !noDeal(p)), ""], ["outer", "🧥 아우터", (R.outer || []).filter((p) => !noDeal(p)), ""], ["kicks", "👟 킥스", (R.kicks || []).filter((p) => !noDeal(p)), ""]].filter((t) => t[2].length);
-      T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(withAds(t[2], new Date().getHours(), [3, 7, 11, 15]), 0, 0, false, (BFD.collabPin || {}).opz || "멜란지"); });
+      const seen = new Set(); const uniq = (A) => A.filter((p) => { const id = String(p.i || p.link); if (seen.has(id)) return false; seen.add(id); return true; });
+      const RA = window.__rdAll || []; const rl = (k) => ((RA.find((r) => r.k === k) || {}).list || (R[k] || []).filter((p) => !noDeal(p)));
+      const sgU = uniq(sg.slice()); const brU = uniq(br.filter((p) => !noDeal(p)));
+      const catL = (k, ck) => { seen.clear(); return uniq([...rl(k), ...sgU.filter((p) => bfCat(p) === ck), ...brU.filter((p) => bfCat(p) === ck)]); };
+      const T = [["sig", "💎 시그니처특가", sgU, ""], ["brand", "🏷️ 브랜드데이", brU, ""], ["top", "👕 상의", catL("top", "top"), ""], ["bottom", "👖 하의", catL("bottom", "bottom"), ""], ["outer", "🧥 아우터", catL("outer", "outer"), ""], ["kicks", "👟 킥스", catL("kicks", "kicks"), ""]].filter((t) => t[2].length);
+      if (0) T.forEach((t) => { if (t[0] === "sold") t[2] = withPin(withAds(t[2], new Date().getHours(), [3, 7, 11, 15]), 0, 0, false, (BFD.collabPin || {}).opz || "멜란지"); });
       if (!live || !T.length || now >= T_END) { if (box) box.remove(); return; }
       if (!box) { box = document.createElement("section"); box.id = "opz"; box.className = "hotz opz"; box.addEventListener("click", (e) => { const b = e.target.closest("[data-r1]"); if (b) { r1Tab = b.dataset.r1; window.__r1All = ""; renderR1(); } const m = e.target.closest("[data-r1all]"); if (m) openR1(m.dataset.r1all); }); }
       const cp = cpA();
@@ -3228,9 +3238,9 @@ async function renderPublicSite(root) {
       const cur = T.find((t) => t[0] === r1Tab);
       const won = (n) => Number(n || 0).toLocaleString("ko-KR") + "원";
       const showAll = false;
-      const cards = cur[2].slice(0, 8).map((p) => itemCard(Object.assign({}, p, { tag: p.pin ? p.tag : (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.pin ? p.comment : p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
+      const cards = cur[2].slice(0, 12).map((p) => itemCard(Object.assign({}, p, { tag: p.pin ? p.tag : (discPct(p) ? "-" + discPct(p) + "%" : "") + (p.cpn ? " 쿠폰" : "") || (p.mj ? "무진장" : (p.tag || "")), comment: p.pin ? p.comment : p.cpn ? `쿠폰 적용 시 ${won(p.cpn)}` : (p.comment || "") }), 0)).join("");
       const at = R.at || day.at; const k = at ? kp(Date.parse(at)) : null;
-      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⭐ 광만두 <em class="plz-em">베스트 픽</em></p><small>꿀템 중 꿀템만 골라놨어요 · 가격·쿠폰은 무신사에서 꼭 확인하세요</small>${cur[2].length > 8 ? `<button type="button" class="sec-all" data-r1all="${r1Tab}">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
+      box.innerHTML = `<div class="hotz-head"><p class="hotz-title">⭐ 광만두 <em class="plz-em">베스트 픽</em></p><small>가격·쿠폰은 무신사에서 꼭 확인하세요</small>${cur[2].length > 12 ? `<button type="button" class="sec-all" data-r1all="${r1Tab}">전체보기 →</button>` : ""}</div><div class="hotz-bar"><i></i></div>
         <div class="opz-tabs">${T.map((t) => `<button type="button" data-r1="${t[0]}" class="${t[0] === r1Tab ? "on" : ""}">${t[1]}<i>${t[2].length}</i></button>`).join("")}</div>
         ${cur[3] ? `<p class="opz-sub">${esc(cur[3])}</p>` : ""}
         <div class="bf-grid">${cards}</div>`;
